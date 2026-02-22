@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase";
+import { determineSection } from "../lib/geo";
 import { v4 as uuidv4 } from "uuid";
 import * as exifr from "exifr";
 
@@ -48,6 +49,7 @@ button.addEventListener("click", async () => {
     gpsFiles.reduce((sum, f) => sum + f.latitude!, 0) / gpsFiles.length;
   const avgLng =
     gpsFiles.reduce((sum, f) => sum + f.longitude!, 0) / gpsFiles.length;
+  const section = determineSection(avgLat, avgLng);
   const earliestDate = processedFiles
     .map((f) => new Date(f.takenAt))
     .sort((a, b) => a.getTime() - b.getTime())[0];
@@ -64,7 +66,7 @@ button.addEventListener("click", async () => {
     .from("entries")
     .insert({
       description,
-      section: "AU", // temporär fix
+      section: section,
       latitude: avgLat,
       longitude: avgLng,
       taken_at: earliestDate.toISOString(),
