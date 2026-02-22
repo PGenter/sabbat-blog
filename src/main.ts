@@ -2,12 +2,22 @@ import './style.css'
 import typescriptLogo from './typescript.svg'
 import viteLogo from '/vite.svg'
 import { setupCounter } from './counter.ts'
+import { supabase } from './lib/supabase'
+
+async function test() {
+  const { data, error } = await supabase.from('entries').select('*')
+
+  console.log('Data:', data, 'Error:', error)
+}
+
+test()
 
 document.querySelector<HTMLDivElement>('#navbar')!.innerHTML = `
     <a href="#app">Australien</a>
     <a href="#page_one">Tasmanien</a>
     <a href="#page_two">Neuseeland</a>
     <a href="#page_three">Fiji</a>
+    <a href="/upload.html">Upload</a>
 `
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
