@@ -8,5 +8,11 @@
   <br /><br />
 
   <button id="uploadBtn">Upload</button>
+  <div id="progressContainer" style="display:none; margin-top:16px;">
+    <div style="background:#eee; height:12px; border-radius:6px; overflow:hidden;">
+      <div id="progressBar" style="width:0%; height:100%; background:#4caf50; transition: width 0.3s ease;"></div>
+    </div>
+    <p id="progressText" style="margin-top:8px; font-size:14px;"></p>
+  </div>
   <script type="module" src="/src/upload/upload.ts"></script>
 </div>

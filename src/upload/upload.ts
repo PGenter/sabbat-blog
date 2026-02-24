@@ -4,6 +4,18 @@ import { v4 as uuidv4 } from "uuid";
 import imageCompression from "browser-image-compression";
 import * as exifr from "exifr";
 
+type ProcessedFile = {
+  fullImage: File;
+  thumbnail: File;
+  latitude: number | null;
+  longitude: number | null;
+  takenAt: Date;
+};
+
+const progressContainer = document.getElementById("progressContainer")!;
+const progressBar = document.getElementById("progressBar")!;
+const progressText = document.getElementById("progressText")!;
+
 const input = document.getElementById("images") as HTMLInputElement;
 const descriptionEl = document.getElementById(
   "description",
@@ -24,20 +36,23 @@ button.addEventListener("click", async () => {
     return;
   }
 
-  const processedFiles = [];
+  const processedFiles: ProcessedFile[] = [];
+
+  button.disabled = true;
+  button.textContent = "Upload läuft...";
 
   for (const originalFile of Array.from(files)) {
-    // 🔥 1️⃣ Bild komprimieren
-    // 🔥 FULL VERSION
+    // 1️⃣ Bild komprimieren
+    // FULL VERSION
     const fullImage = await imageCompression(originalFile, {
       maxWidthOrHeight: 1920,
       initialQuality: 0.8,
       useWebWorker: true,
     });
 
-    // 🔥 THUMBNAIL
+    // THUMBNAIL
     const thumbnail = await imageCompression(fullImage, {
-      maxWidthOrHeight: 500,
+      maxWidthOrHeight: 400,
       initialQuality: 0.7,
       useWebWorker: true,
     });
@@ -46,9 +61,8 @@ button.addEventListener("click", async () => {
     console.log("Compressed:", fullImage.size / 1024 / 1024, "MB");
     console.log("Thumbnail:", thumbnail.size / 1024 / 1024, "MB");
 
-    // 🔥 2️⃣ EXIF vom Original lesen (nicht vom komprimierten!)
+    // 2️⃣ EXIF vom Original lesen (nicht vom komprimierten!)
     const exif = await exifr.parse(originalFile);
-
     const lat = exif?.latitude;
     const lng = exif?.longitude;
     const takenAt = exif?.DateTimeOriginal || new Date();
@@ -88,11 +102,21 @@ button.addEventListener("click", async () => {
     }
   });
 
-  // 🔥 Transaktions-Tracking
+  // Transaktions-Tracking
   let entryId: string | null = null;
   const uploadedPaths: string[] = [];
 
   try {
+    let completed = 0;
+    const total = processedFiles.length;
+    progressContainer.style.display = "block";
+    updateProgress();
+
+    function updateProgress() {
+      const percent = Math.round((completed / total) * 100);
+      progressBar.style.width = percent + "%";
+      progressText.textContent = `${completed} von ${total} Bildern verarbeitet (${percent}%)`;
+    }
     // 1️⃣ Entry erstellen
     const { data: entry, error: entryError } = await supabase
       .from("entries")
@@ -111,52 +135,27 @@ button.addEventListener("click", async () => {
     entryId = entry.id;
 
     // 2️⃣ Bilder hochladen
-    for (const fileData of processedFiles) {
-      const fileName = `${uuidv4()}.jpg`;
+    const results = await runWithConcurrencyLimit(
+      processedFiles,
+      4, // Limit
+      // (fileData) => processAndUploadImage(fileData, entryId!),
+      async (fileData) => {
+        const result = await processAndUploadImage(fileData, entryId!);
 
-      const fullPath = `${entryId}/full/${fileName}`;
-      const thumbPath = `${entryId}/thumb/${fileName}`;
+        completed++;
+        updateProgress();
 
-      const { error: fullError } = await supabase.storage
-        .from("travel-images")
-        .upload(fullPath, fileData.fullImage);
+        return result;
+      },
+    );
 
-      if (fullError) throw fullError;
+    uploadedPaths.push(...results.flat());
 
-      const { error: thumbError } = await supabase.storage
-        .from("travel-images")
-        .upload(thumbPath, fileData.thumbnail);
-
-      if (thumbError) throw thumbError;
-
-      uploadedPaths.push(fullPath, thumbPath);
-
-      const { data: fullUrl } = supabase.storage
-        .from("travel-images")
-        .getPublicUrl(fullPath);
-
-      const { data: thumbUrl } = supabase.storage
-        .from("travel-images")
-        .getPublicUrl(thumbPath);
-
-      const { error: photoError } = await supabase.from("photos").insert({
-        entry_id: entryId,
-        image_url: fullUrl.publicUrl,
-        thumbnail_url: thumbUrl.publicUrl,
-        latitude: fileData.latitude,
-        longitude: fileData.longitude,
-        taken_at: fileData.takenAt,
-      });
-
-      if (photoError) throw photoError;
-    }
-
-    alert("Upload erfolgreich!");
+    // alert("Upload erfolgreich!");
   } catch (error) {
     console.error("Upload fehlgeschlagen:", error);
 
-    // 🔥 ROLLBACK
-
+    // ROLLBACK
     // 1️⃣ Storage löschen
     if (uploadedPaths.length > 0) {
       await supabase.storage.from("travel-images").remove(uploadedPaths);
@@ -164,10 +163,81 @@ button.addEventListener("click", async () => {
 
     // 2️⃣ Entry + Photos löschen (Cascade wäre noch besser)
     if (entryId) {
-      // await supabase.from("photos").delete().eq("entry_id", entryId);
       await supabase.from("entries").delete().eq("id", entryId);
     }
-
+    progressContainer.style.display = "none";
     alert("Upload fehlgeschlagen. Alles wurde zurückgesetzt.");
   }
+  button.disabled = false;
+  button.textContent = "Upload starten";
 });
+
+async function processAndUploadImage(
+  fileData: ProcessedFile,
+  entryId: string,
+): Promise<string[]> {
+  const fileName = `${uuidv4()}.jpg`;
+
+  const fullPath = `${entryId}/full/${fileName}`;
+  const thumbPath = `${entryId}/thumb/${fileName}`;
+
+  // Upload Full
+  const { error: fullError } = await supabase.storage
+    .from("travel-images")
+    .upload(fullPath, fileData.fullImage);
+
+  if (fullError) throw fullError;
+
+  // Upload Thumb
+  const { error: thumbError } = await supabase.storage
+    .from("travel-images")
+    .upload(thumbPath, fileData.thumbnail);
+
+  if (thumbError) throw thumbError;
+
+  const { data: fullUrl } = supabase.storage
+    .from("travel-images")
+    .getPublicUrl(fullPath);
+
+  const { data: thumbUrl } = supabase.storage
+    .from("travel-images")
+    .getPublicUrl(thumbPath);
+
+  const { error: photoError } = await supabase.from("photos").insert({
+    entry_id: entryId,
+    image_url: fullUrl.publicUrl,
+    thumbnail_url: thumbUrl.publicUrl,
+    latitude: fileData.latitude,
+    longitude: fileData.longitude,
+    taken_at: fileData.takenAt,
+  });
+
+  if (photoError) throw photoError;
+
+  return [fullPath, thumbPath]; // Für Rollback
+}
+
+async function runWithConcurrencyLimit<T>(
+  items: T[],
+  limit: number,
+  asyncFn: (item: T) => Promise<any>,
+) {
+  const results: any[] = [];
+  const executing: Promise<any>[] = [];
+
+  for (const item of items) {
+    const p = asyncFn(item).then((result) => {
+      executing.splice(executing.indexOf(p), 1);
+      return result;
+    });
+
+    results.push(p);
+    executing.push(p);
+
+    if (executing.length >= limit) {
+      await Promise.race(executing);
+    }
+  }
+
+  return Promise.all(results);
+}
