@@ -1,18 +1,31 @@
-<div id="app">
-  <h1>Neuer Eintrag</h1>
-
-  <input type="file" id="images" multiple accept="image/*" />
-  <br /><br />
-
-  <textarea id="description" placeholder="Beschreibung"></textarea>
-  <br /><br />
-
-  <button id="uploadBtn">Upload</button>
-  <div id="progressContainer" style="display:none; margin-top:16px;">
-    <div style="background:#eee; height:12px; border-radius:6px; overflow:hidden;">
-      <div id="progressBar" style="width:0%; height:100%; background:#4caf50; transition: width 0.3s ease;"></div>
+<body>
+  <div id="app">
+    <!-- LOGIN -->
+    <div id="login-section">
+      <h2>Login erforderlich</h2>
+      <form id="login-form">
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Passwort" required />
+        <button type="submit">Login</button>
+      </form>
     </div>
-    <p id="progressText" style="margin-top:8px; font-size:14px;"></p>
+    <div id="upload-section" style="display: none;">
+      <h1>Upload-Bereich</h1>
+      <input type="file" id="images" multiple accept="image/*" />
+      <br /><br />
+
+      <textarea id="description" placeholder="Beschreibung"></textarea>
+      <br /><br />
+
+      <button id="uploadBtn">Upload</button>
+      <div id="progressContainer" style="display:none; margin-top:16px;">
+        <div style="background:#eee; height:12px; border-radius:6px; overflow:hidden;">
+          <div id="progressBar" style="width:0%; height:100%; background:#4caf50; transition: width 0.3s ease;"></div>
+        </div>
+        <p id="progressText" style="margin-top:8px; font-size:14px;"></p>
+      </div>
+      <button id="logout">Logout</button>
+    </div>
+    <script type="module" src="/src/upload/upload.ts"></script>
   </div>
-  <script type="module" src="/src/upload/upload.ts"></script>
-</div>
+</body>
