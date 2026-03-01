@@ -1,23 +1,30 @@
 <!doctype html>
 <html lang="de">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sabbat-blog</title>
-  </head>
-  <body>
-    <div class="main_wrapper">
-      <div class="nav_wrapper">
-        <div class="navbar_wrapper" id="navbar"></div>
-      </div>
-      <div class="page_wrapper">
-        <div class="page" id="app"></div>
-        <div class="page" id="page_one"></div>
-        <div class="page" id="page_two"></div>
-        <div class="page" id="page_three"></div>
-      </div>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sabbat-blog</title>
+</head>
+
+<body>
+  <div class="main_wrapper">
+    <div class="nav_wrapper">
+      <div class="navbar_wrapper" id="navbar"></div>
     </div>
-      <script type="module" src="/src/main.ts"></script>
-  </body>
+    <div class="page_wrapper">
+      <div class="page" id="app">
+        <h1>Deutschland</h1>
+        <div id="map" class="map-container"></div>
+      </div>
+      <div class="page" id="page_one"></div>
+      <div class="page" id="page_two"></div>
+      <div class="page" id="page_three"></div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+  <script type="module" src="/src/lib/map.ts"></script>
+</body>
+
 </html>

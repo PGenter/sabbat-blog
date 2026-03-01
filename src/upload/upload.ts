@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from "uuid";
 import imageCompression from "browser-image-compression";
 import * as exifr from "exifr";
 
-const app = document.getElementById("app")!;
 const loginSection = document.getElementById("login-section")!;
 const uploadSection = document.getElementById("upload-section")!;
 const loginForm = document.getElementById("login-form")!;
@@ -16,10 +15,8 @@ async function init() {
   const { data } = await supabase.auth.getSession();
 
   if (!data.session) {
-    // renderLogin();
     showUpload();
   } else {
-    // renderUpload();
     showLogin();
   }
 }
@@ -58,53 +55,6 @@ logoutButton.addEventListener("click", async () => {
   await supabase.auth.signOut();
   showLogin();
 });
-
-// function renderLogin() {
-//   app.innerHTML = `
-//     <h2>Login erforderlich</h2>
-//     <form id="login-form">
-//       <input type="email" id="email" placeholder="Email" required />
-//       <input type="password" id="password" placeholder="Passwort" required />
-//       <button type="submit">Login</button>
-//     </form>
-//   `;
-
-//   document
-//     .getElementById("login-form")!
-//     .addEventListener("submit", handleLogin);
-// }
-
-// async function handleLogin(e: Event) {
-//   e.preventDefault();
-
-//   const email = (document.getElementById("email") as HTMLInputElement).value;
-//   const password = (document.getElementById("password") as HTMLInputElement)
-//     .value;
-
-//   const { error } = await supabase.auth.signInWithPassword({
-//     email,
-//     password,
-//   });
-
-//   if (error) {
-//     alert(error.message);
-//   } else {
-//     renderUpload();
-//   }
-// }
-
-// function renderUpload() {
-//   const logoutButton = document.getElementById("logout");
-
-//   if (logoutButton) {
-//     logoutButton.addEventListener("click", async () => {
-//       await supabase.auth.signOut();
-//       renderLogin();
-//     });
-//   }
-
-//   startUpload();
-// }
 
 async function startUpload() {
   const { data: userData } = await supabase.auth.getUser();
@@ -255,7 +205,6 @@ async function startUpload() {
       const results = await runWithConcurrencyLimit(
         processedFiles,
         4, // Limit
-        // (fileData) => processAndUploadImage(fileData, entryId!),
         async (fileData) => {
           const result = await processAndUploadImage(
             fileData,
@@ -271,8 +220,6 @@ async function startUpload() {
       );
 
       uploadedPaths.push(...results.flat());
-
-      // alert("Upload erfolgreich!");
     } catch (error) {
       console.error("Upload fehlgeschlagen:", error);
 
