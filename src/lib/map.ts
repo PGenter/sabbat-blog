@@ -1,8 +1,11 @@
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { supabase } from '../lib/supabase';
+import "leaflet.markercluster";
 
 let map: L.Map;
-let currentLayer: L.GeoJSON | null = null;
+// let currentLayer: L.GeoJSON | null = null;
+let markerLayer: L.LayerGroup | null = null;
 let activeCountry: string | null = null;
 
 function initMap() {
@@ -46,29 +49,63 @@ export function selectCountry(country: string) {
 
 function setActiveNav(country: string) {
   document.querySelectorAll('.navbar_wrapper a').forEach(link => {
-    link.classList.remove('active');
+    link.classList.remove('active_nav');
     if (link.getAttribute('href') === `#page_${country}`) {
-      link.classList.add('active');
+      link.classList.add('active_nav');
     }
   });
 }
 
-function loadCountryData(country: string) {
-  if (currentLayer) {
-    map.removeLayer(currentLayer);
+// function loadCountryData(country: string) {
+//   if (currentLayer) {
+//     map.removeLayer(currentLayer);
+//     currentLayer = null;
+//   }
+
+//   fetch(`/src/geo/${country}.json`)
+//     .then((res) => res.json())
+//     .then((data) => {
+//       currentLayer = L.geoJSON(data, {
+//         style: {
+//           color: "#2c3e50",
+//           weight: 1,
+//           fillOpacity: 0.1,
+//         },
+//       }).addTo(map);
+//     });
+// }
+
+async function loadCountryData(country: string) {
+  if (markerLayer) {
+    map.removeLayer(markerLayer);
   }
 
-  fetch(`/src/geo/${country}.json`)
-    .then((res) => res.json())
-    .then((data) => {
-      L.geoJSON(data, {
-        style: {
-          color: "#2c3e50",
-          weight: 2,
-          fillOpacity: 0.2,
-        },
-      }).addTo(map);
-    });
+  markerLayer = L.layerGroup().addTo(map);
+
+  const { data, error } = await supabase
+    .from("entries")
+    .select("*")
+    .eq("section", country);
+
+  if (error) {
+    console.error("Supabase error:", error);
+    return;
+  }
+
+  if (!data) return;
+
+  data.forEach((item) => {
+    const marker = L.marker([item.latitude, item.longitude]);
+
+    marker.bindPopup(`
+      <div style="max-width:200px">
+        <h4>${item.title ?? ""}</h4>
+        <img src="${item.image_url}" style="width:100%" />
+      </div>
+    `);
+
+    marker.addTo(markerLayer!);
+  });
 }
 
 initMap();

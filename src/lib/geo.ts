@@ -1,8 +1,8 @@
-import australia from '../geojson/australia.json';
-import tasmania from '../geojson/tasmania.json';
-import newZealand from '../geojson/newZealand.json';
-import germany from '../geojson/germany.json';
-import fiji from '../geojson/fiji.json';
+import australia from '../geo/AU.json';
+import tasmania from '../geo/TAS.json';
+import newZealand from '../geo/NZ.json';
+import germany from '../geo/DE.json';
+import fiji from '../geo/FJ.json';
 
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon'
 import { point } from '@turf/helpers'
