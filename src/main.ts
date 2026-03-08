@@ -10,25 +10,14 @@ async function test() {
 
 test()
 
-const sections = document.querySelectorAll('.page');
+const buttons = document.querySelectorAll(".navbar_wrapper button");
 
-const observer = new IntersectionObserver(
-  (entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const country = (entry.target as HTMLElement).dataset.country;
-        if (country) {
-          // onSectionChange(country);
-          selectCountry(country);
-          
-        }
-      }
-    });
-  },
-  {
-    threshold: 0.6 // Section gilt als aktiv, wenn 60% sichtbar
-  }
-);
-
-sections.forEach(section => observer.observe(section));
+buttons.forEach(button => {
+  button.addEventListener("click", () => {
+    const country = button.getAttribute("data-country");
+    if (country) {
+      selectCountry(country);
+    }
+  });
+});
 

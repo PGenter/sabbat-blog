@@ -11,24 +11,18 @@
 <body>
   <div class="main_wrapper">
     <div class="nav_wrapper">
-      <div class="navbar_wrapper" id="navbar">
-        <a href="#page_start">Deutschland</a>
-        <a href="#page_AU">Australien</a>
-        <a href="#page_TAS">Tasmanien</a>
-        <a href="#page_NZ">Neuseeland</a>
-        <a href="#page_FJ">Fiji</a>
-        <a href="/upload.html">Upload</a>
+      <div class="navbar_wrapper glassy" id="navbar">
+        <button data-country="DE">Deutschland</button>
+        <button data-country="AU">Australien</button>
+        <button data-country="TAS">Tasmanien</button>
+        <button data-country="NZ">Neuseeland</button>
+        <button data-country="FJ">Fiji</button>
       </div>
+    </div>
+    <div class="map_wrapper">
       <div id="map" class="map-container"></div>
     </div>
-    <div class="page_wrapper">
-      <div class="page" id="page_start" data-country="DE">
-        <!-- <h1>Deutschland</h1> -->
-      </div>
-      <div class="page" id="page_AU" data-country="AU"></div>
-      <div class="page" id="page_TAS" data-country="TAS"></div>
-      <div class="page" id="page_NZ" data-country="NZ"></div>
-      <div class="page" id="page_FJ" data-country="FJ"></div>
+    <div class="card_wrapper glassy">
     </div>
   </div>
   <script type="module" src="/src/main.ts"></script>

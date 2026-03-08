@@ -1,6 +1,6 @@
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { supabase } from '../lib/supabase';
+import { supabase } from "../lib/supabase";
 import "leaflet.markercluster";
 
 let map: L.Map;
@@ -9,38 +9,52 @@ let markerLayer: L.LayerGroup | null = null;
 let activeCountry: string | null = null;
 
 function initMap() {
-  map = L.map("map").setView([51.5, 7], 9);
+  map = L.map("map", {
+    zoomControl: false,
+    tapHold: true,
+    inertia: true,
+  }).setView([51.5, 7], 9);
   // OpenStreetMap Layer
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap contributors",
-  }).addTo(map);
-} 
+  // L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  //   attribution: "&copy; OpenStreetMap contributors",
+  // }).addTo(map);
+  L.tileLayer(
+    "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    // "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    // "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png",
+    {
+      attribution: "&copy; OpenStreetMap & CartoDB",
+    },
+  ).addTo(map);
+  setActiveNav("DE");
+  loadCountryData("DE");
+}
 
 export function selectCountry(country: string) {
   console.log("Aktives Land:", country);
-  if (country === activeCountry) return;
-  activeCountry = country;
+  // if (country === activeCountry) return;
+  // activeCountry = country;
   switch (country) {
     case "AU":
       // Karte initialisieren Australien
       // map = L.map("map").setView([-30, 150], 5);
-      map.setView([-30, 148], 5.4);
+      map.flyTo([-27, 135], 5);
       break;
     case "NZ":
       // Karte initialisieren Neuseeland
-      map.setView([-40, 175], 5);
+      map.flyTo([-40, 175], 5);
       break;
     case "FJ":
       // Karte initialisieren Fiji
-      map.setView([-18, 175], 5);
+      map.flyTo([-17.75, 177.15], 12);
       break;
     case "TAS":
       // Karte initialisieren Tasmanien
-      map.setView([-43, 147.5], 9);
+      map.flyTo([-43, 147.5], 9);
       break;
     default:
       // Standardkarte (Deutschland)
-      map.setView([51.5, 7], 9);
+      map.flyTo([51.5, 7], 9);
       break;
   }
   setActiveNav(country);
@@ -48,10 +62,10 @@ export function selectCountry(country: string) {
 }
 
 function setActiveNav(country: string) {
-  document.querySelectorAll('.navbar_wrapper a').forEach(link => {
-    link.classList.remove('active_nav');
-    if (link.getAttribute('href') === `#page_${country}`) {
-      link.classList.add('active_nav');
+  document.querySelectorAll(".navbar_wrapper button").forEach((link) => {
+    link.classList.remove("active_nav");
+    if (link.getAttribute("data-country") === country) {
+      link.classList.add("active_nav");
     }
   });
 }
@@ -106,6 +120,38 @@ async function loadCountryData(country: string) {
 
     marker.addTo(markerLayer!);
   });
+  setCountryCard(country);
+}
+
+function setCountryCard(country: string) {
+  const card = document.querySelector(".card_wrapper") as HTMLDivElement;
+  switch (country) {
+    case "AU":
+      card.innerHTML = `
+        <h2>Australien</h2> 
+        `
+      break;
+    case "NZ":
+      card.innerHTML = `  
+        <h2>Neuseeland</h2>
+        `
+      break;    
+    case "FJ":
+      card.innerHTML = `
+        <h2>Fiji</h2> 
+        `
+      break;
+    case "TAS":
+      card.innerHTML = `
+        <h2>Tasmanien</h2> 
+        `
+      break;
+    default:
+      card.innerHTML = `
+        <h2>Deutschland</h2> 
+        `
+      break;
+  }
 }
 
 initMap();
