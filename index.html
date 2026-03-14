@@ -11,13 +11,39 @@
 <body>
   <div class="main_wrapper">
     <div class="nav_wrapper">
-      <div class="navbar_wrapper glassy" id="navbar">
-        <button data-country="DE">Deutschland</button>
-        <button data-country="AU">Australien</button>
-        <button data-country="TAS">Tasmanien</button>
-        <button data-country="NZ">Neuseeland</button>
-        <button data-country="FJ">Fiji</button>
+      <div class="navbar_wrapper " id="navbar">
+        <div class="slider-handle"></div>
+
+        <div class="slider-stop" data-country="DE" style="left:0%"></div>
+        <div class="slider-stop" data-country="AU" style="left:25%"></div>
+        <div class="slider-stop" data-country="TAS" style="left:50%"></div>
+        <div class="slider-stop" data-country="NZ" style="left:75%"></div>
+        <div class="slider-stop" data-country="FJ" style="left:100%"></div>
+        <!-- <button class="nav-button" data-country="DE" title="Deutschland"><img src="https://flagcdn.com/h20/de.png"
+            srcset="https://flagcdn.com/h40/de.png 2x, https://flagcdn.com/h60/de.png 3x"
+            height="20">Deutschland</button>
+        <button class="nav-button" data-country="AU" title="Australien"><img src="https://flagcdn.com/h20/au.png"
+            srcset="https://flagcdn.com/h40/au.png 2x, https://flagcdn.com/h60/au.png 3x"
+            height="20">Australien</button>
+        <button class="nav-button" data-country="TAS" title="Tasmanien"><img src="https://flagcdn.com/h20/tas.png"
+            srcset="https://flagcdn.com/h40/tas.png 2x, https://flagcdn.com/h60/tas.png 3x"
+            height="20">Tasmanien</button>
+        <button class="nav-button" data-country="NZ" title="Neuseeland"><img src="https://flagcdn.com/h20/nz.png"
+            srcset="https://flagcdn.com/h40/nz.png 2x, https://flagcdn.com/h60/nz.png 3x"
+            height="20">Neuseeland</button>
+        <button class="nav-button" data-country="FJ" title="Fiji"><img src="https://flagcdn.com/h20/fj.png"
+            srcset="https://flagcdn.com/h40/fj.png 2x, https://flagcdn.com/h60/fj.png 3x"
+            height="20">Fiji</button> -->
+        <!-- <button class="nav-button" data-country="DE" title="Deutschland"><img src="../assets/DE-32.png"></img>Deutschland</button> -->
+        <!-- <button class="nav-button" data-country="AU" title="Australien"><img
+            src="../assets/AU-32.png"></img>Australien</button>
+        <button class="nav-button" data-country="TAS" title="Tasmanien"><img
+            src="../assets/TAS-32.png"></img>Tasmanien</button>
+        <button class="nav-button" data-country="NZ" title="Neuseeland"><img
+            src="../assets/NZ-32.png"></img>Neuseeland</button>
+        <button class="nav-button" data-country="FJ" title="Fiji"><img src="../assets/FJ-32.png"></img>Fiji</button> -->
       </div>
+      <div class="slider-tooltip" id="slider-tooltip"></div>
     </div>
     <div class="map_wrapper">
       <div id="map" class="map-container"></div>
@@ -25,6 +51,9 @@
     <div class="card_wrapper glassy">
     </div>
   </div>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icons/7.5.0/css/flag-icons.min.css"
+    integrity="sha512-+WVTaUIzUw5LFzqIqXOT3JVAc5SrMuvHm230I9QAZa6s+QRk8NDPswbHo2miIZj3yiFyV9lAgzO1wVrjdoO4tw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
   <script type="module" src="/src/main.ts"></script>
   <script type="module" src="/src/lib/map.ts"></script>
 </body>

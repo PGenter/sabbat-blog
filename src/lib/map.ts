@@ -4,9 +4,7 @@ import { supabase } from "../lib/supabase";
 import "leaflet.markercluster";
 
 let map: L.Map;
-// let currentLayer: L.GeoJSON | null = null;
 let markerLayer: L.LayerGroup | null = null;
-let activeCountry: string | null = null;
 
 function initMap() {
   map = L.map("map", {
@@ -15,9 +13,6 @@ function initMap() {
     inertia: true,
   }).setView([51.5, 7], 9);
   // OpenStreetMap Layer
-  // L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  //   attribution: "&copy; OpenStreetMap contributors",
-  // }).addTo(map);
   L.tileLayer(
     "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
     // "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
@@ -37,7 +32,6 @@ export function selectCountry(country: string) {
   switch (country) {
     case "AU":
       // Karte initialisieren Australien
-      // map = L.map("map").setView([-30, 150], 5);
       map.flyTo([-27, 135], 5);
       break;
     case "NZ":
