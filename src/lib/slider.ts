@@ -1,13 +1,6 @@
 import { selectCountry } from "./map";
 import { COUNTRIES, type CountryCode } from "./geo";
 
-// const stops = [
-//   { country: "DE", label: "Deutschland" },
-//   { country: "AU", label: "Australien" },
-//   { country: "TAS", label: "Tasmanien" },
-//   { country: "NZ", label: "Neuseeland" },
-//   { country: "FJ", label: "Fiji" },
-// ];
 const stops = Object.entries(COUNTRIES).map(([code, data]) => ({
   country: code as CountryCode,
   label: data.name,
@@ -22,7 +15,7 @@ let dragging = false;
 let currentIndex = 0;
 let dragPercentage = 0;
 
-stops.forEach((stop, index) => {
+stops.forEach((_stop, index) => {
   const el = document.createElement("div");
 
   el.className = "slider-stop";

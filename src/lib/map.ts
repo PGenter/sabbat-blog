@@ -2,9 +2,9 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { supabase } from "../lib/supabase";
 import "leaflet.markercluster";
-import { COUNTRIES } from "./geo";
+import { COUNTRIES, type CountryCode } from "./geo";
 
-type CountryCode = "DE" | "AU" | "TAS" | "NZ" | "FJ";
+// type CountryCode = "DE" | "AU" | "TAS" | "NZ" | "FJ";
 // const buttons = document.querySelectorAll(".navbar_wrapper button");
 
 // const route = [
@@ -25,10 +25,11 @@ type CountryCode = "DE" | "AU" | "TAS" | "NZ" | "FJ";
 //   label: string
 //   country: CountryCode
 // }
-
+const markers = new Map<string, L.Marker>();
+let currentCountry: CountryCode | null = null;
 let map: L.Map;
 let markerLayer: L.LayerGroup | null = null;
-let routeLine: L.Polyline;
+// let routeLine: L.Polyline;
 
 function initMap() {
   map = L.map("map", {
@@ -46,67 +47,38 @@ function initMap() {
     },
   ).addTo(map);
 
-  routeLine = L.polyline([], {
-    color: "#ff5a5f",
-    weight: 3,
-    opacity: 0.7,
-  }).addTo(map);
+  // routeLine = L.polyline([], {
+  //   color: "#ff5a5f",
+  //   weight: 3,
+  //   opacity: 0.7,
+  // }).addTo(map);
+
+  map.on("moveend", handleViewportChanged);
 
   setActiveNav("DE");
   loadCountryData("DE");
 }
 
 export function selectCountry(country: CountryCode) {
+  currentCountry = country;
+  clearMarkers();
   // console.log("Aktives Land:", country);
   const config = COUNTRIES[country];
   if (!config) return;
-  // let coordinates: [number, number];
-  // let zoomLevel: number;
-  // switch (country) {
-  //   case "AU":
-  //     // Karte initialisieren Australien
-  //     coordinates = [-27, 135];
-  //     zoomLevel = 5;
-  //     break;
-  //   case "NZ":
-  //     // Karte initialisieren Neuseeland
-  //     coordinates = [-40, 175];
-  //     zoomLevel = 5;
-  //     break;
-  //   case "FJ":
-  //     // Karte initialisieren Fiji
-  //     coordinates = [-17.75, 177.15];
-  //     zoomLevel = 12;
-  //     break;
-  //   case "TAS":
-  //     // Karte initialisieren Tasmanien
-  //     coordinates = [-43, 147.5];
-  //     zoomLevel = 9;
-  //     break;
-  //   default:
-  //     // Standardkarte (Deutschland)
-  //     coordinates = [51.5, 7];
-  //     zoomLevel = 9;
-  //     break;
-  // }
-  // map.flyTo(coordinates, zoomLevel, {
-  //   duration: 2,
-  //   easeLinearity: 0.25,
-  // });
   map.flyTo(config.center, config.zoom, {
     duration: 2,
   });
-  updateRoute(country);
+  // updateRoute(country);
   setActiveNav(country);
   loadCountryData(country);
 }
 
-function updateRoute(country: CountryCode) {
-  const config = COUNTRIES[country];
+// function updateRoute(country: CountryCode) {
+//   const config = COUNTRIES[country];
 
-  if (!config) return;
-  routeLine.addLatLng(config.center);
-}
+//   if (!config) return;
+//   routeLine.addLatLng(config.center);
+// }
 
 function setActiveNav(country: CountryCode) {
   document.querySelectorAll(".navbar_wrapper button").forEach((link) => {
@@ -137,7 +109,7 @@ async function loadCountryData(country: CountryCode) {
   if (!data) return;
 
   data.forEach((item) => {
-    createMarker(item.latitude, item.longitude);
+    createMarker(item.latitude, item.longitude, item.title, item.image_url);
     // const marker = L.marker([item.latitude, item.longitude]);
 
     // marker.bindPopup(`
@@ -154,36 +126,15 @@ async function loadCountryData(country: CountryCode) {
 
 function setCountryCard(country: CountryCode) {
   const card = document.querySelector(".card_wrapper") as HTMLDivElement;
-  switch (country) {
-    case "AU":
-      card.innerHTML = `
-        <h2>Australien</h2> 
-        `;
-      break;
-    case "NZ":
-      card.innerHTML = `  
-        <h2>Neuseeland</h2>
-        `;
-      break;
-    case "FJ":
-      card.innerHTML = `
-        <h2>Fiji</h2> 
-        `;
-      break;
-    case "TAS":
-      card.innerHTML = `
-        <h2>Tasmanien</h2> 
-        `;
-      break;
-    default:
-      card.innerHTML = `
-        <h2>Deutschland</h2> 
-        `;
-      break;
-  }
+  card.innerHTML = `<h2>${COUNTRIES[country].name}</h2>`;
 }
 
-function createMarker(lat: number, lng: number) {
+function createMarker(
+  lat: number,
+  lng: number,
+  title: string,
+  imageUrl: string,
+) {
   const icon = L.divIcon({
     className: "map-marker",
   });
@@ -195,16 +146,79 @@ function createMarker(lat: number, lng: number) {
     el?.classList.add("visible");
   });
 
+  marker.bindPopup(`
+    <div style="max-width:200px">
+      <h4>${title ?? ""}</h4>
+      <img src="${imageUrl}" style="width:100%" />
+    </div>
+  `);
+
   return marker;
+}
+
+function getViewportBounds() {
+  const bounds = map.getBounds();
+
+  return {
+    north: bounds.getNorth(),
+    south: bounds.getSouth(),
+    east: bounds.getEast(),
+    west: bounds.getWest(),
+  };
+}
+
+async function handleViewportChanged() {
+
+  if (!currentCountry) return;
+
+  const bounds = getViewportBounds();
+
+  const { data, error } = await supabase
+    .from("entries")
+    .select("id, latitude, longitude")
+    .eq("section", currentCountry)
+    .gte("latitude", bounds.south)
+    .lte("latitude", bounds.north)
+    .gte("longitude", bounds.west)
+    .lte("longitude", bounds.east);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  renderMarkers(data);
+}
+
+function renderMarkers(entries:any[]) {
+
+  entries.forEach(entry => {
+
+    if (markers.has(entry.id)) return;
+
+    const marker = createMarker(entry.latitude, entry.longitude, entry.title, entry.image_url);
+
+    markers.set(entry.id, marker);
+
+  });
+
+}
+
+function clearMarkers() {
+
+  markers.forEach(marker => marker.remove());
+
+  markers.clear();
+
 }
 
 // buttons.forEach((button) => {
 //   button.addEventListener("click", () => {
 //     const country = button.dataset.country;
 //     if (!country) return;
-    
+
 //     selectCountry(country as CountryCode);
-    
+
 //   });
 // });
 

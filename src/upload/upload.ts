@@ -155,7 +155,7 @@ async function startUpload() {
     const avgLng =
       gpsFiles.reduce((sum, f) => sum + f.longitude!, 0) / gpsFiles.length;
 
-    const section = determineSection(avgLat, avgLng);
+    const section = await determineSection(avgLat, avgLng);
 
     const earliestDate = processedFiles
       .map((f) => new Date(f.takenAt))

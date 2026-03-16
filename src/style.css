@@ -1,5 +1,5 @@
 :root {
-  --primary-background-color: rgba(41, 37, 37, 1);
+  --primary-background-color: rgb(141, 136, 136);
   --secondary-background-color: rgba(255, 255, 255, 0.8);
 
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -56,7 +56,7 @@ h2 {
 .navbar_wrapper {
   position: relative;
   height: 4px;
-  background: var(--secondary-background-color);
+  background: var(--primary-background-color);
   border-radius: 2px;
 }
 
@@ -74,15 +74,16 @@ h2 {
   transform: translate(-50%, -50%);
   width: 10px;
   height: 10px;
-  background: white;
+  background: currentColor;
   border-radius: 50%;
   cursor: pointer;
-  pointer-events: none;
-  background: var(--secondary-background-color);
+  /* pointer-events: none; */
+  /* background: var(--secondary-background-color); */
 }
 
 .slider-stop.active {
   background: currentColor;
+  pointer-events: none;
 }
 
 .slider-handle {
@@ -148,7 +149,7 @@ h2 {
   width:14px;
   height:14px;
 
-  background:#ff5a5f;
+  background:currentColor;
   border-radius:50%;
 
   opacity:0;
@@ -164,9 +165,9 @@ h2 {
   transform:scale(1);
 }
 
-#map {
-  /* box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8); */
-}
+/* #map {
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8);
+} */
 
 #map::after {
   content: "";
