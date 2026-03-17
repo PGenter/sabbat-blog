@@ -4,9 +4,10 @@ import { COUNTRIES, type CountryCode } from "./geo";
 const stops = Object.entries(COUNTRIES).map(([code, data]) => ({
   country: code as CountryCode,
   label: data.name,
+  img: data.img,
 }));
 
-const track = document.getElementById("navbar")! as HTMLElement;
+const track = document.getElementById("slider-track")! as HTMLElement;
 const handle = document.querySelector(".slider-handle") as HTMLElement;
 const tooltip = document.getElementById("slider-tooltip") as HTMLElement;
 const progress = document.querySelector(".slider-progress") as HTMLElement;
@@ -17,9 +18,14 @@ let dragPercentage = 0;
 
 stops.forEach((_stop, index) => {
   const el = document.createElement("div");
+  // const img = document.createElement("img");
+  // img.src = COUNTRIES[_stop.country].img;
+  // img.alt = _stop.label;
+  // el.appendChild(img);
 
   el.className = "slider-stop";
   el.style.left = `${(index / (stops.length - 1)) * 100}%`;
+  el.style.backgroundImage = `url(${COUNTRIES[_stop.country].img})`;
   track.appendChild(el);
 });
 
@@ -41,6 +47,13 @@ function snapTo(index: number) {
   updateProgress(percent);
   // tooltip.textContent = stops[index].label;
   setActiveStop(index);
+  tooltip.textContent = stops[index].label;
+
+  // kleines haptic feedback
+  if (navigator.vibrate) {
+    navigator.vibrate(10);
+  }
+
   selectCountry(stops[index].country);
 }
 
@@ -59,6 +72,7 @@ function hideTooltip() {
 function updateSlider(percent: number) {
   handle.style.left = `${percent * 100}%`;
   progress.style.width = `${percent * 100}%`;
+  // tooltip.style.left = `${percent * 100}%`;
 }
 
 function updateProgress(percent: number) {
@@ -93,12 +107,37 @@ function magneticPercent(percent: number) {
   return percent;
 }
 
-track.addEventListener("click", (e) => {
-  dragPercentage = magneticPercent(getPercentFromEvent(e));
-  const index = nearestStop(dragPercentage);
+track.addEventListener("click", (e: MouseEvent) => {
+  // verhindert Klick während Drag
+  if (dragging) return;
 
-  snapTo(index);
+  let percent = getPercentFromEvent(e);
+  percent = magneticPercent(percent);
+
+  dragPercentage = percent;
+
+  updateSlider(percent);     // Handle + Progress sofort bewegen
+  previewStop(percent);      // Tooltip aktualisieren
+
+  const index = nearestStop(percent);
+  snapTo(index);             // Snap + Map wechseln
 });
+
+// track.addEventListener("mousemove", (e: MouseEvent) => {
+//   if (dragging) return;
+//   const rect = track.getBoundingClientRect();
+//   const x = e.clientX - rect.left;
+
+//   tooltip.style.left = `${x}px`;
+
+//   const percent = x / rect.width;
+//   previewStop(percent);
+//   showTooltip();
+// });
+
+// track.addEventListener("mouseleave", () => {
+//   if (!dragging) hideTooltip();
+// });
 
 track.addEventListener(
   "touchmove",
@@ -110,6 +149,8 @@ track.addEventListener(
 
 handle.addEventListener("mousedown", () => {
   dragging = true;
+  document.body.style.userSelect = "none";
+  document.body.style.cursor = "grabbing";
   showTooltip();
 });
 
@@ -132,8 +173,10 @@ document.addEventListener("mousemove", (e) => {
 
 document.addEventListener("mouseup", () => {
   if (!dragging) return;
-
+  
   dragging = false;
+  document.body.style.userSelect = "";
+  document.body.style.cursor = "";
   // const percent = getPercentFromEvent(e);
   // const index = nearestStop(dragPercentage);
 
@@ -144,6 +187,8 @@ document.addEventListener("mouseup", () => {
 
 handle.addEventListener("touchstart", () => {
   dragging = true;
+  document.body.style.userSelect = "none";
+  document.body.style.cursor = "grabbing";
   showTooltip();
 });
 
@@ -166,18 +211,21 @@ document.addEventListener("touchmove", (e) => {
 
 document.addEventListener("touchend", () => {
   if (!dragging) return;
-
+  
   dragging = false;
+  document.body.style.userSelect = "";
+  document.body.style.cursor = "";
   // const percent = getPercentFromEvent(e);
   snapTo(nearestStop(dragPercentage));
   // const index = nearestStop(dragPercentage);
 
   // snapTo(index);
-  hideTooltip();
+  // hideTooltip();
 });
 
 document.querySelectorAll(".slider-stop").forEach((stop, i) => {
-  stop.addEventListener("click", () => {
+  stop.addEventListener("click", (e) => {
+    e.stopPropagation();
     snapTo(i);
   });
 });

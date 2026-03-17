@@ -11,14 +11,14 @@ type GeoJson = any;
 const geoCache: Partial<Record<CountryCode, GeoJson>> = {};
 
 export const COUNTRIES = {
-  DE: { name: "Deutschland", center: [51.5, 7], zoom: 9, geo: () => import("../geo/DE.json") },
-  AU: { name: "Australien", center: [-27, 135], zoom: 5, geo: () => import("../geo/AU.json") },
-  TAS: { name: "Tasmanien", center: [-43, 147.5], zoom: 9, geo: () => import("../geo/TAS.json") },
-  NZ: { name: "Neuseeland", center: [-40, 175], zoom: 5, geo: () => import("../geo/NZ.json") },
-  FJ: { name: "Fiji", center: [-17.75, 177.15], zoom: 12, geo: () => import("../geo/FJ.json") },
+  DE: { name: "Deutschland", center: [51.5, 7], zoom: 9, geo: () => import("../geo/DE.json"), img: "../../assets/DE-32.png" },
+  AU: { name: "Australien", center: [-27, 135], zoom: 5, geo: () => import("../geo/AU.json"), img: "../../assets/AU-32.png" },
+  TAS: { name: "Tasmanien", center: [-43, 147.5], zoom: 9, geo: () => import("../geo/TAS.json"), img: "../../assets/TAS-32.png" },
+  NZ: { name: "Neuseeland", center: [-40, 175], zoom: 5, geo: () => import("../geo/NZ.json"), img: "../../assets/NZ-32.png" },
+  FJ: { name: "Fiji", center: [-17.75, 177.15], zoom: 12, geo: () => import("../geo/FJ.json"), img: "../../assets/FJ-32.png" },
 } as const satisfies Record<
   string,
-  { name: string; center: [number, number]; zoom: number; geo: () => Promise<GeoJson> | GeoJson }
+  { name: string; center: [number, number]; zoom: number; geo: () => Promise<GeoJson> | GeoJson; img: string }
 >;
 
 export type CountryCode = keyof typeof COUNTRIES;

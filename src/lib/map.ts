@@ -55,7 +55,7 @@ function initMap() {
 
   map.on("moveend", handleViewportChanged);
 
-  setActiveNav("DE");
+  // setActiveNav("DE");
   loadCountryData("DE");
 }
 
@@ -69,7 +69,7 @@ export function selectCountry(country: CountryCode) {
     duration: 2,
   });
   // updateRoute(country);
-  setActiveNav(country);
+  // setActiveNav(country);
   loadCountryData(country);
 }
 
@@ -80,14 +80,14 @@ export function selectCountry(country: CountryCode) {
 //   routeLine.addLatLng(config.center);
 // }
 
-function setActiveNav(country: CountryCode) {
-  document.querySelectorAll(".navbar_wrapper button").forEach((link) => {
-    link.classList.remove("active_nav");
-    if (link.getAttribute("data-country") === country) {
-      link.classList.add("active_nav");
-    }
-  });
-}
+// function setActiveNav(country: CountryCode) {
+//   document.querySelectorAll(".navbar_wrapper button").forEach((link) => {
+//     link.classList.remove("active_nav");
+//     if (link.getAttribute("data-country") === country) {
+//       link.classList.add("active_nav");
+//     }
+//   });
+// }
 
 async function loadCountryData(country: CountryCode) {
   if (markerLayer) {
