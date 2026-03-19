@@ -110,33 +110,34 @@ h2 {
   align-items: center;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 1rem;
+  width: .1rem;
   height: 1rem;
-  background: currentColor;
-  border: 2px solid currentColor;
-  border-radius: 50%;
+  background: var(--primary-background-color);
+  border: 2px solid var(--primary-background-color);
+  border-radius: 5px;
   cursor: pointer;
   background-size: cover;
   background-position: center;
-  /* background-repeat: no-repeat; */
+  background-repeat: no-repeat;
   /* pointer-events: none; */
   /* background: var(--secondary-background-color); */
 }
 
 .slider-stop img {
-  width: auto;
-  height: 100%;
-   object-fit: fill;
-  border-radius: 50%;
+  width: 1.25rem;
+  height: 1rem;
+  object-fit: cover;
+  border-radius: 5px;
 }
 
 .slider-stop.active {
   background: currentColor;
+  border-color: currentColor;
   pointer-events: none;
 }
 
 .slider-handle {
-  anchor-name: --slider-handle;
+  /* anchor-name: --slider-handle; */
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
@@ -168,21 +169,38 @@ h2 {
 
 .slider-tooltip {
   position: absolute;
-  position-anchor: --slider-handle;
-  top: anchor(top);
-  left: anchor(center);
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: center;
+  gap: 0.4rem;
+  /* position-anchor: --slider-handle; */
+  /* top: anchor(top);
+  left: anchor(center); */
 
-  translate: -50% -120%;
-
-  background: white;
+  /* translate: -50% -120%; */
+  transform: translateY(-120%);
+  /* background: white; */
   color: currentColor;
   padding: 6px 10px;
   border-radius: 6px;
   font-size: 12px;
 
-  opacity: 0;
-  transition: opacity 0.2s;
+  /* opacity: 0;
+  transition: opacity 0.2s; */
+  transition: transform 1s ease;
   pointer-events: none;
+}
+
+.slider-tooltip span {
+  display: none;
+}
+
+.slider-tooltip.active span {
+  display: block;
+}
+
+.slider-tooltip.active img {
+  transform: scale(1.2);
 }
 
 .map_wrapper {
