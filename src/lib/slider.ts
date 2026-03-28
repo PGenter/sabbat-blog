@@ -13,6 +13,7 @@ const handle = document.querySelector(".slider-handle") as HTMLElement;
 const progress = document.querySelector(".slider-progress") as HTMLElement;
 
 let dragging = false;
+// let isDragging = false;
 let currentIndex = 0;
 let dragPercentage = 0;
 
@@ -46,43 +47,34 @@ function getPercentFromEvent(e: MouseEvent | TouchEvent) {
 
 function snapTo(index: number) {
   currentIndex = index;
+
   const percent = index / (stops.length - 1);
 
   handle.style.left = `${percent * 100}%`;
   updateProgress(percent);
-  // tooltip.textContent = stops[index].label;
   setActiveStop(index);
   previewStop(percent);
-  // tooltip.textContent = stops[index].label;
 
   // kleines haptic feedback
   if (navigator.vibrate) {
     navigator.vibrate(10);
   }
 
+  resetAllTooltips();
   selectCountry(stops[index].country);
+
+  requestAnimationFrame(() => {
+    clampActiveTooltip(index);
+  });
 }
 
 function nearestStop(percent: number) {
   return Math.round(percent * (stops.length - 1));
 }
 
-// function showTooltip(percent: number) {
-//   const index = Math.round(percent * (stops.length - 1));
-//   document.getElementById(`tooltip-${stops[index].country}`)?.classList.add("active");
-//   // tooltip.style.opacity = "1";
-// }
-
-// function hideTooltip(percent: number) {
-//   const index = Math.round(percent * (stops.length - 1));
-//   document.getElementById(`tooltip-${stops[index].country}`)?.classList.remove("active");
-//   // tooltip.style.opacity = "0";
-// }
-
 function updateSlider(percent: number) {
   handle.style.left = `${percent * 100}%`;
   progress.style.width = `${percent * 100}%`;
-  // tooltip.style.left = `${percent * 100}%`;
 }
 
 function updateProgress(percent: number) {
@@ -91,10 +83,12 @@ function updateProgress(percent: number) {
 
 function previewStop(percent: number) {
   const index = Math.round(percent * (stops.length - 1));
-  document.querySelectorAll(".slider-tooltip").forEach((stop) => stop.classList.remove("active"));
-  document.getElementById(`tooltip-${stops[index].country}`)?.classList.add("active");
-
-  // tooltip.textContent = stops[index].label;
+  document
+    .querySelectorAll(".slider-tooltip")
+    .forEach((stop) => stop.classList.remove("active"));
+  document
+    .getElementById(`tooltip-${stops[index].country}`)
+    ?.classList.add("active");
 }
 
 function setActiveStop(index: number) {
@@ -119,25 +113,92 @@ function magneticPercent(percent: number) {
   return percent;
 }
 
+function resetAllTooltips() {
+  document.querySelectorAll(".slider-tooltip").forEach((el) => {
+    (el as HTMLElement).style.transform = "";
+  });
+}
+
+function clampActiveTooltip(index: number) {
+  const tooltip = document.querySelector(
+    ".slider-tooltip.active",
+  ) as HTMLElement;
+
+  const nav = document.querySelector(".nav_wrapper") as HTMLElement;
+  const navbar = document.querySelector(".navbar_wrapper") as HTMLElement;
+
+  if (!tooltip || !nav) return;
+
+  const navWidth = nav.clientWidth;
+  const navbarWidth = navbar.clientWidth;
+  const tooltipWidth = tooltip.offsetWidth;
+
+  // console.log("navWidth:", navWidth, "tooltipWidth:", tooltipWidth);
+
+  const percent = index / (stops.length - 1);
+  // console.log("index:", index, "percent:", percent);
+
+  const desiredCenter = percent * navWidth;
+
+  const minCenter = tooltipWidth / 2 + (navbarWidth - navWidth) / 2;
+  const maxCenter = navWidth - tooltipWidth / 2 - (navbarWidth - navWidth) / 2;
+  // console.log("desiredCenter:", desiredCenter, "minCenter:", minCenter, "maxCenter:", maxCenter);
+
+  const clampedCenter = Math.min(Math.max(desiredCenter, minCenter), maxCenter);
+
+  const offset = clampedCenter - desiredCenter;
+
+  tooltip.style.transform = `translate(calc(-50% + ${offset}px), -150%)`;
+}
+
+function updateTooltipDuringDrag(percent: number) {
+  const tooltip = document.querySelector(
+    ".slider-tooltip.active",
+  ) as HTMLElement;
+
+  const nav = document.querySelector(".nav_wrapper") as HTMLElement;
+
+  if (!tooltip || !nav) return;
+
+  const navWidth = nav.clientWidth;
+  const tooltipWidth = tooltip.offsetWidth;
+
+  const desiredCenter = percent * navWidth;
+
+  const minCenter = tooltipWidth / 2;
+  const maxCenter = navWidth - tooltipWidth / 2;
+
+  const clampedCenter = Math.min(Math.max(desiredCenter, minCenter), maxCenter);
+
+  const offset = clampedCenter - desiredCenter;
+
+  tooltip.style.transform = `translate(calc(-50% + ${offset}px), -150%)`;
+}
+
+function setDraggingState(state: boolean) {
+  document.body.classList.toggle("dragging", state);
+}
+
 track.addEventListener("click", (e: MouseEvent) => {
   // verhindert Klick während Drag
-  if (dragging) return;
+  if (dragging || justTouched) return;
 
   let percent = getPercentFromEvent(e);
   percent = magneticPercent(percent);
 
   dragPercentage = percent;
 
-  updateSlider(percent);     // Handle + Progress sofort bewegen
-  // previewStop(percent);      // Tooltip aktualisieren
+  updateSlider(percent);
 
   const index = nearestStop(percent);
-  snapTo(index);             // Snap + Map wechseln
+  snapTo(index); // Snap + Map wechseln
 });
 
 window.onload = () => {
   snapTo(0);
 };
+
+window.addEventListener("resize", () => clampActiveTooltip(currentIndex));
 
 // track.addEventListener("mousemove", (e: MouseEvent) => {
 //   if (dragging) return;
@@ -165,6 +226,8 @@ track.addEventListener(
 
 handle.addEventListener("mousedown", () => {
   dragging = true;
+  // isDragging = true;
+  setDraggingState(dragging);
   document.body.style.userSelect = "none";
   document.body.style.cursor = "grabbing";
   // showTooltip(dragPercentage);
@@ -179,18 +242,17 @@ document.addEventListener("mousemove", (e) => {
 
   updateSlider(percent);
   previewStop(percent);
-  // dragPercentage = magneticPercent(getPercentFromEvent(e));
 
-  // // handle.style.left = `${percent * 100}%`;
-  // // tooltip.style.left = `${percent * 100}%`;
-  // updateProgress(dragPercentage);
-  // previewStop(dragPercentage);
+  updateTooltipDuringDrag(percent);
 });
 
 document.addEventListener("mouseup", () => {
   if (!dragging) return;
-  
+
   dragging = false;
+  // isDragging = false;
+  setDraggingState(dragging);
+
   document.body.style.userSelect = "";
   document.body.style.cursor = "";
   // const percent = getPercentFromEvent(e);
@@ -201,8 +263,13 @@ document.addEventListener("mouseup", () => {
   // hideTooltip(dragPercentage);
 });
 
+let justTouched = false;
+
 handle.addEventListener("touchstart", () => {
   dragging = true;
+  // isDragging = true;
+  justTouched = true;
+  setDraggingState(dragging);
   document.body.style.userSelect = "none";
   document.body.style.cursor = "grabbing";
   // showTooltip(dragPercentage);
@@ -216,23 +283,26 @@ document.addEventListener("touchmove", (e) => {
   dragPercentage = percent;
 
   updateSlider(percent);
-  // previewStop(percent);
-  // dragPercentage = magneticPercent(getPercentFromEvent(e));
 
-  // // handle.style.left = `${percent * 100}%`;
-  // // tooltip.style.left = `${percent * 100}%`;
-  // updateProgress(dragPercentage);
-  // previewStop(dragPercentage);
+  previewStop(percent);
+  updateTooltipDuringDrag(percent);
 });
 
 document.addEventListener("touchend", () => {
+  justTouched = true;
   if (!dragging) return;
-  
+
   dragging = false;
+  // isDragging = false;
+  setDraggingState(dragging);
   document.body.style.userSelect = "";
   document.body.style.cursor = "";
   // const percent = getPercentFromEvent(e);
   snapTo(nearestStop(dragPercentage));
+
+  setTimeout(() => {
+    justTouched = false;
+  }, 300);
   // const index = nearestStop(dragPercentage);
 
   // snapTo(index);
