@@ -27,15 +27,10 @@ stops.forEach((_stop, index) => {
   tooltip.appendChild(tooltipText);
   tooltipImg.src = COUNTRIES[_stop.country].img;
   tooltip.appendChild(tooltipImg);
-  // tooltip.textContent = _stop.label;
   el.appendChild(tooltip);
-  // img.src = COUNTRIES[_stop.country].img;
-  // img.alt = _stop.label;
-  // el.appendChild(img);
 
   el.className = "slider-stop";
   el.style.left = `${(index / (stops.length - 1)) * 100}%`;
-  // el.style.backgroundImage = `url(${COUNTRIES[_stop.country].img})`;
   track.appendChild(el);
 });
 
@@ -139,6 +134,10 @@ track.addEventListener("click", (e: MouseEvent) => {
   const index = nearestStop(percent);
   snapTo(index);             // Snap + Map wechseln
 });
+
+window.onload = () => {
+  snapTo(0);
+};
 
 // track.addEventListener("mousemove", (e: MouseEvent) => {
 //   if (dragging) return;
