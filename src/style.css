@@ -1,6 +1,6 @@
 :root {
   --primary-background-color: rgb(141, 136, 136);
-  --secondary-background-color: rgba(255, 255, 255, 0.8);
+  --secondary-background-color: rgba(255, 255, 255, 0.2);
 
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -40,7 +40,41 @@ h2 {
 }
 
 .main_wrapper {
-  position: relative;
+  /* position: relative; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.interface_wrapper {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  top: 0;
+}
+
+.card_container {
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  margin-top: 5rem;
+  margin-left: 5rem;
+  margin-right: 5rem;
+  width: calc(100% - 10rem);
+  height: calc(100% - 15rem);
+  z-index: 5;
+}
+
+.button_wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 1.5rem;
 }
 
 .nav_wrapper {
@@ -63,6 +97,7 @@ h2 {
 
 .nav_wrapper:hover {
   transform: translateX(-50%) scale(1.1);
+  background-color: oklch(from currentColor calc(l + 0.8) c h / 0.2);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(4px);
   border-radius: 2rem;
@@ -202,7 +237,7 @@ h2 {
   transition:
     transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1),
     opacity 0.15s ease;
-    /* background-color 0.15s,
+  /* background-color 0.15s,
     border 0.15s; */
 }
 
@@ -253,9 +288,20 @@ h2 {
   align-items: center;
 }
 
+.map-filter {
+  position: absolute;
+  inset: 0;
+  background-color: var(--secondary-background-color);
+  backdrop-filter: blur(5px);
+  /* opacity: 0.5; */
+  pointer-events: none;
+  z-index: 4;
+}
+
 .map-container {
   height: 100%;
   width: 100%;
+  z-index: 3;
 }
 
 .map-marker {
@@ -292,23 +338,15 @@ h2 {
 
 .glassy {
   background-color: oklch(from currentColor calc(l + 0.8) c h / 0.2);
-  backdrop-filter: blur(1px);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
 .card_wrapper {
-  position: fixed;
-  display: flex;
-  flex-direction: column;
-  width: 100vw;
-  height: 10vh;
-  top: 0;
-  z-index: 5;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 0 1.5em 1.5em 1.5em;
+  display: none;
 }
 
 .page {
-  /* align-items: center; */
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
@@ -319,30 +357,38 @@ h2 {
   flex-direction: column;
 }
 
-/* .nav-button {
+.nav-button {
   display: inline-flex;
   align-items: center;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  margin: 0.6em 1.2em;
-  font-size: 0;
+  justify-content: center;
+  border-radius: 25px;
+  height: 3rem;
+  width: 3rem;
+  color: currentColor;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
   transition:
-    border-color 0.25s,
-    color 0.25s,
-    text-decoration 0.25s;
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
+
+.nav-button i {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
 .nav-button:hover {
-  border-color: #646cff;
-  color: #646cff;
-  text-decoration: underline;
+  transform: scale(1.2);
+  background-color: oklch(from currentColor calc(l + 0.8) c h / 0.2);
+  border-color: oklch(from currentColor calc(l + 0.8) c h / 0.2);
 }
-.nav-button:focus,
+/* .nav-button:focus,
 .nav-button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 } */
 
-@media screen and (min-width: 768px) {
+@media screen and (min-width: 1024px) {
   /* .nav_wrapper {
     position: fixed;
     top: 0;
@@ -353,16 +399,29 @@ h2 {
     z-index: 10;
   } */
 
+  .card_container {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 5rem;
+    margin-left: 5rem;
+    margin-right: 5rem;
+    width: calc(100% - 10rem);
+    height: calc(100% - 15rem);
+    z-index: 5;
+  }
+
   .card_wrapper {
-    position: fixed;
     display: flex;
     flex-direction: column;
-    width: 100vw;
-    height: 10vh;
+    width: 15rem;
+    height: 100%;
     bottom: 0;
-    z-index: 5;
+    /* z-index: 5; */
     border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 0 1.5em 1.5em 1.5em;
+    border-radius: 16px;
   }
 
   /* .slider-tooltip {

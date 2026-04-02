@@ -1,15 +1,18 @@
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import "./style.css";
 import "./lib/slider.ts";
-import { supabase } from "./lib/supabase";
+import "./lib/login.ts";
+import "./lib/map";
+// import { supabase } from "./lib/supabase";
 // import { selectCountry } from "./lib/map";
 
-async function test() {
-  const { data, error } = await supabase.from("entries").select("*");
+// async function test() {
+//   const { data, error } = await supabase.from("entries").select("*");
 
-  console.log("Data:", data, "Error:", error);
-}
+//   console.log("Data:", data, "Error:", error);
+// }
 
-test();
+// test();
 
 // const buttons = document.querySelectorAll(".navbar_wrapper button");
 
