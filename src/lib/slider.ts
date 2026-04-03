@@ -45,7 +45,7 @@ function getPercentFromEvent(e: MouseEvent | TouchEvent) {
   return percent;
 }
 
-function snapTo(index: number) {
+export function snapTo(index: number) {
   currentIndex = index;
 
   const percent = index / (stops.length - 1);
@@ -55,9 +55,11 @@ function snapTo(index: number) {
   setActiveStop(index);
   previewStop(percent);
 
-  // kleines haptic feedback
-  if (navigator.vibrate) {
-    navigator.vibrate(10);
+  if(!window.onload){
+    // kleines haptic feedback
+    if (navigator.vibrate) {
+      navigator.vibrate(10);
+    }
   }
 
   resetAllTooltips();

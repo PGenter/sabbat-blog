@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <link rel="stylesheet" href="src/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DownUnder-Blog - Passwort zurücksetzen</title>
+</head>
+
+<body>
+  <div class="main_wrapper">
+    <div class="map_wrapper">
+      <div id="map-filter" class="map-filter"></div>
+      <img style="width: 100%; height: 100%; object-fit: cover;" src="public/assets/login-bg.png" alt="">
+      <!-- <div id="map" class="map-container"></div> -->
+    </div>
+    <div class="login_wrapper" id="login_wrapper">
+      <div class="card login-cd glassy" id="login-section">
+        <div class="card-head">
+          <h2>Passwort zurücksetzen</h2>
+          <div class="reset-link">
+            <a href="index.html" title="Zurück">X</a>
+          </div>
+        </div>
+        <form id="reset-form">
+          <input type="email" id="email" placeholder="Email" required />
+          <div class="lg-button-container">
+            
+          <button type="submit" class="nav-button lg-button" id="reset" title="Reset-Link senden"><i
+              class="bi bi-key"></i>Reset-Link senden</button>
+            </div>
+        </form>
+        <div id="message" class="msg-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/page/reset-request.ts"></script>
+</body>
+
+</html>

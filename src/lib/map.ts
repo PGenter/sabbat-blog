@@ -5,6 +5,8 @@ import L from "leaflet";
 import { supabase } from "../lib/supabase";
 import "leaflet.markercluster";
 import { COUNTRIES, type CountryCode } from "./geo";
+import "./slider.ts"
+import { snapTo } from "./slider.ts";
 
 const markers = new Map<string, L.Marker>();
 let currentCountry: CountryCode | null = null;
@@ -14,7 +16,7 @@ let markerCluster: L.MarkerClusterGroup;
 let debounceTimer: number | null = null;
 // let routeLine: L.Polyline;
 
-function initMap() {
+export function initMap() {
   map = L.map("map", {
     zoomControl: false,
     tapHold: true,
@@ -45,6 +47,9 @@ function initMap() {
 
   map.on("moveend", handleViewportChanged);
   currentCountry = "DE";
+  // selectCountry(currentCountry);
+  // snapTo(4);
+
   handleViewportChanged();
 
   // loadCountryData("DE");
@@ -240,7 +245,7 @@ function renderMarkers(entries: any[]) {
   });
 }
 
-function clearMarkers() {
+export function clearMarkers() {
   // markers.forEach((marker) => marker.remove());
   markerCluster.clearLayers();
   markers.clear();

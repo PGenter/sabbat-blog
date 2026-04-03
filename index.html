@@ -4,34 +4,42 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous"> -->
+  <link rel="stylesheet" href="src/style.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>sabbat-blog</title>
+  <title>DownUnder-Blog Login</title>
 </head>
 
 <body>
   <div class="main_wrapper">
     <div class="map_wrapper">
       <div id="map-filter" class="map-filter"></div>
-      <div id="map" class="map-container"></div>
+      <img style="width: 100%; height: 100%; object-fit: cover;" src="public/assets/login-bg.png" alt="">
+      <!-- <div id="map" class="map-container"></div> -->
     </div>
     <div class="login_wrapper" id="login_wrapper">
-      <div class="card_wrapper glassy" id="login-section">
-        <h2>Login erforderlich</h2>
+      <div class="card login-cd glassy" id="login-section">
+        <h2>Bitte melde dich an</h2>
         <form id="login-form">
           <input type="email" id="email" placeholder="Email" required />
           <input type="password" id="password" placeholder="Passwort" required />
-          <button type="submit">Login</button>
+          <div class="lg-button-container">
+            <div class="reset-link">
+              <a href="reset-request.html" title="Passwort vergessen?">Passwort vergessen?</a>
+            </div>
+            <button type="submit" class="nav-button lg-button" id="login" title="Login"><i
+              class="bi bi-box-arrow-in-right"></i>Login</button>
+            </div>
         </form>
       </div>
     </div>
-    <div class="interface_wrapper" style="display:none;" id="map-section">
+    <!-- <div class="interface_wrapper" style="display:none;" id="map-section">
       <div class="card_container">
-        <div class="card_wrapper glassy" id="country-card">
+        <div class="card country-cd glassy" id="country-card">
           <h2>Karte</h2>
         </div>
         <div class="button_wrapper" id="button_wrapper">
-          <button class="nav-button glassy" id="logout" title="Logout"><i class="bi bi-box-arrow-right"></i></button>
+          <button class="nav-button rnd-button glassy" id="logout" title="Logout"><i
+              class="bi bi-box-arrow-right"></i></button>
         </div>
       </div>
       <div class="nav_wrapper">
@@ -42,13 +50,10 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
 
-  <script type="module" src="/src/main.ts"></script>
-  <!-- <script type="module" src="/src/lib/map.ts"></script> -->
-  <!-- <script type="module" src="/src/lib/login.ts"></script> -->
-  <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script> -->
+  <script type="module" src="/src/page/login.ts"></script>
 </body>
 
 </html>

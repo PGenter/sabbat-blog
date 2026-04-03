@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="stylesheet" href="src/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DownUnder-Blog</title>
+</head>
+
+<body>
+    <div class="main_wrapper">
+        <div class="map_wrapper">
+            <div id="map" class="map-container"></div>
+        </div>
+        <div class="interface_wrapper" id="map-section">
+            <div class="card_container">
+                <div class="card country-cd glassy" id="country-card">
+                    <h2>Karte</h2>
+                </div>
+                <div class="button_wrapper" id="button_wrapper">
+                    <button class="nav-button rnd-button glassy" id="logout" title="Logout"><i
+                            class="bi bi-box-arrow-right"></i></button>
+                </div>
+            </div>
+            <div class="nav_wrapper">
+                <div class="navbar_wrapper " id="navbar">
+                    <div class="slider-track" id="slider-track">
+                        <div class="slider-progress" id="slider-progress"></div>
+                        <div class="slider-handle" id="slider-handle"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/page/main.ts"></script>
+</body>
+
+</html>

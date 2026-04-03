@@ -1,0 +1,26 @@
+import "bootstrap-icons/font/bootstrap-icons.css";
+import { supabase } from "../lib/supabase";
+import { redirectIfLoggedIn } from "../lib/auth";
+
+redirectIfLoggedIn();
+
+const form = document.getElementById("reset-form") as HTMLFormElement;
+const messageDiv = document.getElementById("message")!;
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const email = (document.getElementById("email") as HTMLInputElement).value;
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + "/reset-password.html"
+  });
+
+  if (error) {
+    messageDiv.textContent = "Fehler: " + error.message;
+    messageDiv.style.color = "red";
+  } else {
+    messageDiv.textContent = "Reset-Link wurde gesendet! Bitte prüfe deine Email.";
+    // messageDiv.style.color = "green";
+  }
+});
