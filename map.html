@@ -11,6 +11,7 @@
 
 <body>
     <div class="main_wrapper">
+        <div id="modal-backdrop" class="modal-backdrop"></div>
         <div class="map_wrapper">
             <div id="map" class="map-container"></div>
         </div>
@@ -22,7 +23,10 @@
                 <div class="button_wrapper" id="button_wrapper">
                     <button class="nav-button rnd-button glassy" id="logout" title="Logout"><i
                             class="bi bi-box-arrow-right"></i></button>
+                    <button class="nav-button rnd-button glassy" id="upload" title="Upload"><i
+                            class="bi bi-cloud-arrow-up"></i></button>
                 </div>
+
             </div>
             <div class="nav_wrapper">
                 <div class="navbar_wrapper " id="navbar">
@@ -32,6 +36,37 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="upload_wrapper">
+            <div class="card upload-cd glassy modal" id="upload-section" style="visibility: hidden; opacity: 0;">
+                <div class="card-head">
+                    <h2>Foto Upload</h2>
+                    <div class="reset-link">
+                        <button class="close-button" id="close-button">X</button>
+                    </div>
+                </div>
+                <div class="file-container">
+                    <label class="nav-button lg-button"><i class="bi bi-image"></i>
+                        <span class="file-label">
+                            Bilder auswählen
+                        </span>
+                        <input type="file" id="images" class="file-input" multiple accept="image/*" />
+                    </label>
+                    <span id="file-info">Kein Bild ausgewählt</span>
+                </div>
+                <textarea id="description" class="image-desc" placeholder="Beschreibe, was wir erlebt haben..."></textarea>
+
+                <button class="nav-button lg-button" id="uploadBtn"><i class="bi bi-cloud-arrow-up"></i>Upload</button>
+                <div id="progressContainer" style="display:none; margin-top:16px;">
+                    <div style="background:#eee; height:12px; border-radius:6px; overflow:hidden;">
+                        <div id="progressBar"
+                            style="width:0%; height:100%; background:#4caf50; transition: width 0.3s ease;"></div>
+                    </div>
+                    <p id="progressText" style="margin-top:8px; font-size:14px;"></p>
+                </div>
+
+            </div>
+
         </div>
     </div>
 

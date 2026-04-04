@@ -6,7 +6,7 @@ import { supabase } from "../lib/supabase";
 import "leaflet.markercluster";
 import { COUNTRIES, type CountryCode } from "./geo";
 import "./slider.ts"
-import { snapTo } from "./slider.ts";
+// import { snapTo } from "./slider.ts";
 
 const markers = new Map<string, L.Marker>();
 let currentCountry: CountryCode | null = null;
@@ -132,12 +132,25 @@ function createMarker(
   title: string,
   imageUrl: string,
 ) {
-  const icon = L.divIcon({
-    className: "map-marker",
-  });
+  // const icon = L.divIcon({
+  //   className: "map-marker",
+  // });
+
+  var iconOptions = {
+    iconUrl: "../../public/assets/marker/pin-32.png",
+  };
+  
+  var customIcon = L.icon(iconOptions);
+  
+  var markerOptions: L.MarkerOptions = {
+    title: "Hallo Welt",
+    icon: customIcon,
+    // riseOnHover: true,
+  };
 
   // const marker = L.marker([lat, lng], { icon }).addTo(map);
-  const marker = L.marker([lat, lng], { icon });
+  // const marker = L.marker([lat, lng], { icon });
+  const marker = L.marker([lat, lng], markerOptions);
 
   requestAnimationFrame(() => {
     const el = marker.getElement();
@@ -238,6 +251,7 @@ function renderMarkers(entries: any[]) {
       entry.latitude,
       entry.longitude,
       entry.title,
+      // "../../public/assets/marker/pin-96.png",
       entry.image_url,
     );
     markerCluster.addLayer(marker);

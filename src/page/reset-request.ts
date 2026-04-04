@@ -5,7 +5,12 @@ import { redirectIfLoggedIn } from "../lib/auth";
 redirectIfLoggedIn();
 
 const form = document.getElementById("reset-form") as HTMLFormElement;
+const closeButton = document.getElementById("close-button") as HTMLButtonElement;
 const messageDiv = document.getElementById("message")!;
+
+closeButton.addEventListener("click", () => {
+  window.location.href = "/index.html";
+});
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();

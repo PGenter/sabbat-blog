@@ -1,47 +1,22 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
-// import "./style.css";
-// import "./lib/slider.ts";
 import "../lib/map.ts";
 import { supabase } from "../lib/supabase.ts";
 import { clearMarkers } from "../lib/map.ts";
 import { requireAuth } from "../lib/auth.ts";
-// import "./lib/map";
-// import { supabase } from "./lib/supabase";
-// import { selectCountry } from "./lib/map";
+import { startUpload } from "./upload.ts";
 
-// async function test() {
-//   const { data, error } = await supabase.from("entries").select("*");
-
-//   console.log("Data:", data, "Error:", error);
-// }
-
-// test();
-
-// const buttons = document.querySelectorAll(".navbar_wrapper button");
-
-// buttons.forEach((button) => {
-//   button.addEventListener("click", () => {
-//     const country = button.getAttribute("data-country");
-//     if (country) {
-//       selectCountry(country);
-//     }
-//   });
-// });
-
-// const loginSection = document.getElementById("login-section")!;
-// const mapSection = document.getElementById("map-section")!;
 const logoutButton = document.getElementById("logout")!;
-// const mapFilter = document.getElementById("map-filter")!;
-// const map = document.getElementById("map")!;
+const uploadButton = document.getElementById("upload")!;
+const closeButton = document.getElementById("close-button") as HTMLButtonElement;
+const uploadsection = document.getElementById("upload-section") as HTMLDivElement;
+const modalBackdrop = document.getElementById("modal-backdrop") as HTMLDivElement;
+const input = document.getElementById('images') as HTMLInputElement;
+const fileInfo = document.getElementById('file-info') as HTMLDivElement;
 
 init();
 
 async function init() {
   const { data } = await supabase.auth.getSession();
-
-  // if (!data.session) {
-  //   window.location.href = "/index.html";
-  // }
 
   const user = data.session?.user;
   const role = user?.app_metadata?.role || "user";
@@ -51,48 +26,13 @@ async function init() {
   } else {
     hideUpload();
   }
-
-  //   if (!data.session) {
-  //     showLogin();
-  //   } else {
-  //     const user = data.session.user;
-  //     const role = user.app_metadata?.role || "user";
-  //     showApp();
-  //     console.log("User role:", role);
-  //     if (role === "superuser") {
-  //       showUpload();
-  //     } else {
-  //       hideUpload();
-  //     }
-  //   }
 }
 
-// function showLogin() {
-//   loginSection.style.display = "block";
-//   mapSection.style.display = "none";
-//   mapFilter.style.display = "block";
-//   map.style.pointerEvents = "none";
-// }
-
-// function showApp() {
-//   loginSection.style.display = "none";
-//   mapSection.style.display = "flex";
-//   mapFilter.style.display = "none";
-//   map.style.pointerEvents = "auto";
-// }
-
 function showUpload() {
-  const btn = document.createElement("button");
-  const wrapper = document.getElementById("button_wrapper")!;
-  btn.className = "nav-button rnd-button glassy";
-  btn.id = "upload";
-  btn.title = "Upload";
-  btn.innerHTML = `<i class="bi bi-cloud-arrow-up"></i>`;
-  wrapper.appendChild(btn);
+  uploadButton.style.display = "block";
 }
 
 function hideUpload() {
-  const uploadButton = document.getElementById("upload");
   if (uploadButton) {
     uploadButton.style.display = "none";
   }
@@ -102,7 +42,34 @@ logoutButton.addEventListener("click", async () => {
   await supabase.auth.signOut();
   clearMarkers();
   await requireAuth();
-  // window.location.href = "/index.html";
+});
+
+uploadButton.addEventListener("click", () => {
+  uploadsection.style.visibility = "visible";
+  uploadsection.style.opacity = "1";
+  modalBackdrop.classList.add("active");
+});
+
+closeButton.addEventListener("click", () => {
+  uploadsection.style.visibility = "hidden";
+  uploadsection.style.opacity = "0";
+  modalBackdrop.classList.remove("active");
+});
+
+input.addEventListener('change', () => {
+  const files = input.files!;
+
+  if (!files.length) {
+    fileInfo.textContent = 'Keine Datei gewählt';
+    return;
+  }
+
+  if (files.length === 1) {
+    fileInfo.textContent = files[0].name;
+  } else {
+    fileInfo.textContent = `${files.length} Dateien ausgewählt`;
+  }
 });
 
 await requireAuth();
+await startUpload();

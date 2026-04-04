@@ -11,20 +11,21 @@
 
 <body>
   <div class="main_wrapper">
+    <div id="modal-backdrop" class="modal-backdrop active"></div>
     <div class="map_wrapper">
-      <div id="map-filter" class="map-filter"></div>
       <img style="width: 100%; height: 100%; object-fit: cover;" src="public/assets/login-bg.png" alt="">
       <!-- <div id="map" class="map-container"></div> -->
     </div>
     <div class="login_wrapper" id="login_wrapper">
-      <div class="card login-cd glassy" id="login-section">
+      <div class="card login-cd glassy modal" id="login-section">
         <div class="card-head">
           <h2>Passwort zurücksetzen</h2>
           <div class="reset-link">
-            <a href="index.html" title="Zurück">X</a>
+            <button class="close-button" id="close-button">X</button>
+            <!-- <a href="index.html" title="Zurück">X</a> -->
           </div>
         </div>
-        <form id="reset-form">
+        <form id="reset-form" class="lg-button-container">
           <input type="email" id="email" placeholder="Email" required />
           <div class="lg-button-container">
             

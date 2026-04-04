@@ -9,22 +9,22 @@ const uploadSection = document.getElementById("upload-section")!;
 const loginForm = document.getElementById("login-form")!;
 const logoutButton = document.getElementById("logout")!;
 
-init();
+// init();
 
-async function init() {
-  const { data } = await supabase.auth.getSession();
+// async function init() {
+//   const { data } = await supabase.auth.getSession();
 
-  if (!data.session) {
-    showUpload();
-  } else {
-    showLogin();
-  }
-}
+//   if (!data.session) {
+//     showUpload();
+//   } else {
+//     showLogin();
+//   }
+// }
 
-function showLogin() {
-  loginSection.style.display = "block";
-  uploadSection.style.display = "none";
-}
+// function showLogin() {
+//   loginSection.style.display = "block";
+//   uploadSection.style.display = "none";
+// }
 
 function showUpload() {
   loginSection.style.display = "none";
@@ -32,38 +32,38 @@ function showUpload() {
   startUpload();
 }
 
-loginForm.addEventListener("submit", async (e: Event) => {
-  e.preventDefault();
+// loginForm.addEventListener("submit", async (e: Event) => {
+//   e.preventDefault();
 
-  const email = (document.getElementById("email") as HTMLInputElement).value;
-  const password = (document.getElementById("password") as HTMLInputElement)
-    .value;
+//   const email = (document.getElementById("email") as HTMLInputElement).value;
+//   const password = (document.getElementById("password") as HTMLInputElement)
+//     .value;
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+//   const { error } = await supabase.auth.signInWithPassword({
+//     email,
+//     password,
+//   });
 
-  if (error) {
-    alert(error.message);
-  } else {
-    showUpload();
-  }
-});
+//   if (error) {
+//     alert(error.message);
+//   } else {
+//     showUpload();
+//   }
+// });
 
-logoutButton.addEventListener("click", async () => {
-  await supabase.auth.signOut();
-  showLogin();
-});
+// logoutButton.addEventListener("click", async () => {
+//   await supabase.auth.signOut();
+//   showLogin();
+// });
 
-async function startUpload() {
+export async function startUpload() {
   const { data: userData } = await supabase.auth.getUser();
 
-  if (!userData.user) {
-    // renderLogin();
-    showLogin();
-    return;
-  }
+  // if (!userData.user) {
+  //   // renderLogin();
+  //   showLogin();
+  //   return;
+  // }
   type ProcessedFile = {
     fullImage: File;
     thumbnail: File;
@@ -86,7 +86,7 @@ async function startUpload() {
     if (!userData.user) {
       console.error("Kein Benutzer eingeloggt");
       alert("Login erforderlich!");
-      showLogin();
+      // showLogin();
       return;
     }
     const files = input.files;
