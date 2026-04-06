@@ -25,8 +25,10 @@ stops.forEach((_stop, index) => {
   tooltip.className = "slider-tooltip";
   tooltip.id = `tooltip-${_stop.country}`;
   tooltipText.textContent = _stop.label;
+  tooltipText.classList.add("slider-tooltip-text");
   tooltip.appendChild(tooltipText);
   tooltipImg.src = COUNTRIES[_stop.country].img;
+  tooltipImg.title = COUNTRIES[_stop.country].name;
   tooltip.appendChild(tooltipImg);
   el.appendChild(tooltip);
 
@@ -118,6 +120,12 @@ function magneticPercent(percent: number) {
 function resetAllTooltips() {
   document.querySelectorAll(".slider-tooltip").forEach((el) => {
     (el as HTMLElement).style.transform = "";
+    (el as HTMLElement).style.backgroundColor = "";
+    (el as HTMLElement).style.boxShadow = "";
+    // (el as HTMLElement).classList.remove("active");
+  });
+  document.querySelectorAll(".slider-tooltip span").forEach((el) => {
+    (el as HTMLElement).classList.remove("active");
   });
 }
 
@@ -150,15 +158,23 @@ function clampActiveTooltip(index: number) {
 
   const offset = clampedCenter - desiredCenter;
 
-  tooltip.style.transform = `translate(calc(-50% + ${offset}px), -150%)`;
+  // tooltip.style.transform = `translate(calc(-50% + ${offset}px), -150%)`;
 }
 
 function updateTooltipDuringDrag(percent: number) {
+  document.querySelectorAll(".slider-tooltip span").forEach((el) => {
+    (el as HTMLElement).classList.remove("active");
+  });
+  
   const tooltip = document.querySelector(
     ".slider-tooltip.active",
   ) as HTMLElement;
-
+  
   const nav = document.querySelector(".nav_wrapper") as HTMLElement;
+
+  const tooltipText = tooltip.querySelector(
+    "span",
+  ) as HTMLElement;
 
   if (!tooltip || !nav) return;
 
@@ -175,6 +191,11 @@ function updateTooltipDuringDrag(percent: number) {
   const offset = clampedCenter - desiredCenter;
 
   tooltip.style.transform = `translate(calc(-50% + ${offset}px), -150%)`;
+  tooltip.style.backgroundColor = "white";
+  tooltip.style.boxShadow = "0 4px 10px #0004";
+  // tooltipText.style.display = 'Block';
+  tooltip.classList.add("active");
+  tooltipText.classList.add("active");
 }
 
 function setDraggingState(state: boolean) {

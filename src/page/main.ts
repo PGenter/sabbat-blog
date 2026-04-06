@@ -7,7 +7,7 @@ import { startUpload } from "./upload.ts";
 
 const logoutButton = document.getElementById("logout")!;
 const uploadButton = document.getElementById("upload")!;
-const closeButton = document.getElementById("close-button") as HTMLButtonElement;
+const closeButton = document.getElementById("upload-close-button") as HTMLButtonElement;
 const uploadsection = document.getElementById("upload-section") as HTMLDivElement;
 const modalBackdrop = document.getElementById("modal-backdrop") as HTMLDivElement;
 const input = document.getElementById('images') as HTMLInputElement;

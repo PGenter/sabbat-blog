@@ -10,7 +10,6 @@ import "./gallery.ts";
 // import { snapTo } from "./slider.ts";
 
 const markers = new Map<string, L.Marker>();
-
 let currentCountry: CountryCode | null = null;
 let map: L.Map;
 // let markerLayer: L.LayerGroup | null = null;

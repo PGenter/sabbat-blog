@@ -4,10 +4,10 @@ import { v4 as uuidv4 } from "uuid";
 import imageCompression from "browser-image-compression";
 import * as exifr from "exifr";
 
-const loginSection = document.getElementById("login-section")!;
-const uploadSection = document.getElementById("upload-section")!;
-const loginForm = document.getElementById("login-form")!;
-const logoutButton = document.getElementById("logout")!;
+// const loginSection = document.getElementById("login-section")!;
+// const uploadSection = document.getElementById("upload-section")!;
+// const loginForm = document.getElementById("login-form")!;
+// const logoutButton = document.getElementById("logout")!;
 
 // init();
 
@@ -26,11 +26,11 @@ const logoutButton = document.getElementById("logout")!;
 //   uploadSection.style.display = "none";
 // }
 
-function showUpload() {
-  loginSection.style.display = "none";
-  uploadSection.style.display = "block";
-  startUpload();
-}
+// function showUpload() {
+//   loginSection.style.display = "none";
+//   uploadSection.style.display = "block";
+//   startUpload();
+// }
 
 // loginForm.addEventListener("submit", async (e: Event) => {
 //   e.preventDefault();
