@@ -1,14 +1,16 @@
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-import L from "leaflet";
+import L, { icon } from "leaflet";
 import { supabase } from "../lib/supabase";
 import "leaflet.markercluster";
 import { COUNTRIES, type CountryCode } from "./geo";
-import "./slider.ts"
+import "./slider.ts";
+import "./gallery.ts";
 // import { snapTo } from "./slider.ts";
 
 const markers = new Map<string, L.Marker>();
+
 let currentCountry: CountryCode | null = null;
 let map: L.Map;
 // let markerLayer: L.LayerGroup | null = null;
@@ -130,42 +132,185 @@ function createMarker(
   lat: number,
   lng: number,
   title: string,
-  imageUrl: string,
+  id: string,
+  takenAt: string,
+  createdAt: string,
+  userId: string,
 ) {
   // const icon = L.divIcon({
   //   className: "map-marker",
   // });
 
   var iconOptions = {
-    iconUrl: "../../public/assets/marker/pin-32.png",
+    // iconUrl: "../../public/assets/marker/pin-32.png",
+    iconUrl: "../../public/assets/marker/photo-48.png",
+    // iconSize: [48, 48],
   };
-  
+
   var customIcon = L.icon(iconOptions);
-  
+
   var markerOptions: L.MarkerOptions = {
-    title: "Hallo Welt",
+    // title: "Hallo Welt",
     icon: customIcon,
     // riseOnHover: true,
   };
 
   // const marker = L.marker([lat, lng], { icon }).addTo(map);
   // const marker = L.marker([lat, lng], { icon });
-  const marker = L.marker([lat, lng], markerOptions);
+  const marker = L.marker([lat, lng], markerOptions).on("click", () =>
+    showPhotoGallery(id, title, takenAt, createdAt, userId),
+  );
 
   requestAnimationFrame(() => {
     const el = marker.getElement();
     el?.classList.add("visible");
   });
 
-  marker.bindPopup(`
-    <div style="max-width:200px">
-      <h4>${title ?? ""}</h4>
-      <img src="${imageUrl}" style="width:100%" />
-    </div>
-  `);
+  // marker.bindPopup(`
+  //   <div style="max-width:200px">
+  //     <h4>${title ?? ""}</h4>
+  //     <img src="${imageUrl}" style="width:100%" />
+  //   </div>
+  // `);
 
   return marker;
 }
+
+function showPhotoGallery(
+  entryId: string,
+  title: string,
+  takenAt: string,
+  createdAt: string,
+  userId: string,
+) {
+  loadPhotosOfMarker(entryId, title);
+  // Hier könntetest du eine Lightbox oder ein Modal öffnen, um die Fotos anzuzeigen
+}
+
+async function loadPhotosOfMarker(entryId: string, title: string) {
+  // alert("Show gallery for entry " + entryId);
+  if (!entryId) return;
+
+  const { data, error } = await supabase
+    .from("photos")
+    .select("id, user_id, taken_at, created_at, image_url, thumbnail_url")
+    .eq("entry_id", entryId)
+    .order("taken_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  renderPhotos(data, title);
+}
+
+function renderPhotos(photos: any[], title: string) {
+  const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
+  const header = document.getElementById("photo-header") as HTMLDivElement;
+  header.innerHTML = `<h2>${COUNTRIES[currentCountry!].name}</h2> 
+                      <div class="close-button-container">
+                        <button class="close-button" id="close-button">X</button>
+                      </div>`;
+
+  const closeButton = document.getElementById(
+    "close-button",
+  ) as HTMLButtonElement;
+  closeButton.addEventListener("click", () => {
+    const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
+    gallery.classList.remove("active");
+  });
+
+  const carouselGallery = document.getElementById(
+    "carousel-gallery",
+  ) as HTMLDivElement;
+  const thumbnailGallery = document.getElementById(
+    "thumbnail-gallery",
+  ) as HTMLDivElement;
+  const firstPhoto = photos[0];
+  const total = photos.length;
+  carouselGallery.innerHTML = ""; // Clear previous photos
+  thumbnailGallery.innerHTML = ""; // Clear previous thumbnails
+  gallery.classList.add("active");
+  photos.forEach((photo, index) => {
+    if (index === 0) {
+      createPhoto(photo, index);
+      return;
+    }
+
+    createPhoto(photo, index);
+    createThumbnail(photo);
+  });
+
+  createThumbnail(firstPhoto);
+
+  function createPhoto(photo: any, index: number) {
+    const imgContainer = document.createElement("div");
+    const img = document.createElement("img");
+    const itemImg = document.createElement("div");
+    const itemContent = document.createElement("div");
+    const itemNo = document.createElement("div");
+    // const itemCountry = document.createElement("div");
+    const itemTakenAt = document.createElement("div");
+    const itemDescription = document.createElement("div");
+    const takenAt = new Date(photo.taken_at).toLocaleDateString("de-DE", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+
+    img.src = photo.image_url;
+    img.alt = title;
+    // img.title = title;
+    itemNo.textContent = `Bild ${index + 1} von ${total}`;
+    // itemCountry.textContent = COUNTRIES[currentCountry!].name || "Unknown";
+    itemTakenAt.textContent = takenAt;
+    itemDescription.textContent = title || "";
+
+    imgContainer.classList.add("item");
+    itemImg.classList.add("item-img");
+    itemContent.classList.add("item-content");
+    itemNo.classList.add("item-no");
+    // itemCountry.classList.add("item-country");
+    itemTakenAt.classList.add("item-date");
+    itemDescription.classList.add("item-description");
+
+    carouselGallery.appendChild(imgContainer);
+    imgContainer.appendChild(itemImg);
+    imgContainer.appendChild(itemContent);
+    itemImg.appendChild(img);
+    // itemContent.appendChild(itemCountry);
+    itemContent.appendChild(itemNo);
+    itemContent.appendChild(itemTakenAt);
+    itemContent.appendChild(itemDescription);
+  }
+
+  function createThumbnail(photo: any) {
+    const thumbItem = document.createElement("div");
+    const thumbImg = document.createElement("img");
+    thumbImg.src = photo.thumbnail_url;
+    thumbImg.alt = title;
+    thumbItem.classList.add("item");
+    thumbItem.appendChild(thumbImg);
+    const thumbnailGallery = document.getElementById(
+      "thumbnail-gallery",
+    ) as HTMLDivElement;
+    thumbnailGallery.appendChild(thumbItem);
+  }
+}
+
+// function loadFullImage(url: string, takenAt: string, createdAt: string) {
+//   const photoContainer = document.getElementById(
+//     "active-photo-container",
+//   ) as HTMLDivElement;
+//   const fullImg = document.createElement("img");
+//   fullImg.src = url;
+//   fullImg.alt = `Photo taken at ${takenAt}`;
+//   fullImg.title = `Taken at: ${takenAt}\nUploaded at: ${createdAt}`;
+//   fullImg.classList.add("full-photo");
+//   photoContainer.innerHTML = ""; // Clear previous photo
+//   photoContainer.appendChild(fullImg);
+// }
 
 // function getViewportBounds() {
 //   const bounds = map.getBounds();
@@ -196,7 +341,9 @@ async function loadMarkersInView() {
 
   const { data, error } = await supabase
     .from("entries")
-    .select("id, latitude, longitude, description, id")
+    .select(
+      "id, latitude, longitude, description, user_id, taken_at, created_at",
+    )
     .eq("section", currentCountry)
     .gte("latitude", bounds.south)
     .lte("latitude", bounds.north)
@@ -250,9 +397,12 @@ function renderMarkers(entries: any[]) {
     const marker = createMarker(
       entry.latitude,
       entry.longitude,
-      entry.title,
+      entry.description,
       // "../../public/assets/marker/pin-96.png",
-      entry.image_url,
+      entry.id,
+      entry.taken_at,
+      entry.created_at,
+      entry.user_id,
     );
     markerCluster.addLayer(marker);
     markers.set(entry.id, marker);
