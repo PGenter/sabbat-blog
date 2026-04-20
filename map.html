@@ -26,7 +26,7 @@
                 <div id="thumbnail-gallery" class="thumbnail-gallery"></div>
                 <div class="arrows">
                     <button id="prev" class="nav-button rnd-button glassy"><</button>
-                    <button id="next" class="nav-button rnd-button glassy">></button>
+                            <button id="next" class="nav-button rnd-button glassy">></button>
                 </div>
 
             </div>
@@ -46,10 +46,12 @@
                             class="bi bi-box-arrow-right"></i></button>
                     <button class="nav-button rnd-button glassy" id="upload" title="Upload"><i
                             class="bi bi-cloud-arrow-up"></i></button>
+                    <button class="nav-button rnd-button glassy" id="invite" title="Freunde einladen"><i
+                            class="bi bi-person-add"></i></button>
                 </div>
 
             </div>
-            <div class="nav_wrapper">
+            <div class="nav_wrapper" id="nav-wrapper">
                 <div class="navbar_wrapper " id="navbar">
                     <div class="slider-track" id="slider-track">
                         <div class="slider-progress" id="slider-progress"></div>
@@ -58,39 +60,60 @@
                 </div>
             </div>
         </div>
-        <div class="upload_wrapper">
-            <div class="card upload-cd glassy modal" id="upload-section" style="visibility: hidden; opacity: 0;">
-                <div class="card-head">
-                    <h2>Foto Upload</h2>
-                    <div class="reset-link">
-                        <button class="close-button" id="upload-close-button">X</button>
+        <div class="modal_dialog">
+
+            <div class="invitation_wrapper">
+                <div class="card upload-cd glassy modal" id="invitation-section"
+                    style="visibility: hidden; opacity: 0;">
+                    <div class="card-head">
+                        <h2>Neue User einladen</h2>
+                        <div class="reset-link">
+                            <button class="close-button" id="invite-close-button">X</button>
+                        </div>
+                    </div>
+                    <div class="invitation-container">
+                        <input type="text" id="firstName" placeholder="Vorname" required/>
+                        <input type="text" id="lastName" placeholder="Nachname" required/>
+                        <input type="email" id="email" placeholder="Email" required />
+                        <button class="nav-button lg-button" id="inviteBtn"><i class="bi bi-person-add"></i>Einladung versenden</button>
                     </div>
                 </div>
-                <div class="file-container">
-                    <label class="nav-button lg-button"><i class="bi bi-image"></i>
-                        <span class="file-label">
-                            Bilder auswählen
-                        </span>
-                        <input type="file" id="images" class="file-input" multiple accept="image/*" />
-                    </label>
-                    <span id="file-info">Kein Bild ausgewählt</span>
-                </div>
-                <textarea id="description" class="image-desc"
-                    placeholder="Beschreibe, was wir erlebt haben..."></textarea>
-
-                <button class="nav-button lg-button" id="uploadBtn"><i class="bi bi-cloud-arrow-up"></i>Upload</button>
-                <div id="progressContainer" style="display:none; margin-top:16px;">
-                    <div class="progress-container">
-                        <div id="progressBar" class="progress-bar"></div>
+            </div>
+            <div class="upload_wrapper">
+                <div class="card upload-cd glassy modal" id="upload-section" style="visibility: hidden; opacity: 0;">
+                    <div class="card-head">
+                        <h2>Foto Upload</h2>
+                        <div class="reset-link">
+                            <button class="close-button" id="upload-close-button">X</button>
+                        </div>
                     </div>
-                    <p id="progressText" style="margin-top:8px; font-size:14px;"></p>
-                </div>
+                    <div class="file-container">
+                        <label class="nav-button lg-button"><i class="bi bi-image"></i>
+                            <span class="file-label">
+                                Bilder auswählen
+                            </span>
+                            <input type="file" id="images" class="file-input" multiple accept="image/*" />
+                        </label>
+                        <span id="file-info">Kein Bild ausgewählt</span>
+                    </div>
+                    <textarea id="description" class="image-desc"
+                        placeholder="Beschreibe, was wir erlebt haben..."></textarea>
 
+                    <button class="nav-button lg-button" id="uploadBtn"><i
+                            class="bi bi-cloud-arrow-up"></i>Upload</button>
+                    <div id="progressContainer" style="display:none; margin-top:16px;">
+                        <div class="progress-container">
+                            <div id="progressBar" class="progress-bar"></div>
+                        </div>
+                        <p id="progressText" style="margin-top:8px; font-size:14px;"></p>
+                    </div>
+
+                </div>
             </div>
 
         </div>
-        <a href="https://www.flaticon.com/free-icons/photography" title="photography icons">Photography icons created by
-            Fahrul Oktaviana - Flaticon</a>
+        <!-- <a href="https://www.flaticon.com/free-icons/photography" title="photography icons">Photography icons created by
+            Fahrul Oktaviana - Flaticon</a> -->
     </div>
 
     <script type="module" src="/src/page/main.ts"></script>

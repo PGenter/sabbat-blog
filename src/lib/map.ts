@@ -11,7 +11,7 @@ import "./gallery.ts";
 
 const markers = new Map<string, L.Marker>();
 let currentCountry: CountryCode | null = null;
-let map: L.Map;
+export let map: L.Map;
 // let markerLayer: L.LayerGroup | null = null;
 let markerCluster: L.MarkerClusterGroup;
 let debounceTimer: number | null = null;
@@ -142,7 +142,8 @@ function createMarker(
 
   var iconOptions = {
     // iconUrl: "../../public/assets/marker/pin-32.png",
-    iconUrl: "../../public/assets/marker/photo-48.png",
+    // iconUrl: "../../public/assets/marker/photo-48.png",
+    iconUrl: "../../assets/marker/camera-48-new.png",
     // iconSize: [48, 48],
   };
 
