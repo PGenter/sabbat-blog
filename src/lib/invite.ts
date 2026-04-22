@@ -1,33 +1,52 @@
 import { hideModal } from "../page/main";
 import { supabase } from "./supabase";
+import { handleError } from "./errorHandler";
 
 const { data: userData } = await supabase.auth.getUser();
 const button = document.getElementById("inviteBtn") as HTMLButtonElement;
 
 button.addEventListener("click", async () => {
-  const email = (document.getElementById("email") as HTMLInputElement).value;
-  const firstName = (document.getElementById("firstName") as HTMLInputElement).value;
-  const lastName = (document.getElementById("lastName") as HTMLInputElement).value;
+  try {
+    const email = (document.getElementById("email") as HTMLInputElement).value;
+    const firstName = (document.getElementById("firstName") as HTMLInputElement)
+      .value;
+    const lastName = (document.getElementById("lastName") as HTMLInputElement)
+      .value;
 
-  if (!userData.user) {
-    alert("Login erforderlich!");
-    return;
+    if (!userData.user) {
+      alert("Login erforderlich!");
+      return;
+    }
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const res = await fetch(
+      "https://xwlywwowqbruqbyiehwe.supabase.co/functions/v1/invite-user",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ email, firstName, lastName }),
+      },
+    );
+    if (!res.ok) {
+      let errorData;
+
+      try {
+        errorData = await res.json();
+      } catch {
+        errorData = { message: res.statusText, status: res.status };
+      }
+
+      throw errorData;
+    }
+
+    hideModal(document.getElementById("invitation-section") as HTMLDivElement);
+  } catch (error) {
+    handleError(error);
   }
-  
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  // console.log("Session aktiv");
-  // console.log(session);
-
-  await fetch("https://xwlywwowqbruqbyiehwe.supabase.co/functions/v1/invite-user", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${session?.access_token}`,
-    },
-    body: JSON.stringify({ email, firstName, lastName }),
-  });
-
-  hideModal(document.getElementById("invitation-section") as HTMLDivElement);
 });

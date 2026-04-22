@@ -1,9 +1,9 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "../lib/map.ts";
 import "../lib/invite.ts"
-import { supabase } from "../lib/supabase.ts";
+import { supabase, requireAuth } from "../lib/supabase.ts";
 import { clearMarkers, map } from "../lib/map.ts";
-import { requireAuth } from "../lib/auth.ts";
+// import { requireAuth } from "../lib/auth.ts";
 import { startUpload } from "./upload.ts";
 
 

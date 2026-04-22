@@ -1,6 +1,6 @@
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { supabase } from "../lib/supabase";
-import { onAuthRedirect, redirectIfLoggedIn } from '../lib/auth';
+import { supabase, onAuthRedirect, redirectIfLoggedIn } from "../lib/supabase";
+// import {  } from '../lib/auth';
 // import { initMap } from './map';
 
 const loginForm = document.getElementById("login-form")!;

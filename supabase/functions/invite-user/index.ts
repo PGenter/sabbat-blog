@@ -12,10 +12,11 @@ Deno.serve(async (req) => {
   const authHeader = req.headers.get("Authorization");
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: corsHeaders,
-    });
+    return jsonResponse({ error: "Zugang verweigert", code: "UNAUTHORIZED" }, 401);
+    // return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    //   status: 401,
+    //   headers: corsHeaders,
+    // });
   }
 
   const token = authHeader.replace("Bearer ", "");
@@ -32,38 +33,42 @@ Deno.serve(async (req) => {
   } = await supabaseUserClient.auth.getUser(token);
 
   if (userError || !user) {
-    return new Response(JSON.stringify({ error: "Invalid token" }), {
-      status: 401,
-      headers: corsHeaders,
-    });
+    return jsonResponse({ error: "Zugang verweigert", code: "UNAUTHORIZED" }, 401);
+    // return new Response(JSON.stringify({ error: "Invalid token" }), {
+    //   status: 401,
+    //   headers: corsHeaders,
+    // });
   }
 
   // --- OPTIONAL: Rollenprüfung ---
   if (user.app_metadata?.role !== "administrator") {
-    return new Response(JSON.stringify({ error: "Forbidden" }), {
-      status: 403,
-      headers: corsHeaders,
-    });
+    return jsonResponse({ error: "Fehlende Berechtigung", code: "FORBIDDEN" }, 403);
+    // return new Response(JSON.stringify({ error: "Forbidden" }), {
+    //   status: 403,
+    //   headers: corsHeaders,
+    // });
   }
 
   // --- Request Body ---
   const { email, firstName, lastName } = await req.json();
 
   if (!email) {
-    return new Response(JSON.stringify({ error: "Email required" }), {
-      status: 400,
-      headers: corsHeaders,
-    });
+    return jsonResponse({ error: "Email-Adresse erforderlich", code: "VALIDATION_ERROR" }, 400);
+    // return new Response(JSON.stringify({ error: "Email required" }), {
+    //   status: 400,
+    //   headers: corsHeaders,
+    // });
   }
 
   if (!firstName || !lastName) {
-    return new Response(
-      JSON.stringify({ error: "Firstname and lastname required" }),
-      {
-        status: 400,
-        headers: corsHeaders,
-      },
-    );
+    return jsonResponse({ error: "Vorname und Nachname erforderlich", code: "VALIDATION_ERROR" }, 400);
+    // return new Response(
+    //   JSON.stringify({ error: "Firstname and lastname required" }),
+    //   {
+    //     status: 400,
+    //     headers: corsHeaders,
+    //   },
+    // );
   }
 
   const displayName = firstName + " " + lastName;
@@ -80,22 +85,34 @@ Deno.serve(async (req) => {
       data: {
         display_name: displayName,
       },
-      redirectTo: "http://localhost:5173/reset-passwort.hmtl"
+      redirectTo: "http://localhost:5173/reset-passwort.html"
     },
   );
 
   if (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: corsHeaders,
-    });
+    return jsonResponse({ error: "Allgemeiner Fehler: " + error.message, code: "VALIDATION_ERROR" }, 400);
+    // return new Response(JSON.stringify({ error: error.message }), {
+    //   status: 400,
+    //   headers: corsHeaders,
+    // });
   }
 
-  return new Response(JSON.stringify({ success: true, data }), {
-    status: 200,
-    headers: corsHeaders,
-  });
+  return jsonResponse({ success: true, data, code: "SUCCESS" }, 200);
+  // return new Response(JSON.stringify({ success: true, data }), {
+  //   status: 200,
+  //   headers: corsHeaders,
+  // });
 });
+
+function jsonResponse(body: any, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json",
+    },
+  });
+}
 
 // --- CORS Headers ---
 const corsHeaders = {

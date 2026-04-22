@@ -3,67 +3,11 @@ import { determineSection } from "../lib/geo";
 import { v4 as uuidv4 } from "uuid";
 import imageCompression from "browser-image-compression";
 import * as exifr from "exifr";
-
-// const loginSection = document.getElementById("login-section")!;
-// const uploadSection = document.getElementById("upload-section")!;
-// const loginForm = document.getElementById("login-form")!;
-// const logoutButton = document.getElementById("logout")!;
-
-// init();
-
-// async function init() {
-//   const { data } = await supabase.auth.getSession();
-
-//   if (!data.session) {
-//     showUpload();
-//   } else {
-//     showLogin();
-//   }
-// }
-
-// function showLogin() {
-//   loginSection.style.display = "block";
-//   uploadSection.style.display = "none";
-// }
-
-// function showUpload() {
-//   loginSection.style.display = "none";
-//   uploadSection.style.display = "block";
-//   startUpload();
-// }
-
-// loginForm.addEventListener("submit", async (e: Event) => {
-//   e.preventDefault();
-
-//   const email = (document.getElementById("email") as HTMLInputElement).value;
-//   const password = (document.getElementById("password") as HTMLInputElement)
-//     .value;
-
-//   const { error } = await supabase.auth.signInWithPassword({
-//     email,
-//     password,
-//   });
-
-//   if (error) {
-//     alert(error.message);
-//   } else {
-//     showUpload();
-//   }
-// });
-
-// logoutButton.addEventListener("click", async () => {
-//   await supabase.auth.signOut();
-//   showLogin();
-// });
+import { handleError } from "../lib/errorHandler";
 
 export async function startUpload() {
   const { data: userData } = await supabase.auth.getUser();
 
-  // if (!userData.user) {
-  //   // renderLogin();
-  //   showLogin();
-  //   return;
-  // }
   type ProcessedFile = {
     fullImage: File;
     thumbnail: File;
@@ -86,7 +30,6 @@ export async function startUpload() {
     if (!userData.user) {
       console.error("Kein Benutzer eingeloggt");
       alert("Login erforderlich!");
-      // showLogin();
       return;
     }
     const files = input.files;
@@ -108,7 +51,7 @@ export async function startUpload() {
     button.textContent = "Upload läuft...";
 
     for (const originalFile of Array.from(files)) {
-      // 1️⃣ Bild komprimieren
+      // Bild komprimieren
       // FULL VERSION
       const fullImage = await imageCompression(originalFile, {
         maxWidthOrHeight: 1920,
@@ -183,7 +126,7 @@ export async function startUpload() {
         progressBar.style.width = percent + "%";
         progressText.textContent = `${completed} von ${total} Bildern verarbeitet (${percent}%)`;
       }
-      // 1️⃣ Entry erstellen
+      // Entry erstellen
       const { data: entry, error: entryError } = await supabase
         .from("entries")
         .insert({
@@ -201,7 +144,7 @@ export async function startUpload() {
 
       entryId = entry.id;
 
-      // 2️⃣ Bilder hochladen
+      // Bilder hochladen
       const results = await runWithConcurrencyLimit(
         processedFiles,
         4, // Limit
@@ -222,19 +165,19 @@ export async function startUpload() {
       uploadedPaths.push(...results.flat());
     } catch (error) {
       console.error("Upload fehlgeschlagen:", error);
-
+      
       // ROLLBACK
-      // 1️⃣ Storage löschen
       if (uploadedPaths.length > 0) {
         await supabase.storage.from("travel-images").remove(uploadedPaths);
       }
 
-      // 2️⃣ Entry + Photos löschen (Cascade wäre noch besser)
       if (entryId) {
         await supabase.from("entries").delete().eq("id", entryId);
       }
+
       progressContainer.style.display = "none";
-      alert("Upload fehlgeschlagen. Alles wurde zurückgesetzt.");
+      
+      handleError(error);
     }
     button.disabled = false;
     button.textContent = "Upload starten";
