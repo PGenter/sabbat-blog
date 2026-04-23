@@ -12,12 +12,11 @@ import "./gallery.ts";
 const markers = new Map<string, L.Marker>();
 let currentCountry: CountryCode | null = null;
 export let map: L.Map;
-// let markerLayer: L.LayerGroup | null = null;
 let markerCluster: L.MarkerClusterGroup;
 let debounceTimer: number | null = null;
 // let routeLine: L.Polyline;
 
-export function initMap() {
+export async function initMap() {
   map = L.map("map", {
     zoomControl: false,
     tapHold: true,
@@ -46,8 +45,15 @@ export function initMap() {
   //   opacity: 0.7,
   // }).addTo(map);
 
-  map.on("moveend", handleViewportChanged);
   currentCountry = "DE";
+  
+  const latestEntry = await getLatestEntry();
+  if(latestEntry?.section && latestEntry?.section != null){
+    currentCountry = latestEntry.section;
+    selectCountry(latestEntry.section);
+  }
+  
+  map.on("moveend", handleViewportChanged);
   // selectCountry(currentCountry);
   // snapTo(4);
 
@@ -150,13 +156,16 @@ function createMarker(
   var customIcon = L.icon(iconOptions);
 
   var markerOptions: L.MarkerOptions = {
-    // title: "Hallo Welt",
+    title:
+      "Upload am " +
+      new Date(createdAt).toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
     icon: customIcon,
-    // riseOnHover: true,
   };
 
-  // const marker = L.marker([lat, lng], { icon }).addTo(map);
-  // const marker = L.marker([lat, lng], { icon });
   const marker = L.marker([lat, lng], markerOptions).on("click", () =>
     showPhotoGallery(id, title, takenAt, createdAt, userId),
   );
@@ -165,13 +174,6 @@ function createMarker(
     const el = marker.getElement();
     el?.classList.add("visible");
   });
-
-  // marker.bindPopup(`
-  //   <div style="max-width:200px">
-  //     <h4>${title ?? ""}</h4>
-  //     <img src="${imageUrl}" style="width:100%" />
-  //   </div>
-  // `);
 
   return marker;
 }
@@ -184,11 +186,9 @@ function showPhotoGallery(
   userId: string,
 ) {
   loadPhotosOfMarker(entryId, title);
-  // Hier könntetest du eine Lightbox oder ein Modal öffnen, um die Fotos anzuzeigen
 }
 
 async function loadPhotosOfMarker(entryId: string, title: string) {
-  // alert("Show gallery for entry " + entryId);
   if (!entryId) return;
 
   const { data, error } = await supabase
@@ -354,14 +354,29 @@ async function loadMarkersInView() {
     console.error(error);
     return;
   }
-
   removeMarkersOutsideViewport();
   renderMarkers(data);
 }
 
-function handleViewportChanged() {
-  // if (!currentCountry) return;
+async function getLatestEntry() {
+  const { data: latestEntry, error } = await supabase
+    .from("entries")
+    .select(
+      "created_at, section",
+    )
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
 
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  return latestEntry;
+}
+
+function handleViewportChanged() {
   if (debounceTimer) {
     clearTimeout(debounceTimer);
   }
@@ -369,25 +384,6 @@ function handleViewportChanged() {
   debounceTimer = window.setTimeout(() => {
     loadMarkersInView();
   }, 200); // 200–300ms sweet spot
-
-  // const bounds = getViewportBounds();
-  // const bounds = map.getBounds();
-
-  // const { data, error } = await supabase
-  //   .from("entries")
-  //   .select("id, latitude, longitude, title, image_url")
-  //   .eq("section", currentCountry)
-  //   .gte("latitude", bounds.getSouth())
-  //   .lte("latitude", bounds.getNorth())
-  //   .gte("longitude", bounds.getWest())
-  //   .lte("longitude", bounds.getEast());
-
-  // if (error) {
-  //   console.error(error);
-  //   return;
-  // }
-  // removeMarkersOutsideViewport();
-  // renderMarkers(data);
 }
 
 function renderMarkers(entries: any[]) {

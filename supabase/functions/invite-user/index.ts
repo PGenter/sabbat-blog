@@ -84,6 +84,8 @@ Deno.serve(async (req) => {
     {
       data: {
         display_name: displayName,
+        first_name: firstName,
+        last_name: lastName,
       },
       redirectTo: "http://localhost:5173/reset-passwort.html"
     },
