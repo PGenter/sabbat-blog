@@ -1,7 +1,7 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "../lib/map.ts";
 import "../lib/invite.ts"
-import { supabase, requireAuth } from "../lib/supabase.ts";
+import { role, supabase, requireAuth } from "../lib/supabase.ts";
 import { clearMarkers, map } from "../lib/map.ts";
 // import { requireAuth } from "../lib/auth.ts";
 import { startUpload } from "./upload.ts";
@@ -23,10 +23,10 @@ const fileInfo = document.getElementById('file-info') as HTMLDivElement;
 init();
 
 async function init() {
-  const { data } = await supabase.auth.getSession();
+  // const { data } = await supabase.auth.getSession();
 
-  const user = data.session?.user;
-  const role = user?.app_metadata?.role || "user";
+  // const user = data.session?.user;
+  // const role = user?.app_metadata?.role || "user";
 
   if (role === "superuser" || role === "administrator") {
     showUploadButton();

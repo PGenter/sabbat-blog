@@ -4,9 +4,13 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const { data } = await supabase.auth.getSession();
+
+export const user = data.session?.user;
+export const role = user?.app_metadata?.role || "user";
 
 export async function requireAuth(redirectTo = "/index.html") {
-  const { data } = await supabase.auth.getSession();
+  // const { data } = await supabase.auth.getSession();
 
   if (!data.session) {
     window.location.href = redirectTo;
@@ -17,7 +21,7 @@ export async function requireAuth(redirectTo = "/index.html") {
 }
 
 export async function redirectIfLoggedIn() {
-  const { data } = await supabase.auth.getSession();
+  // const { data } = await supabase.auth.getSession();
 
   if (data.session) {
     window.location.href = "/map.html";

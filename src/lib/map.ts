@@ -1,19 +1,19 @@
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-import L, { icon } from "leaflet";
-import { supabase } from "../lib/supabase";
+import L from "leaflet";
+import { user, supabase } from "../lib/supabase";
 import "leaflet.markercluster";
 import { COUNTRIES, type CountryCode } from "./geo";
 import "./slider.ts";
 import "./gallery.ts";
-// import { snapTo } from "./slider.ts";
 
 const markers = new Map<string, L.Marker>();
 let currentCountry: CountryCode | null = null;
 export let map: L.Map;
 let markerCluster: L.MarkerClusterGroup;
 let debounceTimer: number | null = null;
+let visitedMarkers: Set<string> = new Set();
 // let routeLine: L.Polyline;
 
 export async function initMap() {
@@ -22,11 +22,8 @@ export async function initMap() {
     tapHold: true,
     inertia: true,
   }).setView([51.5, 7], 9);
-  // OpenStreetMap Layer
   L.tileLayer(
     "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-    // "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-    // "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png",
     {
       attribution: "&copy; OpenStreetMap & CartoDB",
     },
@@ -46,20 +43,16 @@ export async function initMap() {
   // }).addTo(map);
 
   currentCountry = "DE";
-  
+
   const latestEntry = await getLatestEntry();
-  if(latestEntry?.section && latestEntry?.section != null){
+  if (latestEntry?.section && latestEntry?.section != null) {
     currentCountry = latestEntry.section;
     selectCountry(latestEntry.section);
   }
-  
+  await loadVisitedMarkers();
   map.on("moveend", handleViewportChanged);
-  // selectCountry(currentCountry);
-  // snapTo(4);
 
   handleViewportChanged();
-
-  // loadCountryData("DE");
 }
 
 export function selectCountry(country: CountryCode) {
@@ -73,8 +66,6 @@ export function selectCountry(country: CountryCode) {
   const card = document.getElementById("country-card") as HTMLDivElement;
   card.innerHTML = `<h2>${COUNTRIES[country].name}</h2>`;
   // updateRoute(country);
-  // setActiveNav(country);
-  // loadCountryData(country);
 }
 
 // function updateRoute(country: CountryCode) {
@@ -82,55 +73,6 @@ export function selectCountry(country: CountryCode) {
 
 //   if (!config) return;
 //   routeLine.addLatLng(config.center);
-// }
-
-// function setActiveNav(country: CountryCode) {
-//   document.querySelectorAll(".navbar_wrapper button").forEach((link) => {
-//     link.classList.remove("active_nav");
-//     if (link.getAttribute("data-country") === country) {
-//       link.classList.add("active_nav");
-//     }
-//   });
-// }
-
-// async function loadCountryData(country: CountryCode) {
-//   if (markerLayer) {
-//     map.removeLayer(markerLayer);
-//   }
-
-//   markerLayer = L.layerGroup().addTo(map);
-
-//   const { data, error } = await supabase
-//     .from("entries")
-//     .select("*")
-//     .eq("section", country);
-
-//   if (error) {
-//     console.error("Supabase error:", error);
-//     return;
-//   }
-
-//   if (!data) return;
-
-//   data.forEach((item) => {
-//     createMarker(item.latitude, item.longitude, item.title, item.image_url);
-//     // const marker = L.marker([item.latitude, item.longitude]);
-
-//     // marker.bindPopup(`
-//     //   <div style="max-width:200px">
-//     //     <h4>${item.title ?? ""}</h4>
-//     //     <img src="${item.image_url}" style="width:100%" />
-//     //   </div>
-//     // `);
-
-//     // marker.addTo(markerLayer!);
-//   });
-//   setCountryCard(country);
-// }
-
-// function setCountryCard(country: CountryCode) {
-//   const card = document.querySelector(".card_wrapper") as HTMLDivElement;
-//   card.innerHTML = `<h2>${COUNTRIES[country].name}</h2>`;
 // }
 
 function createMarker(
@@ -142,15 +84,16 @@ function createMarker(
   createdAt: string,
   userId: string,
 ) {
-  // const icon = L.divIcon({
-  //   className: "map-marker",
-  // });
+  const isVisited = visitedMarkers.has(id);
+  let icon;
+  if (isVisited) {
+    icon = "../../assets/marker/camera-48-visited.png";
+  } else {
+    icon = "../../assets/marker/camera-48-new.png";
+  }
 
   var iconOptions = {
-    // iconUrl: "../../public/assets/marker/pin-32.png",
-    // iconUrl: "../../public/assets/marker/photo-48.png",
-    iconUrl: "../../assets/marker/camera-48-new.png",
-    // iconSize: [48, 48],
+    iconUrl: icon,
   };
 
   var customIcon = L.icon(iconOptions);
@@ -166,8 +109,17 @@ function createMarker(
     icon: customIcon,
   };
 
-  const marker = L.marker([lat, lng], markerOptions).on("click", () =>
-    showPhotoGallery(id, title, takenAt, createdAt, userId),
+  const marker = L.marker([lat, lng], markerOptions).on(
+    "click",
+    () => (showPhotoGallery(id, title), setMarkerVisited(id)),
+  );
+
+  marker.bindTooltip(
+    `Upload am ${new Date(createdAt).toLocaleDateString("de-DE")}`,
+    {
+      direction: "top",
+      offset: [25, 0],
+    },
   );
 
   requestAnimationFrame(() => {
@@ -178,13 +130,7 @@ function createMarker(
   return marker;
 }
 
-function showPhotoGallery(
-  entryId: string,
-  title: string,
-  takenAt: string,
-  createdAt: string,
-  userId: string,
-) {
+function showPhotoGallery(entryId: string, title: string) {
   loadPhotosOfMarker(entryId, title);
 }
 
@@ -250,7 +196,6 @@ function renderPhotos(photos: any[], title: string) {
     const itemImg = document.createElement("div");
     const itemContent = document.createElement("div");
     const itemNo = document.createElement("div");
-    // const itemCountry = document.createElement("div");
     const itemTakenAt = document.createElement("div");
     const itemDescription = document.createElement("div");
     const takenAt = new Date(photo.taken_at).toLocaleDateString("de-DE", {
@@ -261,9 +206,7 @@ function renderPhotos(photos: any[], title: string) {
 
     img.src = photo.image_url;
     img.alt = title;
-    // img.title = title;
     itemNo.textContent = `Bild ${index + 1} von ${total}`;
-    // itemCountry.textContent = COUNTRIES[currentCountry!].name || "Unknown";
     itemTakenAt.textContent = takenAt;
     itemDescription.textContent = title || "";
 
@@ -271,7 +214,6 @@ function renderPhotos(photos: any[], title: string) {
     itemImg.classList.add("item-img");
     itemContent.classList.add("item-content");
     itemNo.classList.add("item-no");
-    // itemCountry.classList.add("item-country");
     itemTakenAt.classList.add("item-date");
     itemDescription.classList.add("item-description");
 
@@ -279,7 +221,6 @@ function renderPhotos(photos: any[], title: string) {
     imgContainer.appendChild(itemImg);
     imgContainer.appendChild(itemContent);
     itemImg.appendChild(img);
-    // itemContent.appendChild(itemCountry);
     itemContent.appendChild(itemNo);
     itemContent.appendChild(itemTakenAt);
     itemContent.appendChild(itemDescription);
@@ -298,30 +239,6 @@ function renderPhotos(photos: any[], title: string) {
     thumbnailGallery.appendChild(thumbItem);
   }
 }
-
-// function loadFullImage(url: string, takenAt: string, createdAt: string) {
-//   const photoContainer = document.getElementById(
-//     "active-photo-container",
-//   ) as HTMLDivElement;
-//   const fullImg = document.createElement("img");
-//   fullImg.src = url;
-//   fullImg.alt = `Photo taken at ${takenAt}`;
-//   fullImg.title = `Taken at: ${takenAt}\nUploaded at: ${createdAt}`;
-//   fullImg.classList.add("full-photo");
-//   photoContainer.innerHTML = ""; // Clear previous photo
-//   photoContainer.appendChild(fullImg);
-// }
-
-// function getViewportBounds() {
-//   const bounds = map.getBounds();
-
-//   return {
-//     north: bounds.getNorth(),
-//     south: bounds.getSouth(),
-//     east: bounds.getEast(),
-//     west: bounds.getWest(),
-//   };
-// }
 
 function getViewportBoundsWithPadding(padding = 0.3) {
   const bounds = map.getBounds();
@@ -355,15 +272,14 @@ async function loadMarkersInView() {
     return;
   }
   removeMarkersOutsideViewport();
+  // await loadVisitedMarkers();
   renderMarkers(data);
 }
 
 async function getLatestEntry() {
   const { data: latestEntry, error } = await supabase
     .from("entries")
-    .select(
-      "created_at, section",
-    )
+    .select("created_at, section")
     .order("created_at", { ascending: false })
     .limit(1)
     .single();
@@ -394,7 +310,6 @@ function renderMarkers(entries: any[]) {
       entry.latitude,
       entry.longitude,
       entry.description,
-      // "../../public/assets/marker/pin-96.png",
       entry.id,
       entry.taken_at,
       entry.created_at,
@@ -405,8 +320,40 @@ function renderMarkers(entries: any[]) {
   });
 }
 
+async function loadVisitedMarkers() {
+  const { data: visited, error } = await supabase
+    .from("visited_entries")
+    .select("entry_id")
+    .eq("user_id", user?.id);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  visitedMarkers = new Set(visited?.map((v) => v.entry_id));
+}
+
+async function setMarkerVisited(entryId: string) {
+  await supabase.from("visited_entries").upsert({
+    user_id: user?.id,
+    entry_id: entryId,
+    visited_at: new Date().toISOString(),
+  });
+
+  visitedMarkers.add(entryId);
+
+  const marker = markers.get(entryId);
+  if (marker) {
+    const icon = L.icon({
+      iconUrl: "../../assets/marker/camera-48-visited.png",
+    });
+
+    marker.setIcon(icon);
+  }
+}
+
 export function clearMarkers() {
-  // markers.forEach((marker) => marker.remove());
   markerCluster.clearLayers();
   markers.clear();
 }
@@ -423,15 +370,5 @@ function removeMarkersOutsideViewport() {
     }
   });
 }
-
-// buttons.forEach((button) => {
-//   button.addEventListener("click", () => {
-//     const country = button.dataset.country;
-//     if (!country) return;
-
-//     selectCountry(country as CountryCode);
-
-//   });
-// });
 
 initMap();
