@@ -1,4 +1,4 @@
-@import url('https://fonts.cdnfonts.com/css/marhey');
+@import url("https://fonts.cdnfonts.com/css/marhey");
 
 :root {
   --a: #768542;
@@ -12,9 +12,10 @@
   --i: #2f3777;
 
   --secondary-background-color: rgba(158, 133, 111, 0.2);
+  --tertiary-background-color: rgba(158, 133, 111, 1);
 
-  font-family: 'Marhey', sans-serif;
-                                                
+  font-family: "Marhey", sans-serif;
+
   /* font-family: system-ui, Avenir, Helvetica, Arial, sans-serif; */
   line-height: 1.5;
   font-weight: 400;
@@ -238,8 +239,8 @@ button {
   transition:
     /* width 0.2s ease,
     height 0.2s ease,
-    background 0.2s ease, */
-    all 0.2s ease;
+    background 0.2s ease, */ all
+    0.2s ease;
 }
 
 .slider-stop::before {
@@ -379,7 +380,7 @@ button {
   overflow: hidden;
 }
 
-.modal_dialog{
+.modal_dialog {
   display: grid;
 }
 
@@ -449,6 +450,76 @@ button {
   inset: 0;
   background-color: var(--primary-background-color);
   pointer-events: none;
+}
+
+/* --- Reset für Leaflet Tooltip --- */
+.leaflet-tooltip.visited-marker,
+.leaflet-tooltip.unvisited-marker {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* --- Tooltip Container --- */
+.tooltip-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+
+  backdrop-filter: blur(6px);
+
+  /* Default (unvisited) */
+  background: var(--primary-color);
+  color: #000000;
+
+  /* Animation (beim Erscheinen) */
+  opacity: 0;
+  transform: translateY(6px) scale(0.95);
+  animation: tooltipFadeIn 0.18s ease forwards;
+}
+
+/* --- Animation --- */
+@keyframes tooltipFadeIn {
+  to {
+    opacity: 0.8;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* --- Visited State --- */
+.visited-marker .tooltip-inner {
+  background: var(--primary-background-color);
+  color: #202020;
+}
+
+/* --- Inhalt --- */
+.tooltip-date {
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.tooltip-views {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* --- Pfeil anpassen --- */
+.unvisited-marker.leaflet-tooltip-top::before {
+  border-top-color: rgba(0, 0, 0, 0.85);
+}
+
+.visited-marker.leaflet-tooltip-top::before {
+  border-top-color: rgba(80, 80, 80, 0.8);
+}
+
+/* --- Optional: leichter Hover-Effekt --- */
+.tooltip-inner:hover {
+  transform: scale(1.05);
 }
 
 .glassy {
@@ -579,12 +650,11 @@ button {
   color: currentColor;
   background-color: var(--secondary-background-color);
   cursor: pointer;
-  border:none;
+  border: none;
   transition:
     transform 0.2s ease,
     background-color 0.2s ease,
-    /* border-color 0.2s ease, */
-    box-shadow 0.2s ease;
+    /* border-color 0.2s ease, */ box-shadow 0.2s ease;
 }
 
 .lg-button {

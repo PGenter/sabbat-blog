@@ -9,12 +9,13 @@ import "./slider.ts";
 import "./gallery.ts";
 
 const markers = new Map<string, L.Marker>();
-let currentCountry: CountryCode | null = null;
+let currentCountry: CountryCode | "DE" = "DE";
 export let map: L.Map;
 let markerCluster: L.MarkerClusterGroup;
 let debounceTimer: number | null = null;
 let visitedMarkers: Set<string> = new Set();
-// let routeLine: L.Polyline;
+let routeLine: L.Polyline;
+let routeAnimationFrame: number | null = null;
 
 export async function initMap() {
   map = L.map("map", {
@@ -36,13 +37,15 @@ export async function initMap() {
 
   map.addLayer(markerCluster);
 
-  // routeLine = L.polyline([], {
-  //   color: "#ff5a5f",
-  //   weight: 3,
-  //   opacity: 0.7,
-  // }).addTo(map);
+  routeLine = L.polyline([], {
+    color: "#ff5a5f",
+    weight: 3,
+    opacity: 0.7,
+    lineCap: "round",
+    lineJoin: "round",
+  }).addTo(map);
 
-  currentCountry = "DE";
+  // currentCountry = "DE";
 
   const latestEntry = await getLatestEntry();
   if (latestEntry?.section && latestEntry?.section != null) {
@@ -52,7 +55,7 @@ export async function initMap() {
   await loadVisitedMarkers();
   map.on("moveend", handleViewportChanged);
 
-  handleViewportChanged();
+  // handleViewportChanged();
 }
 
 export function selectCountry(country: CountryCode) {
@@ -68,12 +71,71 @@ export function selectCountry(country: CountryCode) {
   // updateRoute(country);
 }
 
-// function updateRoute(country: CountryCode) {
-//   const config = COUNTRIES[country];
+// function updateRoute(entries: any[]) {
+//   if (!entries || entries.length === 0) {
+//     routeLine.setLatLngs([]);
+//     return;
+//   }
 
-//   if (!config) return;
-//   routeLine.addLatLng(config.center);
+//   const latlngs = entries.map((e) => [e.latitude, e.longitude]);
+
+//   routeLine.setLatLngs(latlngs);
 // }
+
+function animateRoute(entries: any[]) {
+  if (!entries || entries.length < 2) return;
+
+  if (routeAnimationFrame) {
+    cancelAnimationFrame(routeAnimationFrame);
+  }
+
+  routeLine.setLatLngs([]);
+
+  const points = entries.map(e => [e.latitude, e.longitude] as [number, number]);
+
+  let segmentIndex = 0;
+  let progress = 0;
+
+  const speed = 0.02; // 👈 kleiner = langsamer, größer = schneller
+
+  let currentLatLngs: L.LatLngExpression[] = [points[0]];
+
+  function interpolate(p1: [number, number], p2: [number, number], t: number): [number, number] {
+    return [
+      p1[0] + (p2[0] - p1[0]) * t,
+      p1[1] + (p2[1] - p1[1]) * t,
+    ];
+  }
+
+  function draw() {
+    if (segmentIndex >= points.length - 1) return;
+
+    progress += speed;
+
+    if (progress >= 1) {
+      progress = 0;
+      segmentIndex++;
+      currentLatLngs.push(points[segmentIndex]);
+
+      if (segmentIndex >= points.length - 1) {
+        routeLine.setLatLngs(currentLatLngs);
+        return;
+      }
+    }
+
+    const interpolatedPoint = interpolate(
+      points[segmentIndex],
+      points[segmentIndex + 1],
+      progress
+    );
+
+    routeLine.setLatLngs([...currentLatLngs, interpolatedPoint]);
+
+    routeAnimationFrame = requestAnimationFrame(draw);
+  }
+
+  draw();
+}
 
 function createMarker(
   lat: number,
@@ -83,6 +145,7 @@ function createMarker(
   takenAt: string,
   createdAt: string,
   userId: string,
+  views: number,
 ) {
   const isVisited = visitedMarkers.has(id);
   let icon;
@@ -92,11 +155,15 @@ function createMarker(
     icon = "../../assets/marker/camera-48-new.png";
   }
 
-  var iconOptions = {
-    iconUrl: icon,
-  };
+  // var iconOptions = {
+  //   iconUrl: icon,
+  // };
 
-  var customIcon = L.icon(iconOptions);
+  var customIcon = L.icon({
+    iconUrl: icon,
+    iconSize: [48, 48],
+    iconAnchor: [24, 42],
+  });
 
   var markerOptions: L.MarkerOptions = {
     title:
@@ -115,10 +182,18 @@ function createMarker(
   );
 
   marker.bindTooltip(
-    `Upload am ${new Date(createdAt).toLocaleDateString("de-DE")}`,
+    `<div class="tooltip-inner">
+     <div class="tooltip-date">
+       ${new Date(createdAt).toLocaleDateString("de-DE")}
+     </div>
+     <div class="bi bi-eye tooltip-views">
+      ${views}
+     </div>
+   </div>`,
     {
+      className: isVisited ? "visited-marker" : "unvisited-marker",
       direction: "top",
-      offset: [25, 0],
+      offset: [2, -42],
     },
   );
 
@@ -259,13 +334,14 @@ async function loadMarkersInView() {
   const { data, error } = await supabase
     .from("entries")
     .select(
-      "id, latitude, longitude, description, user_id, taken_at, created_at",
+      "id, latitude, longitude, description, user_id, taken_at, created_at, visited_entries(count)",
     )
     .eq("section", currentCountry)
     .gte("latitude", bounds.south)
     .lte("latitude", bounds.north)
     .gte("longitude", bounds.west)
-    .lte("longitude", bounds.east);
+    .lte("longitude", bounds.east)
+    .order("created_at", { ascending: true });
 
   if (error) {
     console.error(error);
@@ -274,6 +350,8 @@ async function loadMarkersInView() {
   removeMarkersOutsideViewport();
   // await loadVisitedMarkers();
   renderMarkers(data);
+  // updateRoute(data);
+  animateRoute(data);
 }
 
 async function getLatestEntry() {
@@ -314,6 +392,7 @@ function renderMarkers(entries: any[]) {
       entry.taken_at,
       entry.created_at,
       entry.user_id,
+      entry.visited_entries?.[0]?.count ?? 0,
     );
     markerCluster.addLayer(marker);
     markers.set(entry.id, marker);
