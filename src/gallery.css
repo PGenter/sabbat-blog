@@ -1,5 +1,5 @@
 .photo-gallery {
-  visibility: hidden;
+  /* visibility: hidden; */
   position: fixed;
   display: flex;
   flex-direction: column;
@@ -9,19 +9,25 @@
   left: 0;
   z-index: 1001;
   background-color: var(--secondary-background-color);
-  backdrop-filter: blur(0px);
-  -webkit-backdrop-filter: blur(0px);
+  /* backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px); */
+  opacity: 0;
+  transform: scale(0.95);
   transition:
-    backdrop-filter 0.3s ease,
-    background 0.3s ease,
-    visibility 0.3s ease;
+    opacity 0.5s ease,
+    transform 0.5s ease;
+    /* backdrop-filter 0.2s ease,
+    background-color 0.2s ease; */
+    /* visibility 0.3s ease; */
   pointer-events: none;
 }
 
 .photo-gallery.active {
-  visibility: visible;
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  /* visibility: visible; */
+  opacity: 1;
+  transform: scale(1);
+  /* backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px); */
   pointer-events: auto;
 }
 
