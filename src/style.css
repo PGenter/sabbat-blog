@@ -522,6 +522,21 @@ button {
   transform: scale(1.05);
 }
 
+path.leaflet-interactive:nth-child(1){
+  stroke: var(--a);
+  stroke-opacity: 0.2;
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-lineJoin: round;
+}
+path.leaflet-interactive:nth-child(2) {
+  stroke: var(--a);
+  stroke-opacity: 0.9;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-lineJoin: round;
+}
+
 .glassy {
   background-color: var(--secondary-background-color);
   /* background-color: oklch(from currentColor calc(l + 0.8) c h / 0.2); */

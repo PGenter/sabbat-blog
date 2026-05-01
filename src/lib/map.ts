@@ -5,19 +5,25 @@ import L from "leaflet";
 import { user, supabase } from "../lib/supabase";
 import "leaflet.markercluster";
 import { COUNTRIES, type CountryCode } from "./geo";
-import "./slider.ts";
+// import "./slider.ts";
 import "./gallery.ts";
 
 const markers = new Map<string, L.Marker>();
 let currentCountry: CountryCode | "DE" = "DE";
 export let map: L.Map;
+let isInitialized = false;
 let markerCluster: L.MarkerClusterGroup;
 let debounceTimer: number | null = null;
 let visitedMarkers: Set<string> = new Set();
 let routeLine: L.Polyline;
+let routeGlow: L.Polyline;
 let routeAnimationFrame: number | null = null;
+let lastRouteKey: string | null = null;
 
 export async function initMap() {
+  if (isInitialized) return;
+  isInitialized = true;
+  
   map = L.map("map", {
     zoomControl: false,
     tapHold: true,
@@ -37,15 +43,20 @@ export async function initMap() {
 
   map.addLayer(markerCluster);
 
-  routeLine = L.polyline([], {
-    color: "#ff5a5f",
-    weight: 3,
-    opacity: 0.7,
+  routeGlow = L.polyline([], {
+    color: "#768542",
+    opacity: 0.2,
+    weight: 10,
     lineCap: "round",
     lineJoin: "round",
   }).addTo(map);
-
-  // currentCountry = "DE";
+  routeLine = L.polyline([], {
+    color: "#768542",
+    opacity: 0.9,
+    weight: 3,
+    lineCap: "round",
+    lineJoin: "round",
+  }).addTo(map);
 
   const latestEntry = await getLatestEntry();
   if (latestEntry?.section && latestEntry?.section != null) {
@@ -54,8 +65,6 @@ export async function initMap() {
   }
   await loadVisitedMarkers();
   map.on("moveend", handleViewportChanged);
-
-  // handleViewportChanged();
 }
 
 export function selectCountry(country: CountryCode) {
@@ -68,19 +77,11 @@ export function selectCountry(country: CountryCode) {
   });
   const card = document.getElementById("country-card") as HTMLDivElement;
   card.innerHTML = `<h2>${COUNTRIES[country].name}</h2>`;
-  // updateRoute(country);
 }
 
-// function updateRoute(entries: any[]) {
-//   if (!entries || entries.length === 0) {
-//     routeLine.setLatLngs([]);
-//     return;
-//   }
-
-//   const latlngs = entries.map((e) => [e.latitude, e.longitude]);
-
-//   routeLine.setLatLngs(latlngs);
-// }
+function getRouteKey(entries: any[]) {
+  return entries.map((e) => e.id).join("-");
+}
 
 function animateRoute(entries: any[]) {
   if (!entries || entries.length < 2) return;
@@ -89,22 +90,26 @@ function animateRoute(entries: any[]) {
     cancelAnimationFrame(routeAnimationFrame);
   }
 
+  routeGlow.setLatLngs([]);
   routeLine.setLatLngs([]);
 
-  const points = entries.map(e => [e.latitude, e.longitude] as [number, number]);
+  const points = entries.map(
+    (e) => [e.latitude, e.longitude] as [number, number],
+  );
 
   let segmentIndex = 0;
   let progress = 0;
 
-  const speed = 0.02; // 👈 kleiner = langsamer, größer = schneller
+  const speed = 0.02; // kleiner = langsamer, größer = schneller
 
   let currentLatLngs: L.LatLngExpression[] = [points[0]];
 
-  function interpolate(p1: [number, number], p2: [number, number], t: number): [number, number] {
-    return [
-      p1[0] + (p2[0] - p1[0]) * t,
-      p1[1] + (p2[1] - p1[1]) * t,
-    ];
+  function interpolate(
+    p1: [number, number],
+    p2: [number, number],
+    t: number,
+  ): [number, number] {
+    return [p1[0] + (p2[0] - p1[0]) * t, p1[1] + (p2[1] - p1[1]) * t];
   }
 
   function draw() {
@@ -118,6 +123,7 @@ function animateRoute(entries: any[]) {
       currentLatLngs.push(points[segmentIndex]);
 
       if (segmentIndex >= points.length - 1) {
+        routeGlow.setLatLngs(currentLatLngs);
         routeLine.setLatLngs(currentLatLngs);
         return;
       }
@@ -126,9 +132,10 @@ function animateRoute(entries: any[]) {
     const interpolatedPoint = interpolate(
       points[segmentIndex],
       points[segmentIndex + 1],
-      progress
+      progress,
     );
 
+    routeGlow.setLatLngs([...currentLatLngs, interpolatedPoint]);
     routeLine.setLatLngs([...currentLatLngs, interpolatedPoint]);
 
     routeAnimationFrame = requestAnimationFrame(draw);
@@ -142,9 +149,9 @@ function createMarker(
   lng: number,
   title: string,
   id: string,
-  takenAt: string,
+  // takenAt: string,
   createdAt: string,
-  userId: string,
+  // userId: string,
   views: number,
 ) {
   const isVisited = visitedMarkers.has(id);
@@ -348,10 +355,14 @@ async function loadMarkersInView() {
     return;
   }
   removeMarkersOutsideViewport();
-  // await loadVisitedMarkers();
   renderMarkers(data);
-  // updateRoute(data);
-  animateRoute(data);
+
+  const routeKey = getRouteKey(data);
+
+  if (routeKey !== lastRouteKey) {
+    lastRouteKey = routeKey;
+    animateRoute(data);
+  }
 }
 
 async function getLatestEntry() {
@@ -389,9 +400,9 @@ function renderMarkers(entries: any[]) {
       entry.longitude,
       entry.description,
       entry.id,
-      entry.taken_at,
+      // entry.taken_at,
       entry.created_at,
-      entry.user_id,
+      // entry.user_id,
       entry.visited_entries?.[0]?.count ?? 0,
     );
     markerCluster.addLayer(marker);
@@ -435,6 +446,8 @@ async function setMarkerVisited(entryId: string) {
 export function clearMarkers() {
   markerCluster.clearLayers();
   markers.clear();
+  routeGlow.setLatLngs([]);
+  routeLine.setLatLngs([]);
 }
 
 function removeMarkersOutsideViewport() {
@@ -450,4 +463,4 @@ function removeMarkersOutsideViewport() {
   });
 }
 
-initMap();
+// initMap();

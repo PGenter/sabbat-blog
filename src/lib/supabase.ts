@@ -10,8 +10,8 @@ export const user = data.session?.user;
 export const role = user?.app_metadata?.role || "user";
 
 export async function requireAuth(redirectTo = "/index.html") {
-  // const { data } = await supabase.auth.getSession();
-
+  const { data } = await supabase.auth.getSession();
+  // console.log("data aus requireAuth: "+data.session?.access_token);
   if (!data.session) {
     window.location.href = redirectTo;
     return null;

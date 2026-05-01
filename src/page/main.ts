@@ -2,7 +2,8 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "../lib/map.ts";
 import "../lib/invite.ts"
 import { role, supabase, requireAuth } from "../lib/supabase.ts";
-import { clearMarkers, map } from "../lib/map.ts";
+import { initMap, selectCountry, clearMarkers, map } from "../lib/map.ts";
+import { setOnCountryChange } from "../lib/slider";
 // import { requireAuth } from "../lib/auth.ts";
 import { startUpload } from "./upload.ts";
 
@@ -118,3 +119,9 @@ input.addEventListener('change', () => {
 
 await requireAuth();
 await startUpload();
+
+await initMap();
+
+setOnCountryChange((country) => {
+  selectCountry(country);
+});
