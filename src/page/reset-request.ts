@@ -1,6 +1,5 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { supabase } from "../lib/supabase";
-import { redirectIfLoggedIn } from "../lib/auth";
+import { supabase,  redirectIfLoggedIn} from "../lib/supabase";
 
 redirectIfLoggedIn();
 
@@ -26,6 +25,5 @@ form.addEventListener("submit", async (e) => {
     messageDiv.style.color = "red";
   } else {
     messageDiv.textContent = "Reset-Link wurde gesendet! Bitte prüfe deine Email.";
-    // messageDiv.style.color = "green";
   }
 });

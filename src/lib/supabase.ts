@@ -4,10 +4,17 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-const { data } = await supabase.auth.getSession();
 
-export const user = data.session?.user;
-export const role = user?.app_metadata?.role || "user";
+export async function getUser() {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user ?? null;
+}
+
+export async function getRole() {
+  const user = await getUser();
+  return user?.app_metadata?.role ?? "user";
+}
+
 
 export async function requireAuth(redirectTo = "/index.html") {
   const { data } = await supabase.auth.getSession();
@@ -21,7 +28,7 @@ export async function requireAuth(redirectTo = "/index.html") {
 }
 
 export async function redirectIfLoggedIn() {
-  // const { data } = await supabase.auth.getSession();
+  const { data } = await supabase.auth.getSession();
 
   if (data.session) {
     window.location.href = "/map.html";
@@ -39,14 +46,3 @@ export function onAuthRedirect() {
     }
   });
 }
-
-// let lastActivity = Date.now()
-
-// window.addEventListener('mousemove', () => lastActivity = Date.now())
-// window.addEventListener('keydown', () => lastActivity = Date.now())
-
-// setInterval(() => {
-//   if (Date.now() - lastActivity > 15 * 60 * 1000) {
-//     supabase.auth.signOut()
-//   }
-// }, 60_000)

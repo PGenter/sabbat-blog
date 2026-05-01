@@ -9,12 +9,9 @@ const stops = Object.entries(COUNTRIES).map(([code, data]) => ({
 
 const track = document.getElementById("slider-track")! as HTMLElement;
 const handle = document.querySelector(".slider-handle") as HTMLElement;
-// const tooltip = document.getElementById("slider-tooltip") as HTMLElement;
 const progress = document.querySelector(".slider-progress") as HTMLElement;
 
 let dragging = false;
-// let isDragging = false;
-// let currentIndex = 0;
 let dragPercentage = 0;
 let onCountryChange: ((country: CountryCode) => void) | null = null;
 
@@ -53,8 +50,6 @@ function getPercentFromEvent(e: MouseEvent | TouchEvent) {
 }
 
 export function snapTo(index: number) {
-  // currentIndex = index;
-
   const percent = index / (stops.length - 1);
 
   handle.style.left = `${percent * 100}%`;
@@ -62,7 +57,7 @@ export function snapTo(index: number) {
   setActiveStop(index);
   previewStop(percent);
 
-  if(!window.onload){
+  if (!window.onload) {
     // kleines haptic feedback
     if (navigator.vibrate) {
       navigator.vibrate(10);
@@ -70,14 +65,9 @@ export function snapTo(index: number) {
   }
 
   resetAllTooltips();
-  // selectCountry(stops[index].country);
   if (onCountryChange) {
-  onCountryChange(stops[index].country);
-}
-
-  // requestAnimationFrame(() => {
-  //   clampActiveTooltip(index);
-  // });
+    onCountryChange(stops[index].country);
+  }
 }
 
 function nearestStop(percent: number) {
@@ -130,59 +120,24 @@ function resetAllTooltips() {
     (el as HTMLElement).style.transform = "";
     (el as HTMLElement).style.backgroundColor = "";
     (el as HTMLElement).style.boxShadow = "";
-    // (el as HTMLElement).classList.remove("active");
   });
   document.querySelectorAll(".slider-tooltip span").forEach((el) => {
     (el as HTMLElement).classList.remove("active");
   });
 }
 
-// function clampActiveTooltip(index: number) {
-//   const tooltip = document.querySelector(
-//     ".slider-tooltip.active",
-//   ) as HTMLElement;
-
-//   const nav = document.querySelector(".nav_wrapper") as HTMLElement;
-//   const navbar = document.querySelector(".navbar_wrapper") as HTMLElement;
-
-//   if (!tooltip || !nav) return;
-
-//   const navWidth = nav.clientWidth;
-//   const navbarWidth = navbar.clientWidth;
-//   const tooltipWidth = tooltip.offsetWidth;
-
-//   // console.log("navWidth:", navWidth, "tooltipWidth:", tooltipWidth);
-
-//   const percent = index / (stops.length - 1);
-//   // console.log("index:", index, "percent:", percent);
-
-//   const desiredCenter = percent * navWidth;
-
-//   const minCenter = tooltipWidth / 2 + (navbarWidth - navWidth) / 2;
-//   const maxCenter = navWidth - tooltipWidth / 2 - (navbarWidth - navWidth) / 2;
-//   // console.log("desiredCenter:", desiredCenter, "minCenter:", minCenter, "maxCenter:", maxCenter);
-
-//   const clampedCenter = Math.min(Math.max(desiredCenter, minCenter), maxCenter);
-
-//   const offset = clampedCenter - desiredCenter;
-
-//   // tooltip.style.transform = `translate(calc(-50% + ${offset}px), -150%)`;
-// }
-
 function updateTooltipDuringDrag(percent: number) {
   document.querySelectorAll(".slider-tooltip span").forEach((el) => {
     (el as HTMLElement).classList.remove("active");
   });
-  
+
   const tooltip = document.querySelector(
     ".slider-tooltip.active",
   ) as HTMLElement;
-  
+
   const nav = document.querySelector(".nav_wrapper") as HTMLElement;
 
-  const tooltipText = tooltip.querySelector(
-    "span",
-  ) as HTMLElement;
+  const tooltipText = tooltip.querySelector("span") as HTMLElement;
 
   if (!tooltip || !nav) return;
 
@@ -222,30 +177,8 @@ track.addEventListener("click", (e: MouseEvent) => {
   updateSlider(percent);
 
   const index = nearestStop(percent);
-  snapTo(index); // Snap + Map wechseln
+  snapTo(index); 
 });
-
-// window.onload = () => {
-//   snapTo(0);
-// };
-
-// window.addEventListener("resize", () => clampActiveTooltip(currentIndex));
-
-// track.addEventListener("mousemove", (e: MouseEvent) => {
-//   if (dragging) return;
-//   const rect = track.getBoundingClientRect();
-//   const x = e.clientX - rect.left;
-
-//   tooltip.style.left = `${x}px`;
-
-//   const percent = x / rect.width;
-//   previewStop(percent);
-//   showTooltip();
-// });
-
-// track.addEventListener("mouseleave", () => {
-//   if (!dragging) hideTooltip();
-// });
 
 track.addEventListener(
   "touchmove",
@@ -257,11 +190,9 @@ track.addEventListener(
 
 handle.addEventListener("mousedown", () => {
   dragging = true;
-  // isDragging = true;
   setDraggingState(dragging);
   document.body.style.userSelect = "none";
   document.body.style.cursor = "grabbing";
-  // showTooltip(dragPercentage);
 });
 
 document.addEventListener("mousemove", (e) => {
@@ -281,29 +212,21 @@ document.addEventListener("mouseup", () => {
   if (!dragging) return;
 
   dragging = false;
-  // isDragging = false;
   setDraggingState(dragging);
 
   document.body.style.userSelect = "";
   document.body.style.cursor = "";
-  // const percent = getPercentFromEvent(e);
-  // const index = nearestStop(dragPercentage);
-
-  // snapTo(index);
   snapTo(nearestStop(dragPercentage));
-  // hideTooltip(dragPercentage);
 });
 
 let justTouched = false;
 
 handle.addEventListener("touchstart", () => {
   dragging = true;
-  // isDragging = true;
   justTouched = true;
   setDraggingState(dragging);
   document.body.style.userSelect = "none";
   document.body.style.cursor = "grabbing";
-  // showTooltip(dragPercentage);
 });
 
 document.addEventListener("touchmove", (e) => {
@@ -324,20 +247,14 @@ document.addEventListener("touchend", () => {
   if (!dragging) return;
 
   dragging = false;
-  // isDragging = false;
   setDraggingState(dragging);
   document.body.style.userSelect = "";
   document.body.style.cursor = "";
-  // const percent = getPercentFromEvent(e);
   snapTo(nearestStop(dragPercentage));
 
   setTimeout(() => {
     justTouched = false;
   }, 300);
-  // const index = nearestStop(dragPercentage);
-
-  // snapTo(index);
-  // hideTooltip();
 });
 
 document.querySelectorAll(".slider-stop").forEach((stop, i) => {

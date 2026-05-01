@@ -1,7 +1,7 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "../lib/map.ts";
 import "../lib/invite.ts"
-import { role, supabase, requireAuth } from "../lib/supabase.ts";
+import { getRole, supabase, requireAuth } from "../lib/supabase.ts";
 import { initMap, selectCountry, clearMarkers, map } from "../lib/map.ts";
 import { setOnCountryChange } from "../lib/slider";
 // import { requireAuth } from "../lib/auth.ts";
@@ -28,6 +28,7 @@ async function init() {
 
   // const user = data.session?.user;
   // const role = user?.app_metadata?.role || "user";
+  const role = await getRole();
 
   if (role === "superuser" || role === "administrator") {
     showUploadButton();
@@ -101,6 +102,16 @@ inviteButton.addEventListener("click", () => {
 inviteCloseButton.addEventListener("click", () => {
   hideModal(invitesection);
 });
+
+document.body.addEventListener("keydown", (event) => {
+    const key = event.key;
+    switch (key) {
+      case "Escape":
+        invitesection.checkVisibility() ? hideModal(invitesection) : ""
+        uploadsection.checkVisibility() ? hideModal(uploadsection) : ""
+        break;
+    }
+  });
 
 input.addEventListener('change', () => {
   const files = input.files!;

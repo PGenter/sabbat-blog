@@ -4,7 +4,9 @@ const form = document.getElementById("new-password-form") as HTMLFormElement;
 const messageDiv = document.getElementById("message")!;
 
 const passwordInput = document.getElementById("password") as HTMLInputElement;
-const confirmInput = document.getElementById("confirm-password") as HTMLInputElement;
+const confirmInput = document.getElementById(
+  "confirm-password",
+) as HTMLInputElement;
 
 // Regeln
 const rules = {
@@ -14,11 +16,6 @@ const rules = {
   special: document.getElementById("rule-special")!,
   match: document.getElementById("rule-match")!,
 };
-
-// Token holen
-const hash = window.location.hash.substring(1);
-const params = new URLSearchParams(hash);
-const accessToken = params.get("access_token");
 
 let isValid = false;
 
@@ -50,46 +47,28 @@ function validatePassword() {
 passwordInput.addEventListener("input", validatePassword);
 confirmInput.addEventListener("input", validatePassword);
 
-// ❗ Token prüfen
-if (!accessToken) {
-  messageDiv.textContent = "Ungültiger oder abgelaufener Link!";
-  messageDiv.style.color = "red";
-  form.style.display = "none";
-} else {
-  supabase.auth.setSession({
-    access_token: accessToken,
-    refresh_token: accessToken
-  }).then(() => {
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      if (!isValid) {
-        messageDiv.textContent = "Bitte erfülle alle Passwort-Anforderungen.";
-        messageDiv.style.color = "red";
-        return;
-      }
-
-      const password = passwordInput.value;
-
-      const { error } = await supabase.auth.updateUser({ password });
-
-      if (error) {
-        messageDiv.textContent = "Fehler: " + error.message;
-        messageDiv.style.color = "red";
-      } else {
-        messageDiv.textContent = "Passwort erfolgreich gesetzt! Weiterleitung...";
-        messageDiv.style.color = "green";
-
-        setTimeout(() => {
-          window.location.href = "/index.html";
-        }, 1500);
-      }
-    });
-
-  }).catch((err) => {
-    messageDiv.textContent = "Fehler beim Setzen der Session: " + err.message;
+  if (!isValid) {
+    messageDiv.textContent = "Bitte erfülle alle Passwort-Anforderungen.";
     messageDiv.style.color = "red";
-    form.style.display = "none";
-  });
-}
+    return;
+  }
+
+  const password = passwordInput.value;
+
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    messageDiv.textContent = "Fehler: " + error.message;
+    messageDiv.style.color = "red";
+  } else {
+    messageDiv.textContent = "Passwort erfolgreich gesetzt! Weiterleitung...";
+    messageDiv.style.color = "green";
+
+    setTimeout(() => {
+      window.location.href = "/index.html";
+    }, 1500);
+  }
+});

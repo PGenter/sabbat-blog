@@ -2,7 +2,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import L from "leaflet";
-import { user, supabase } from "../lib/supabase";
+import { supabase, getUser } from "../lib/supabase";
 import "leaflet.markercluster";
 import { COUNTRIES, type CountryCode } from "./geo";
 // import "./slider.ts";
@@ -23,7 +23,7 @@ let lastRouteKey: string | null = null;
 export async function initMap() {
   if (isInitialized) return;
   isInitialized = true;
-  
+
   map = L.map("map", {
     zoomControl: false,
     tapHold: true,
@@ -153,6 +153,7 @@ function createMarker(
   createdAt: string,
   // userId: string,
   views: number,
+  images: number,
 ) {
   const isVisited = visitedMarkers.has(id);
   let icon;
@@ -161,10 +162,6 @@ function createMarker(
   } else {
     icon = "../../assets/marker/camera-48-new.png";
   }
-
-  // var iconOptions = {
-  //   iconUrl: icon,
-  // };
 
   var customIcon = L.icon({
     iconUrl: icon,
@@ -191,9 +188,12 @@ function createMarker(
   marker.bindTooltip(
     `<div class="tooltip-inner">
      <div class="tooltip-date">
-       ${new Date(createdAt).toLocaleDateString("de-DE")}
+       Upload: ${new Date(createdAt).toLocaleDateString("de-DE")}
      </div>
-     <div class="bi bi-eye tooltip-views">
+     <div class="bi bi-images tooltip-views">
+      ${images}
+     </div>
+     <div class="bi bi-eye-fill tooltip-views">
       ${views}
      </div>
    </div>`,
@@ -245,8 +245,15 @@ function renderPhotos(photos: any[], title: string) {
     "close-button",
   ) as HTMLButtonElement;
   closeButton.addEventListener("click", () => {
-    const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
-    gallery.classList.remove("active");
+    closeGallery();
+  });
+  document.body.addEventListener("keydown", (event) => {
+    const key = event.key;
+    switch (key) {
+      case "Escape":
+        closeGallery();
+        break;
+    }
   });
 
   const carouselGallery = document.getElementById(
@@ -320,6 +327,11 @@ function renderPhotos(photos: any[], title: string) {
     ) as HTMLDivElement;
     thumbnailGallery.appendChild(thumbItem);
   }
+
+  function closeGallery() {
+    const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
+    gallery.classList.remove("active");
+  }
 }
 
 function getViewportBoundsWithPadding(padding = 0.3) {
@@ -341,7 +353,7 @@ async function loadMarkersInView() {
   const { data, error } = await supabase
     .from("entries")
     .select(
-      "id, latitude, longitude, description, user_id, taken_at, created_at, visited_entries(count)",
+      "id, latitude, longitude, description, user_id, taken_at, created_at, visited_entries(count), photos!photos_entry_id_fkey(count)",
     )
     .eq("section", currentCountry)
     .gte("latitude", bounds.south)
@@ -404,6 +416,7 @@ function renderMarkers(entries: any[]) {
       entry.created_at,
       // entry.user_id,
       entry.visited_entries?.[0]?.count ?? 0,
+      entry.photos?.[0].count ?? 0,
     );
     markerCluster.addLayer(marker);
     markers.set(entry.id, marker);
@@ -411,6 +424,7 @@ function renderMarkers(entries: any[]) {
 }
 
 async function loadVisitedMarkers() {
+  const user = await getUser();
   const { data: visited, error } = await supabase
     .from("visited_entries")
     .select("entry_id")
@@ -425,6 +439,7 @@ async function loadVisitedMarkers() {
 }
 
 async function setMarkerVisited(entryId: string) {
+  const user = await getUser();
   await supabase.from("visited_entries").upsert({
     user_id: user?.id,
     entry_id: entryId,
@@ -434,13 +449,22 @@ async function setMarkerVisited(entryId: string) {
   visitedMarkers.add(entryId);
 
   const marker = markers.get(entryId);
-  if (marker) {
-    const icon = L.icon({
-      iconUrl: "../../assets/marker/camera-48-visited.png",
-    });
+  if (!marker) return;
+  const icon = L.icon({
+    iconUrl: "../../assets/marker/camera-48-visited.png",
+  });
 
-    marker.setIcon(icon);
-  }
+  marker.setIcon(icon);
+
+  const currentTooltip = marker.getTooltip();
+  const content = currentTooltip?.getContent() ?? "";
+
+  marker.unbindTooltip();
+  marker.bindTooltip(content, {
+    className: "visited-marker",
+    direction: "top",
+    offset: [2, -42],
+  });
 }
 
 export function clearMarkers() {
