@@ -86,10 +86,11 @@ textarea {
   padding: 0.5em;
   margin-bottom: 0.8em;
   min-height: 7rem;
-  /* border-top: none; */
+  border-top: none;
   border-left: none;
   border-right: none;
   border-bottom: 1px solid var(--primary-background-color);
+  align-content: end;
   /* border-radius: 8px; */
   background-color: transparent;
   color: currentColor;
@@ -498,9 +499,14 @@ button {
 }
 
 /* --- Inhalt --- */
-.tooltip-date {
+.tooltip-title{
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.5;
+}
+
+.tooltip-date {
+  font-weight: 400;
+  line-height: 2;
 }
 
 .tooltip-views {
@@ -697,15 +703,23 @@ path.leaflet-interactive:nth-child(2) {
 .close-button {
   /* position: absolute;
   right: 1.5rem; */
+  height: 3rem;
+  width: 3rem;
   background: transparent;
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
   color: currentColor;
+  transition:
+    background-color ease 0.3s,
+    border ease 0.3s,
+    transform 0.3s ease,
+    color 0.3s ease;
   /* z-index: 9999; */
 }
 
 .close-button:hover {
+  transform: scale(1.2);
   color: oklch(from currentColor calc(l + 0.2) c h / 0.9);
 }
 
@@ -758,6 +772,11 @@ path.leaflet-interactive:nth-child(2) {
   .country-cd {
     display: block;
     width: 15rem;
+    height: fit-content;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 }
 

@@ -21,6 +21,7 @@ export async function startUpload() {
   const progressText = document.getElementById("progressText")!;
 
   const input = document.getElementById("images") as HTMLInputElement;
+  const titleEl = document.getElementById("title") as HTMLInputElement;
   const descriptionEl = document.getElementById(
     "description",
   ) as HTMLTextAreaElement;
@@ -33,6 +34,7 @@ export async function startUpload() {
       return;
     }
     const files = input.files;
+    const title = titleEl.value;
     const description = descriptionEl.value;
 
     if (!files || files.length === 0) {
@@ -40,8 +42,13 @@ export async function startUpload() {
       return;
     }
 
+    if (!title) {
+      alert("Bitte gib einen Titel an");
+      return;
+    }
+
     if (!description) {
-      alert("Bitte Beschreibung eingeben");
+      alert("Bitte gib eine Beschreibung ein");
       return;
     }
 
@@ -130,6 +137,7 @@ export async function startUpload() {
       const { data: entry, error: entryError } = await supabase
         .from("entries")
         .insert({
+          title,
           description,
           section,
           latitude: avgLat,
@@ -165,7 +173,7 @@ export async function startUpload() {
       uploadedPaths.push(...results.flat());
     } catch (error) {
       console.error("Upload fehlgeschlagen:", error);
-      
+
       // ROLLBACK
       if (uploadedPaths.length > 0) {
         await supabase.storage.from("travel-images").remove(uploadedPaths);
@@ -176,7 +184,7 @@ export async function startUpload() {
       }
 
       progressContainer.style.display = "none";
-      
+
       handleError(error);
     }
     button.disabled = false;

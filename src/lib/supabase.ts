@@ -15,7 +15,6 @@ export async function getRole() {
   return user?.app_metadata?.role ?? "user";
 }
 
-
 export async function requireAuth(redirectTo = "/index.html") {
   const { data } = await supabase.auth.getSession();
   // console.log("data aus requireAuth: "+data.session?.access_token);

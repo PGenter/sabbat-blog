@@ -9,12 +9,14 @@ import { COUNTRIES, type CountryCode } from "./geo";
 import "./gallery.ts";
 
 const markers = new Map<string, L.Marker>();
+const latestEntry = await getLatestEntry();
 let currentCountry: CountryCode | "DE" = "DE";
 export let map: L.Map;
 let isInitialized = false;
 let markerCluster: L.MarkerClusterGroup;
 let debounceTimer: number | null = null;
 let visitedMarkers: Set<string> = new Set();
+export let unvisitedEntries = 0;
 let routeLine: L.Polyline;
 let routeGlow: L.Polyline;
 let routeAnimationFrame: number | null = null;
@@ -58,12 +60,15 @@ export async function initMap() {
     lineJoin: "round",
   }).addTo(map);
 
-  const latestEntry = await getLatestEntry();
+  await loadVisitedMarkers();
+  await loadUnvisitedEntryCount();
+  
+  // const latestEntry = await getLatestEntry();
   if (latestEntry?.section && latestEntry?.section != null) {
     currentCountry = latestEntry.section;
     selectCountry(latestEntry.section);
+    await setCardText(latestEntry.section);
   }
-  await loadVisitedMarkers();
   map.on("moveend", handleViewportChanged);
 }
 
@@ -75,8 +80,21 @@ export function selectCountry(country: CountryCode) {
   map.flyTo(config.center, config.zoom, {
     duration: 2,
   });
+  // const card = document.getElementById("country-card") as HTMLDivElement;
+  // card.innerHTML = `<h2>${COUNTRIES[country].name}</h2>`;
+}
+
+export async function setCardText(country: CountryCode){
   const card = document.getElementById("country-card") as HTMLDivElement;
-  card.innerHTML = `<h2>${COUNTRIES[country].name}</h2>`;
+  const user = await getUser();
+  card.innerHTML = `<h2>Hallo ${user?.user_metadata?.first_name},</h2>
+  <p> schön, dass du hier bist! Auf dieser Seite kannst du uns auf unserer Reise begleiten.</p>
+  <p>Aktuell befinden wir uns in <u><b>${COUNTRIES[country].name}</b></u>.</p>`
+  if(unvisitedEntries > 0){
+    card.innerHTML += `<p>Es gibt noch ${unvisitedEntries} unserer Stationen, die du noch nicht entdeckt hast. </p>`;
+  } else {
+    card.innerHTML += `<p>Es gibt aktuell leider keine neuen Stationen zu entdecken. Wir werden bald neue Bilder hochladen. Bis dahin kannst du unsere bisherigen Stationen noch einmal erkunden.</p>`;
+  }
 }
 
 function getRouteKey(entries: any[]) {
@@ -148,6 +166,7 @@ function createMarker(
   lat: number,
   lng: number,
   title: string,
+  desc: string,
   id: string,
   // takenAt: string,
   createdAt: string,
@@ -170,23 +189,27 @@ function createMarker(
   });
 
   var markerOptions: L.MarkerOptions = {
-    title:
-      "Upload am " +
-      new Date(createdAt).toLocaleDateString("de-DE", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }),
+    // title:
+    //   title +
+    //   "</br>Upload am " +
+    //   new Date(createdAt).toLocaleDateString("de-DE", {
+    //     day: "2-digit",
+    //     month: "2-digit",
+    //     year: "numeric",
+    //   }),
     icon: customIcon,
   };
 
   const marker = L.marker([lat, lng], markerOptions).on(
     "click",
-    () => (showPhotoGallery(id, title), setMarkerVisited(id)),
+    () => (showPhotoGallery(id, desc), setMarkerVisited(id)),
   );
 
   marker.bindTooltip(
     `<div class="tooltip-inner">
+      <div class="tooltip-title">
+        ${title}
+      </div>
      <div class="tooltip-date">
        Upload: ${new Date(createdAt).toLocaleDateString("de-DE")}
      </div>
@@ -353,7 +376,7 @@ async function loadMarkersInView() {
   const { data, error } = await supabase
     .from("entries")
     .select(
-      "id, latitude, longitude, description, user_id, taken_at, created_at, visited_entries(count), photos!photos_entry_id_fkey(count)",
+      "id, latitude, longitude, title, description, user_id, taken_at, created_at, visited_entries(count), photos!photos_entry_id_fkey(count)",
     )
     .eq("section", currentCountry)
     .gte("latitude", bounds.south)
@@ -410,6 +433,7 @@ function renderMarkers(entries: any[]) {
     const marker = createMarker(
       entry.latitude,
       entry.longitude,
+      entry.title,
       entry.description,
       entry.id,
       // entry.taken_at,
@@ -438,6 +462,37 @@ async function loadVisitedMarkers() {
   visitedMarkers = new Set(visited?.map((v) => v.entry_id));
 }
 
+async function loadUnvisitedEntryCount() {
+  const user = await getUser();
+  if (!user?.id) {
+    unvisitedEntries = 0;
+    return;
+  }
+
+  const { count: totalEntries, error: totalError } = await supabase
+    .from("entries")
+    .select("id", { count: "exact", head: true });
+
+  if (totalError) {
+    console.error(totalError);
+    unvisitedEntries = 0;
+    return;
+  }
+
+  const { count: visitedCount, error: visitedError } = await supabase
+    .from("visited_entries")
+    .select("entry_id", { count: "exact", head: true })
+    .eq("user_id", user.id);
+
+  if (visitedError) {
+    console.error(visitedError);
+    unvisitedEntries = totalEntries ?? 0;
+    return;
+  }
+
+  unvisitedEntries = Math.max(0, (totalEntries ?? 0) - (visitedCount ?? 0));
+}
+
 async function setMarkerVisited(entryId: string) {
   const user = await getUser();
   await supabase.from("visited_entries").upsert({
@@ -447,6 +502,7 @@ async function setMarkerVisited(entryId: string) {
   });
 
   visitedMarkers.add(entryId);
+  await loadUnvisitedEntryCount();
 
   const marker = markers.get(entryId);
   if (!marker) return;

@@ -51,14 +51,13 @@
 
 .gallery-header .close-button {
   color: white;
-  transition:
-    transform 0.5s ease,
-    color 0.5s ease;
+  border: 2px solid currentColor;
+  border-radius: 50%;
 }
 
 .gallery-header .close-button:hover {
   color: var(--a);
-  transform: scale(1.2);
+  background-color: white;
 }
 
 .close-button-container {
