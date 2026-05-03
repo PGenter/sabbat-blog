@@ -2,7 +2,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "../lib/map.ts";
 import "../lib/invite.ts"
 import { getRole, supabase, requireAuth } from "../lib/supabase.ts";
-import { initMap, selectCountry, clearMarkers, map } from "../lib/map.ts";
+import { initMap, selectCountry, clearMarkers, map, toggleEditMode } from "../lib/map.ts";
 import { setOnCountryChange } from "../lib/slider";
 // import { requireAuth } from "../lib/auth.ts";
 import { startUpload } from "./upload.ts";
@@ -10,6 +10,8 @@ import { startUpload } from "./upload.ts";
 
 const logoutButton = document.getElementById("logout")!;
 const uploadButton = document.getElementById("upload")!;
+const editMapButton = document.getElementById("edit-map")!;
+const editGalleryButton = document.getElementById("edit-gallery")!;
 const inviteButton = document.getElementById("invite")!;
 const uploadCloseButton = document.getElementById("upload-close-button") as HTMLButtonElement;
 const inviteCloseButton = document.getElementById("invite-close-button") as HTMLButtonElement;
@@ -31,9 +33,9 @@ async function init() {
   const role = await getRole();
 
   if (role === "superuser" || role === "administrator") {
-    showUploadButton();
+    showSuperuserButtons();
   } else {
-    hideUploadButton();
+    hideSuperuserButtons();
   }
   
   if (role === "administrator") {
@@ -43,13 +45,21 @@ async function init() {
   }
 }
 
-function showUploadButton() {
+function showSuperuserButtons() {
   uploadButton.style.display = "block";
+  editMapButton.style.display = "block";
+  editGalleryButton.style.display = "block";
 }
 
-function hideUploadButton() {
+function hideSuperuserButtons() {
   if (uploadButton) {
     uploadButton.style.display = "none";
+  }
+  if(editGalleryButton){
+    editGalleryButton.style.display = "none";
+  }
+  if(editMapButton){
+    editMapButton.style.display = "none";
   }
 }
 
@@ -90,6 +100,14 @@ logoutButton.addEventListener("click", async () => {
 uploadButton.addEventListener("click", () => {
   showModal(uploadsection);
 }); 
+
+editMapButton.addEventListener("click", () => {
+  toggleEditMode("edit-map");
+});
+
+editGalleryButton.addEventListener("click", () => {
+  toggleEditMode("edit-gallery");
+});
 
 uploadCloseButton.addEventListener("click", () => {
   hideModal(uploadsection);

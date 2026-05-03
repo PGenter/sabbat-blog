@@ -6,7 +6,7 @@
   --c: #6e7dbc;
   --d: #91233e;
   --e: #a31023;
-  --f: #dac5ae;
+  --f: #e7ded5;
   --primary-color: #bfe264;
   --primary-background-color: #9e856f;
   --i: #2f3777;
@@ -453,6 +453,12 @@ button {
   pointer-events: none;
 }
 
+/* --- Reset für Leaflet marker icons --- */
+.leaflet-marker-icon {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
 /* --- Reset für Leaflet Tooltip --- */
 .leaflet-tooltip.visited-marker,
 .leaflet-tooltip.unvisited-marker {
@@ -499,7 +505,7 @@ button {
 }
 
 /* --- Inhalt --- */
-.tooltip-title{
+.tooltip-title {
   font-weight: 600;
   line-height: 1.5;
 }
@@ -512,6 +518,16 @@ button {
 .tooltip-views {
   font-size: 14px;
   opacity: 0.8;
+}
+
+.tooltip-edit-hint {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 12px;
+  opacity: 0.9;
+  color: rgba(17, 17, 17, 0.9);
 }
 
 /* --- Pfeil anpassen --- */
@@ -528,19 +544,45 @@ button {
   transform: scale(1.05);
 }
 
-path.leaflet-interactive:nth-child(1){
-  stroke: var(--a);
+body.edit-mode #map {
+  outline: 4px solid rgba(191, 226, 100, 0.35);
+  outline-offset: -4px;
+}
+
+body.edit-mode .leaflet-marker-icon {
+  
+  filter: drop-shadow(0 0 18px rgba(191, 226, 100, 0.45));
+  transition: filter 0.2s ease;
+  cursor: pointer;
+}
+
+body.edit-mode .leaflet-marker-icon.editable-marker {
+  animation: editGlow 1.8s ease-in-out infinite;
+  
+}
+
+@keyframes editGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 18px rgba(191, 226, 100, 0.45)) brightness(1.05);
+  }
+  50% {
+    filter: drop-shadow(0 0 30px rgba(191, 226, 100, 0.65)) brightness(1.45);
+  }
+}
+
+path.leaflet-interactive:nth-child(1) {
+  stroke: var(--b);
   stroke-opacity: 0.2;
   stroke-width: 10;
   stroke-linecap: round;
-  stroke-lineJoin: round;
+  stroke-linejoin: round;
 }
 path.leaflet-interactive:nth-child(2) {
-  stroke: var(--a);
+  stroke: var(--b);
   stroke-opacity: 0.9;
   stroke-width: 3;
   stroke-linecap: round;
-  stroke-lineJoin: round;
+  stroke-linejoin: round;
 }
 
 .glassy {
@@ -615,6 +657,50 @@ path.leaflet-interactive:nth-child(2) {
   width: min(50vw, 400px);
   gap: 1.5rem;
   height: auto;
+}
+
+.edit-cd {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: min(50vw, 400px);
+  gap: 1.5rem;
+  height: auto;
+}
+
+.edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.edit-container input {
+  padding: 0.5em;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: var(--secondary-background-color);
+  color: currentColor;
+}
+
+.delete-btn {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
+
+.delete-btn:hover {
+  background-color: #c82333 !important;
+}
+
+#edit-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001;
+}
+
+#edit-modal .modal-content {
+  position: relative;
 }
 
 .file-container {
@@ -695,14 +781,115 @@ path.leaflet-interactive:nth-child(2) {
   /* border: 1px solid var(--secondary-background-color); */
 }
 
+.rnd-button.active {
+  background-color: var(--a) !important;
+  color: var(--primary-background-color);
+}
+
 .nav-button i {
   font-size: 1.2rem;
   font-weight: bold;
 }
 
+.item-description-input {
+  width: 100%;
+  min-height: 4rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.15);
+  color: white;
+  font-size: 1rem;
+  line-height: 1.5;
+  resize: vertical;
+  margin-top: 0.75rem;
+}
+
+.item-save-button {
+  margin-top: 0.75rem;
+  width: max-content;
+}
+
+.image-delete-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 20px;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  opacity: 0;
+  transition:
+    opacity 0.2s ease,
+    transform 0.5s ease,
+    background 0.5s;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.thumbnail-delete-button {
+  position: absolute;
+  top: 0%;
+  right: 0%;
+  /* transform: translate(-50%, -50%); */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 150px;
+  height: 220px;
+  border-radius: 20px;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  opacity: 0;
+  transition:
+    opacity 0.2s ease,
+    background 0.5s;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.thumbnail-delete-button i {
+  transition:
+    transform 0.5s ease;
+}
+
+.edit-mode .image-delete-button,
+.edit-mode .thumbnail-delete-button {
+  opacity: 1;
+}
+
+.item-img,
+.thumbnail-gallery .item {
+  position: relative;
+}
+
+.thumbnail-delete-button:hover {
+  background: rgba(220, 53, 69, 0.85);
+}
+
+.thumbnail-delete-button:hover i {
+  transform: scale(1.5);
+}
+
+.image-delete-button:hover {
+  transform: translate(-50%, -50%) scale(1.5);
+  background: rgba(220, 53, 69, 0.85);
+}
+
+.thumbnail-gallery .item {
+  overflow: hidden;
+}
+
 .close-button {
-  /* position: absolute;
-  right: 1.5rem; */
   height: 3rem;
   width: 3rem;
   background: transparent;
@@ -715,7 +902,6 @@ path.leaflet-interactive:nth-child(2) {
     border ease 0.3s,
     transform 0.3s ease,
     color 0.3s ease;
-  /* z-index: 9999; */
 }
 
 .close-button:hover {

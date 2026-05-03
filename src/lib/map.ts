@@ -8,6 +8,10 @@ import { COUNTRIES, type CountryCode } from "./geo";
 // import "./slider.ts";
 import "./gallery.ts";
 
+const editMarkerIconUrl = new URL("../../assets/marker/camera-48.png", import.meta.url).href;
+const visitedMarkerIconUrl = new URL("../../assets/marker/camera-48-visited.png", import.meta.url).href;
+const newMarkerIconUrl = new URL("../../assets/marker/camera-48-new.png", import.meta.url).href;
+
 const markers = new Map<string, L.Marker>();
 const latestEntry = await getLatestEntry();
 let currentCountry: CountryCode | "DE" = "DE";
@@ -21,6 +25,9 @@ let routeLine: L.Polyline;
 let routeGlow: L.Polyline;
 let routeAnimationFrame: number | null = null;
 let lastRouteKey: string | null = null;
+let isEditMode = false;
+let currentGalleryEntryId: string | null = null;
+let currentGalleryDescription: string | null = null;
 
 export async function initMap() {
   if (isInitialized) return;
@@ -46,14 +53,14 @@ export async function initMap() {
   map.addLayer(markerCluster);
 
   routeGlow = L.polyline([], {
-    color: "#768542",
+    color: "#bfe264",
     opacity: 0.2,
     weight: 10,
     lineCap: "round",
     lineJoin: "round",
   }).addTo(map);
   routeLine = L.polyline([], {
-    color: "#768542",
+    color: "#bfe264",
     opacity: 0.9,
     weight: 3,
     lineCap: "round",
@@ -70,6 +77,29 @@ export async function initMap() {
     await setCardText(latestEntry.section);
   }
   map.on("moveend", handleViewportChanged);
+}
+
+export function toggleEditMode(buttonName: string) {
+  // console.log("Starte Edit-Mode");
+  // console.log("Geklickter Button ist " + buttonName);
+  isEditMode = !isEditMode;
+  const editButton = document.getElementById(buttonName) as HTMLButtonElement;
+  if (isEditMode) {
+    editButton.classList.add("active");
+    document.body.classList.add("edit-mode");
+  } else {
+    editButton.classList.remove("active");
+    document.body.classList.remove("edit-mode");
+  }
+  // Reload markers to update click handlers (without clearing the route)
+  markerCluster.clearLayers();
+  markers.clear();
+  loadMarkersInView();
+
+  const gallery = document.getElementById("photo-gallery") as HTMLDivElement | null;
+  if (gallery?.classList.contains("active") && currentGalleryEntryId) {
+    loadPhotosOfMarker(currentGalleryEntryId, currentGalleryDescription || "");
+  }
 }
 
 export function selectCountry(country: CountryCode) {
@@ -175,17 +205,17 @@ function createMarker(
   images: number,
 ) {
   const isVisited = visitedMarkers.has(id);
-  let icon;
-  if (isVisited) {
-    icon = "../../assets/marker/camera-48-visited.png";
-  } else {
-    icon = "../../assets/marker/camera-48-new.png";
-  }
+  const icon = isEditMode
+    ? editMarkerIconUrl
+    : isVisited
+      ? visitedMarkerIconUrl
+      : newMarkerIconUrl;
 
   var customIcon = L.icon({
     iconUrl: icon,
     iconSize: [48, 48],
     iconAnchor: [24, 42],
+    className: isEditMode ? "editable-marker" : "normal-marker",
   });
 
   var markerOptions: L.MarkerOptions = {
@@ -198,12 +228,24 @@ function createMarker(
     //     year: "numeric",
     //   }),
     icon: customIcon,
+    opacity: 0,
   };
 
   const marker = L.marker([lat, lng], markerOptions).on(
     "click",
-    () => (showPhotoGallery(id, desc), setMarkerVisited(id)),
+    () => {
+      if (isEditMode) {
+        showEditMenu(id, title);
+      } else {
+        showPhotoGallery(id, desc);
+        setMarkerVisited(id);
+      }
+    },
   );
+
+  const editHint = isEditMode
+    ? `<div class="tooltip-edit-hint"><i class="bi bi-pencil"></i> Bearbeiten</div>`
+    : "";
 
   marker.bindTooltip(
     `<div class="tooltip-inner">
@@ -219,6 +261,7 @@ function createMarker(
      <div class="bi bi-eye-fill tooltip-views">
       ${views}
      </div>
+     ${editHint}
    </div>`,
     {
       className: isVisited ? "visited-marker" : "unvisited-marker",
@@ -235,11 +278,112 @@ function createMarker(
   return marker;
 }
 
-function showPhotoGallery(entryId: string, title: string) {
-  loadPhotosOfMarker(entryId, title);
+async function showEditMenu(entryId: string, currentTitle: string) {
+  const user = await getUser();
+  const role = user?.app_metadata?.role || "user";
+
+  // Create modal if it doesn't exist
+  let editModal = document.getElementById("edit-modal") as HTMLDivElement;
+  if (!editModal) {
+    editModal = document.createElement("div");
+    editModal.id = "edit-modal";
+    editModal.className = "modal";
+    editModal.innerHTML = `
+      <div class="card edit-cd glassy modal-content">
+        <div class="card-head">
+          <h2>Marker bearbeiten</h2>
+          <div class="reset-link">
+            <button class="close-button" id="edit-close-button">X</button>
+          </div>
+        </div>
+        <div class="edit-container">
+          <input type="text" id="edit-title" placeholder="Titel" required/>
+          <button class="nav-button lg-button" id="save-edit-btn"><i class="bi bi-check"></i>Speichern</button>
+          ${role === "administrator" ? '<button class="nav-button lg-button delete-btn" id="delete-entry-btn"><i class="bi bi-trash"></i>Löschen</button>' : ''}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(editModal);
+  }
+
+  const titleInput = document.getElementById("edit-title") as HTMLInputElement;
+  const saveBtn = document.getElementById("save-edit-btn") as HTMLButtonElement;
+  const closeBtn = document.getElementById("edit-close-button") as HTMLButtonElement;
+  const deleteBtn = document.getElementById("delete-entry-btn") as HTMLButtonElement | null;
+
+  titleInput.value = currentTitle;
+
+  // Show modal
+  editModal.style.visibility = "visible";
+  editModal.style.opacity = "1";
+  const modalBackdrop = document.getElementById("modal-backdrop") as HTMLDivElement;
+  modalBackdrop.classList.add("active");
+  map.scrollWheelZoom.disable();
+
+  const closeModal = () => {
+    editModal.style.visibility = "hidden";
+    editModal.style.opacity = "0";
+    modalBackdrop.classList.remove("active");
+    map.scrollWheelZoom.enable();
+  };
+
+  closeBtn.onclick = closeModal;
+
+  saveBtn.onclick = async () => {
+    const newTitle = titleInput.value.trim();
+    if (!newTitle) return;
+
+    console.log("Updating entry", entryId, "with title", newTitle);
+
+    const { error } = await supabase
+      .from("entries")
+      .update({ title: newTitle })
+      .eq("id", entryId);
+
+    console.log("Update result:", error);
+
+    if (error) {
+      console.error("Error updating entry:", error);
+      alert("Fehler beim Speichern: " + error.message);
+    } else {
+      alert("Titel gespeichert");
+      closeModal();
+      // Reload markers to reflect changes
+      clearMarkers();
+      loadMarkersInView();
+    }
+  };
+
+  if (deleteBtn) {
+    deleteBtn.onclick = async () => {
+      if (confirm("Bist du sicher, dass du diesen Eintrag löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.")) {
+        const { error } = await supabase
+          .from("entries")
+          .delete()
+          .eq("id", entryId);
+
+        if (error) {
+          console.error("Error deleting entry:", error);
+          alert("Fehler beim Löschen");
+        } else {
+          alert("Eintrag gelöscht");
+          closeModal();
+          // Reload markers
+          clearMarkers();
+          loadMarkersInView();
+        }
+      }
+    };
+  }
 }
 
-async function loadPhotosOfMarker(entryId: string, title: string) {
+function showPhotoGallery(entryId: string, description: string) {
+  currentGalleryEntryId = entryId;
+  currentGalleryDescription = description;
+  loadPhotosOfMarker(entryId, description);
+}
+
+async function loadPhotosOfMarker(entryId: string, description: string) {
   if (!entryId) return;
 
   const { data, error } = await supabase
@@ -253,10 +397,10 @@ async function loadPhotosOfMarker(entryId: string, title: string) {
     return;
   }
 
-  renderPhotos(data, title);
+  await renderPhotos(data, description);
 }
 
-function renderPhotos(photos: any[], title: string) {
+async function renderPhotos(photos: any[], description: string) {
   const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
   const header = document.getElementById("photo-header") as HTMLDivElement;
   header.innerHTML = `<h2>${COUNTRIES[currentCountry!].name}</h2> 
@@ -290,6 +434,12 @@ function renderPhotos(photos: any[], title: string) {
   carouselGallery.innerHTML = ""; // Clear previous photos
   thumbnailGallery.innerHTML = ""; // Clear previous thumbnails
   gallery.classList.add("active");
+
+  const user = await getUser();
+  const role = user?.app_metadata?.role || "user";
+  const canEditDescription = isEditMode && (role === "administrator" || role === "superuser");
+  const canDeletePhotos = isEditMode && role === "administrator";
+
   photos.forEach((photo, index) => {
     if (index === 0) {
       createPhoto(photo, index);
@@ -309,7 +459,6 @@ function renderPhotos(photos: any[], title: string) {
     const itemContent = document.createElement("div");
     const itemNo = document.createElement("div");
     const itemTakenAt = document.createElement("div");
-    const itemDescription = document.createElement("div");
     const takenAt = new Date(photo.taken_at).toLocaleDateString("de-DE", {
       day: "2-digit",
       month: "2-digit",
@@ -317,17 +466,33 @@ function renderPhotos(photos: any[], title: string) {
     });
 
     img.src = photo.image_url;
-    img.alt = title;
+    img.alt = description;
     itemNo.textContent = `Bild ${index + 1} von ${total}`;
     itemTakenAt.textContent = takenAt;
-    itemDescription.textContent = title || "";
+
+    const itemDescriptionElement = canEditDescription
+      ? document.createElement("textarea")
+      : document.createElement("div");
+    itemDescriptionElement.className = canEditDescription
+      ? "item-description item-description-input"
+      : "item-description";
+
+    if (canEditDescription) {
+      const textarea = itemDescriptionElement as HTMLTextAreaElement;
+      textarea.value = description || "";
+      textarea.placeholder = "Beschreibung bearbeiten...";
+      textarea.rows = 4;
+    } else {
+      itemDescriptionElement.textContent = description || "";
+    }
 
     imgContainer.classList.add("item");
+    imgContainer.dataset.photoId = photo.id;
     itemImg.classList.add("item-img");
     itemContent.classList.add("item-content");
     itemNo.classList.add("item-no");
     itemTakenAt.classList.add("item-date");
-    itemDescription.classList.add("item-description");
+    itemDescriptionElement.classList.add("item-description");
 
     carouselGallery.appendChild(imgContainer);
     imgContainer.appendChild(itemImg);
@@ -335,16 +500,128 @@ function renderPhotos(photos: any[], title: string) {
     itemImg.appendChild(img);
     itemContent.appendChild(itemNo);
     itemContent.appendChild(itemTakenAt);
-    itemContent.appendChild(itemDescription);
+    itemContent.appendChild(itemDescriptionElement);
+
+    if (canEditDescription) {
+      const saveButton = document.createElement("button");
+      saveButton.className = "nav-button lg-button item-save-button";
+      saveButton.innerHTML = '<i class="bi bi-check"></i> Speichern';
+      saveButton.addEventListener("click", async () => {
+        const newDescription = (
+          itemDescriptionElement as HTMLTextAreaElement
+        ).value.trim();
+        if (!currentGalleryEntryId) return;
+
+        const { error } = await supabase
+          .from("entries")
+          .update({ description: newDescription })
+          .eq("id", currentGalleryEntryId);
+
+        if (error) {
+          console.error("Error updating description:", error);
+          alert("Fehler beim Speichern der Beschreibung");
+          return;
+        }
+
+        currentGalleryDescription = newDescription;
+        const descriptionElements = document.querySelectorAll(
+          ".item-description",
+        );
+        descriptionElements.forEach((element) => {
+          if (element instanceof HTMLTextAreaElement) {
+            element.value = newDescription;
+          } else {
+            element.textContent = newDescription;
+          }
+        });
+
+        alert("Beschreibung gespeichert");
+      });
+      itemContent.appendChild(saveButton);
+    }
+
+    if (canDeletePhotos) {
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "image-delete-button";
+      deleteButton.innerHTML = '<i class="bi bi-trash"></i>';
+      deleteButton.addEventListener("click", async (event) => {
+        event.stopPropagation();
+        if (!confirm("Bist du sicher, dass du dieses Bild löschen möchtest?")) return;
+
+        const { error } = await supabase
+          .from("photos")
+          .delete()
+          .eq("id", photo.id);
+
+        if (error) {
+          console.error("Error deleting photo:", error);
+          alert("Fehler beim Löschen des Bildes");
+          return;
+        }
+
+        const removedPhoto = carouselGallery.querySelector(
+          `.item[data-photo-id="${photo.id}"]`,
+        );
+        const removedThumbnail = thumbnailGallery.querySelector(
+          `.item[data-photo-id="${photo.id}"]`,
+        );
+        removedPhoto?.remove();
+        removedThumbnail?.remove();
+
+        if (!carouselGallery.querySelector(".item")) {
+          closeGallery();
+        }
+      });
+
+      itemImg.appendChild(deleteButton);
+    }
   }
 
   function createThumbnail(photo: any) {
     const thumbItem = document.createElement("div");
     const thumbImg = document.createElement("img");
     thumbImg.src = photo.thumbnail_url;
-    thumbImg.alt = title;
+    thumbImg.alt = description;
     thumbItem.classList.add("item");
+    thumbItem.dataset.photoId = photo.id;
     thumbItem.appendChild(thumbImg);
+
+    if (canDeletePhotos) {
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "thumbnail-delete-button";
+      deleteButton.innerHTML = '<i class="bi bi-trash"></i>';
+      deleteButton.addEventListener("click", async (event) => {
+        event.stopPropagation();
+        if (!confirm("Bist du sicher, dass du dieses Bild löschen möchtest?")) return;
+
+        const { error } = await supabase
+          .from("photos")
+          .delete()
+          .eq("id", photo.id);
+
+        if (error) {
+          console.error("Error deleting photo:", error);
+          alert("Fehler beim Löschen des Bildes");
+          return;
+        }
+
+        const removedPhoto = carouselGallery.querySelector(
+          `.item[data-photo-id="${photo.id}"]`,
+        );
+        const removedThumbnail = thumbnailGallery.querySelector(
+          `.item[data-photo-id="${photo.id}"]`,
+        );
+        removedPhoto?.remove();
+        removedThumbnail?.remove();
+
+        if (!carouselGallery.querySelector(".item")) {
+          closeGallery();
+        }
+      });
+
+      thumbItem.appendChild(deleteButton);
+    }
+
     const thumbnailGallery = document.getElementById(
       "thumbnail-gallery",
     ) as HTMLDivElement;
@@ -427,6 +704,7 @@ function handleViewportChanged() {
 }
 
 function renderMarkers(entries: any[]) {
+  let delay = 0;
   entries.forEach((entry) => {
     if (markers.has(entry.id)) return;
 
@@ -444,6 +722,12 @@ function renderMarkers(entries: any[]) {
     );
     markerCluster.addLayer(marker);
     markers.set(entry.id, marker);
+
+    setTimeout(() => {
+      marker.setOpacity(1);
+    }, delay);
+
+    delay += 80;
   });
 }
 
@@ -507,7 +791,10 @@ async function setMarkerVisited(entryId: string) {
   const marker = markers.get(entryId);
   if (!marker) return;
   const icon = L.icon({
-    iconUrl: "../../assets/marker/camera-48-visited.png",
+    iconUrl: visitedMarkerIconUrl,
+    iconSize: [48, 48],
+    iconAnchor: [24, 42],
+    className: "normal-marker",
   });
 
   marker.setIcon(icon);

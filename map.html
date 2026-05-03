@@ -24,14 +24,16 @@
             <div class="gallery-container">
                 <div id="carousel-gallery" class="carousel-gallery"></div>
                 <div id="thumbnail-gallery" class="thumbnail-gallery"></div>
-                <div class="arrows">
-                    <button id="prev" class="nav-button rnd-button glassy">‹</button>
-                    <button id="next" class="nav-button rnd-button glassy">›</button>
+                <div class="gallery-buttons">
+                    <div class="arrows">
+                        <button id="prev" class="nav-button rnd-button glassy">‹</button>
+                        <button id="next" class="nav-button rnd-button glassy">›</button>
+                    </div>
+                    <button class="nav-button rnd-button glassy" id="edit-gallery" title="Einträge bearbeiten"><i
+                            class="bi bi-pencil-square"></i></button>
                 </div>
 
             </div>
-            <!-- </div> -->
-            <!-- <div id="active-photo-container" class="active-photo-container"></div> -->
         </div>
         <div class="map_wrapper">
             <div id="map" class="map-container"></div>
@@ -46,6 +48,8 @@
                             class="bi bi-box-arrow-right"></i></button>
                     <button class="nav-button rnd-button glassy" id="upload" title="Upload"><i
                             class="bi bi-cloud-arrow-up"></i></button>
+                    <button class="nav-button rnd-button glassy" id="edit-map" title="Einträge bearbeiten"><i
+                            class="bi bi-pencil-square"></i></button>
                     <button class="nav-button rnd-button glassy" id="invite" title="Freunde einladen"><i
                             class="bi bi-person-add"></i></button>
                 </div>
@@ -72,10 +76,11 @@
                         </div>
                     </div>
                     <div class="invitation-container">
-                        <input type="text" id="firstName" placeholder="Vorname" required/>
-                        <input type="text" id="lastName" placeholder="Nachname" required/>
+                        <input type="text" id="firstName" placeholder="Vorname" required />
+                        <input type="text" id="lastName" placeholder="Nachname" required />
                         <input type="email" id="email" placeholder="Email" required />
-                        <button class="nav-button lg-button" id="inviteBtn"><i class="bi bi-person-add"></i>Einladung versenden</button>
+                        <button class="nav-button lg-button" id="inviteBtn"><i class="bi bi-person-add"></i>Einladung
+                            versenden</button>
                     </div>
                 </div>
             </div>
@@ -99,7 +104,7 @@
                         </label>
                         <span id="file-info">Kein Bild ausgewählt</span>
                     </div>
-                    
+
                     <button class="nav-button lg-button" id="uploadBtn"><i
                             class="bi bi-cloud-arrow-up"></i>Upload</button>
                     <div id="progressContainer" style="display:none; margin-top:16px;">

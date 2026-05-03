@@ -16,9 +16,9 @@
   transition:
     opacity 0.5s ease,
     transform 0.5s ease;
-    /* backdrop-filter 0.2s ease,
+  /* backdrop-filter 0.2s ease,
     background-color 0.2s ease; */
-    /* visibility 0.3s ease; */
+  /* visibility 0.3s ease; */
   pointer-events: none;
 }
 
@@ -53,10 +53,11 @@
   color: white;
   border: 2px solid currentColor;
   border-radius: 50%;
+  background-color: var(--primary-color);
 }
 
 .gallery-header .close-button:hover {
-  color: var(--a);
+  color: var(--primary-color);
   background-color: white;
 }
 
@@ -144,18 +145,25 @@
   border-radius: 20px;
 }
 
-.arrows {
+.gallery-buttons {
   position: absolute;
   bottom: 6rem;
   left: 18%;
-  width: 300px;
+  display: flex;
+  width: 400px;
   max-width: 30%;
+  align-items: center;
+  gap: 3rem;
+}
+
+.arrows {
+  position: relative;
   display: flex;
   gap: 10px;
   align-items: center;
 }
 
-.arrows button {
+.gallery-buttons button {
   width: 50px;
   height: 50px;
   background-color: #eee4;
