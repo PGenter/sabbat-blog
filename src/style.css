@@ -1,18 +1,24 @@
 @import url("https://fonts.cdnfonts.com/css/marhey");
 
 :root {
-  --a: #768542;
+  /* --a: #768542; */
+  --a: #4e4e4e;
   --b: #abbe6e;
-  --c: #6e7dbc;
+  --c: rgb(110, 125, 188);
   --d: #91233e;
   --e: #a31023;
-  --f: #e7ded5;
+  /* --f: #e7ded5; */
+  --f: rgba(229, 102, 117, 1);
   --primary-color: #bfe264;
-  --primary-background-color: #9e856f;
+  /* --primary-background-color: #9e856f; */
+  --primary-background-color: rgb(191, 226, 100);
   --i: #2f3777;
 
-  --secondary-background-color: rgba(158, 133, 111, 0.2);
-  --tertiary-background-color: rgba(158, 133, 111, 1);
+  /* --secondary-background-color: rgba(158, 133, 111, 0.2); */
+  /* --tertiary-background-color: rgba(158, 133, 111, 1); */
+  --secondary-background-color: rgba(229, 102, 117, 0.2);
+  --tertiary-background-color: rgba(229, 102, 117, 0.8);
+  --inactive-background-color: #b5b5b5;
 
   font-family: "Marhey", sans-serif;
 
@@ -71,7 +77,7 @@ input {
   border-top: none;
   border-left: none;
   border-right: none;
-  border-bottom: 1px solid var(--primary-background-color);
+  border-bottom: 1px solid;
   /* border-radius: 8px; */
   background-color: transparent;
   color: currentColor;
@@ -89,7 +95,7 @@ textarea {
   border-top: none;
   border-left: none;
   border-right: none;
-  border-bottom: 1px solid var(--primary-background-color);
+  border-bottom: 1px solid;
   align-content: end;
   /* border-radius: 8px; */
   background-color: transparent;
@@ -172,7 +178,7 @@ button {
 
 .nav_wrapper:hover {
   transform: translateX(-50%) scale(1.1);
-  background-color: var(--f);
+  background-color: var(--tertiary-background-color);
   /* background-color: oklch(from var(--primary-background-color) calc(l ) c h / 0.2); */
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(4px);
@@ -212,8 +218,8 @@ button {
   width: 0%;
   background: linear-gradient(
     90deg,
-    oklch(from currentColor calc(l - 0.3) c h),
-    currentColor
+    oklch(from var(--primary-color) calc(l - 0.5) c h),
+    oklch(from var(--primary-color) calc(l - 0.2) c h)
   );
   border-radius: 2px;
   transition:
@@ -271,13 +277,13 @@ button {
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 1rem;
+  height: 1rem;
   border-radius: 50%;
 
   box-shadow:
-    0 0 0 4px oklch(from currentColor calc(l + 0.2) c h / 0.2),
-    0 0 12px oklch(from currentColor calc(l + 0.8) c h / 0.2);
+    0 0 0 4px oklch(from var(--primary-color) calc(l + 0.2) c h / 0.2),
+    0 0 12px oklch(from var(--primary-color) calc(l + 0.8) c h / 0.2);
 
   cursor: grab;
   transition:
@@ -307,7 +313,7 @@ button {
   left: 50%;
   transform: translateX(-50%) scale(0.9);
   white-space: nowrap;
-  color: black;
+  color: var(--a);
   border-radius: 6px;
   font-size: 12px;
   /* pointer-events: none; */
@@ -360,12 +366,12 @@ button {
   height: 1rem;
   object-fit: cover;
   border-radius: 5px;
-  border: 1px solid var(--c);
+  /* border: 1px solid var(--c); */
   transition: transform 0.15s;
 }
 
 .slider-tooltip.active img {
-  border: 2px solid var(--c);
+  border: 2px solid var(--primary-color);
   transform: scale(1.2);
 }
 
@@ -395,12 +401,11 @@ button {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: var(--secondary-background-color);
   backdrop-filter: blur(0px);
   -webkit-backdrop-filter: blur(0px);
   transition:
     backdrop-filter 0.3s ease,
-    background 0.3s ease;
+    background-color 0.3s ease;
   pointer-events: none;
   z-index: 999;
 }
@@ -409,6 +414,7 @@ button {
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   pointer-events: none;
+  background-color: var(--secondary-background-color);
 }
 
 .inactive-background {
@@ -449,7 +455,7 @@ button {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: var(--primary-background-color);
+  background-color: var(--inactive-background-color);
   pointer-events: none;
 }
 
@@ -500,7 +506,7 @@ button {
 
 /* --- Visited State --- */
 .visited-marker .tooltip-inner {
-  background: var(--primary-background-color);
+  background: var(--inactive-background-color);
   color: #202020;
 }
 
@@ -782,8 +788,8 @@ path.leaflet-interactive:nth-child(2) {
 }
 
 .rnd-button.active {
-  background-color: var(--a) !important;
-  color: var(--primary-background-color);
+  background-color: var(--tertiary-background-color) !important;
+  color: var(--primary-color);
 }
 
 .nav-button i {

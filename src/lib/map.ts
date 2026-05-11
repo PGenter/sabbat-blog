@@ -8,9 +8,21 @@ import { COUNTRIES, type CountryCode } from "./geo";
 // import "./slider.ts";
 import "./gallery.ts";
 
-const editMarkerIconUrl = new URL("../../assets/marker/camera-48.png", import.meta.url).href;
-const visitedMarkerIconUrl = new URL("../../assets/marker/camera-48-visited.png", import.meta.url).href;
-const newMarkerIconUrl = new URL("../../assets/marker/camera-48-new.png", import.meta.url).href;
+// const editMarkerIconUrl = new URL("../../assets/marker/camera-48.png", import.meta.url).href;
+// const visitedMarkerIconUrl = new URL("../../assets/marker/camera-48-visited.png", import.meta.url).href;
+// const newMarkerIconUrl = new URL("../../assets/marker/camera-48-new.png", import.meta.url).href;
+const newMarkerIconUrl = new URL(
+  "../../assets/marker/cameraMarker-new.png",
+  import.meta.url,
+).href;
+const visitedMarkerIconUrl = new URL(
+  "../../assets/marker/cameraMarker-viewed.png",
+  import.meta.url,
+).href;
+const editMarkerIconUrl = new URL(
+  "../../assets/marker/cameraMarker-edit.png",
+  import.meta.url,
+).href;
 
 const markers = new Map<string, L.Marker>();
 const latestEntry = await getLatestEntry();
@@ -69,7 +81,7 @@ export async function initMap() {
 
   await loadVisitedMarkers();
   await loadUnvisitedEntryCount();
-  
+
   // const latestEntry = await getLatestEntry();
   if (latestEntry?.section && latestEntry?.section != null) {
     currentCountry = latestEntry.section;
@@ -96,7 +108,9 @@ export function toggleEditMode(buttonName: string) {
   markers.clear();
   loadMarkersInView();
 
-  const gallery = document.getElementById("photo-gallery") as HTMLDivElement | null;
+  const gallery = document.getElementById(
+    "photo-gallery",
+  ) as HTMLDivElement | null;
   if (gallery?.classList.contains("active") && currentGalleryEntryId) {
     loadPhotosOfMarker(currentGalleryEntryId, currentGalleryDescription || "");
   }
@@ -114,13 +128,13 @@ export function selectCountry(country: CountryCode) {
   // card.innerHTML = `<h2>${COUNTRIES[country].name}</h2>`;
 }
 
-export async function setCardText(country: CountryCode){
+export async function setCardText(country: CountryCode) {
   const card = document.getElementById("country-card") as HTMLDivElement;
   const user = await getUser();
   card.innerHTML = `<h2>Hallo ${user?.user_metadata?.first_name},</h2>
   <p> schön, dass du hier bist! Auf dieser Seite kannst du uns auf unserer Reise begleiten.</p>
-  <p>Aktuell befinden wir uns in <u><b>${COUNTRIES[country].name}</b></u>.</p>`
-  if(unvisitedEntries > 0){
+  <p>Aktuell befinden wir uns in <u><b>${COUNTRIES[country].name}</b></u>.</p>`;
+  if (unvisitedEntries > 0) {
     card.innerHTML += `<p>Es gibt noch ${unvisitedEntries} unserer Stationen, die du noch nicht entdeckt hast. </p>`;
   } else {
     card.innerHTML += `<p>Es gibt aktuell leider keine neuen Stationen zu entdecken. Wir werden bald neue Bilder hochladen. Bis dahin kannst du unsere bisherigen Stationen noch einmal erkunden.</p>`;
@@ -213,8 +227,8 @@ function createMarker(
 
   var customIcon = L.icon({
     iconUrl: icon,
-    iconSize: [48, 48],
-    iconAnchor: [24, 42],
+    iconSize: [42, 42],
+    iconAnchor: [20, 42],
     className: isEditMode ? "editable-marker" : "normal-marker",
   });
 
@@ -231,17 +245,14 @@ function createMarker(
     opacity: 0,
   };
 
-  const marker = L.marker([lat, lng], markerOptions).on(
-    "click",
-    () => {
-      if (isEditMode) {
-        showEditMenu(id, title);
-      } else {
-        showPhotoGallery(id, desc);
-        setMarkerVisited(id);
-      }
-    },
-  );
+  const marker = L.marker([lat, lng], markerOptions).on("click", () => {
+    if (isEditMode) {
+      showEditMenu(id, title);
+    } else {
+      showPhotoGallery(id, desc);
+      setMarkerVisited(id);
+    }
+  });
 
   const editHint = isEditMode
     ? `<div class="tooltip-edit-hint"><i class="bi bi-pencil"></i> Bearbeiten</div>`
@@ -299,7 +310,7 @@ async function showEditMenu(entryId: string, currentTitle: string) {
         <div class="edit-container">
           <input type="text" id="edit-title" placeholder="Titel" required/>
           <button class="nav-button lg-button" id="save-edit-btn"><i class="bi bi-check"></i>Speichern</button>
-          ${role === "administrator" ? '<button class="nav-button lg-button delete-btn" id="delete-entry-btn"><i class="bi bi-trash"></i>Löschen</button>' : ''}
+          ${role === "administrator" ? '<button class="nav-button lg-button delete-btn" id="delete-entry-btn"><i class="bi bi-trash"></i>Löschen</button>' : ""}
         </div>
       </div>
     `;
@@ -308,15 +319,21 @@ async function showEditMenu(entryId: string, currentTitle: string) {
 
   const titleInput = document.getElementById("edit-title") as HTMLInputElement;
   const saveBtn = document.getElementById("save-edit-btn") as HTMLButtonElement;
-  const closeBtn = document.getElementById("edit-close-button") as HTMLButtonElement;
-  const deleteBtn = document.getElementById("delete-entry-btn") as HTMLButtonElement | null;
+  const closeBtn = document.getElementById(
+    "edit-close-button",
+  ) as HTMLButtonElement;
+  const deleteBtn = document.getElementById(
+    "delete-entry-btn",
+  ) as HTMLButtonElement | null;
 
   titleInput.value = currentTitle;
 
   // Show modal
   editModal.style.visibility = "visible";
   editModal.style.opacity = "1";
-  const modalBackdrop = document.getElementById("modal-backdrop") as HTMLDivElement;
+  const modalBackdrop = document.getElementById(
+    "modal-backdrop",
+  ) as HTMLDivElement;
   modalBackdrop.classList.add("active");
   map.scrollWheelZoom.disable();
 
@@ -356,7 +373,11 @@ async function showEditMenu(entryId: string, currentTitle: string) {
 
   if (deleteBtn) {
     deleteBtn.onclick = async () => {
-      if (confirm("Bist du sicher, dass du diesen Eintrag löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.")) {
+      if (
+        confirm(
+          "Bist du sicher, dass du diesen Eintrag löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.",
+        )
+      ) {
         const { error } = await supabase
           .from("entries")
           .delete()
@@ -405,7 +426,7 @@ async function renderPhotos(photos: any[], description: string) {
   const header = document.getElementById("photo-header") as HTMLDivElement;
   header.innerHTML = `<h2>${COUNTRIES[currentCountry!].name}</h2> 
                       <div class="close-button-container">
-                        <button class="close-button" id="close-button">X</button>
+                        <button class="nav-button rnd-button glassy close-button" id="close-button"><i class="bi bi-x"></i></button>
                       </div>`;
 
   const closeButton = document.getElementById(
@@ -437,7 +458,8 @@ async function renderPhotos(photos: any[], description: string) {
 
   const user = await getUser();
   const role = user?.app_metadata?.role || "user";
-  const canEditDescription = isEditMode && (role === "administrator" || role === "superuser");
+  const canEditDescription =
+    isEditMode && (role === "administrator" || role === "superuser");
   const canDeletePhotos = isEditMode && role === "administrator";
 
   photos.forEach((photo, index) => {
@@ -524,9 +546,8 @@ async function renderPhotos(photos: any[], description: string) {
         }
 
         currentGalleryDescription = newDescription;
-        const descriptionElements = document.querySelectorAll(
-          ".item-description",
-        );
+        const descriptionElements =
+          document.querySelectorAll(".item-description");
         descriptionElements.forEach((element) => {
           if (element instanceof HTMLTextAreaElement) {
             element.value = newDescription;
@@ -546,7 +567,8 @@ async function renderPhotos(photos: any[], description: string) {
       deleteButton.innerHTML = '<i class="bi bi-trash"></i>';
       deleteButton.addEventListener("click", async (event) => {
         event.stopPropagation();
-        if (!confirm("Bist du sicher, dass du dieses Bild löschen möchtest?")) return;
+        if (!confirm("Bist du sicher, dass du dieses Bild löschen möchtest?"))
+          return;
 
         const { error } = await supabase
           .from("photos")
@@ -592,7 +614,8 @@ async function renderPhotos(photos: any[], description: string) {
       deleteButton.innerHTML = '<i class="bi bi-trash"></i>';
       deleteButton.addEventListener("click", async (event) => {
         event.stopPropagation();
-        if (!confirm("Bist du sicher, dass du dieses Bild löschen möchtest?")) return;
+        if (!confirm("Bist du sicher, dass du dieses Bild löschen möchtest?"))
+          return;
 
         const { error } = await supabase
           .from("photos")
