@@ -145,7 +145,21 @@ const translations = {
 } as const;
 
 const LANGUAGE_STORAGE_KEY = "sabbat-blog-language";
-let currentLanguage: Language = "german";
+
+function getInitialLanguage(): Language {
+  if (typeof window !== "undefined") {
+    const storedLanguage = getStoredLanguage();
+    if (storedLanguage) return storedLanguage;
+
+    const browserLanguage = navigator.language?.slice(0, 2).toLowerCase();
+    if (browserLanguage === "de") return "german";
+    if (browserLanguage === "es") return "spanish";
+  }
+
+  return "german";
+}
+
+let currentLanguage: Language = getInitialLanguage();
 
 function isSupportedLanguage(value: unknown): value is Language {
   return typeof value === "string" && SUPPORTED_LANGUAGES.includes(value as Language);
