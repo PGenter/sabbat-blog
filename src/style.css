@@ -9,27 +9,22 @@
   --e: #a31023;
   /* --f: #e7ded5; */
   --f: rgba(229, 102, 117, 1);
-  --primary-color: #bfe264;
-  /* --primary-background-color: #9e856f; */
-  --primary-background-color: rgb(191, 226, 100);
   --i: #2f3777;
 
-  /* --secondary-background-color: rgba(158, 133, 111, 0.2); */
-  /* --tertiary-background-color: rgba(158, 133, 111, 1); */
+  --primary-color: #bfe264;
+  --primary-background-color: rgb(191, 226, 100);
   --secondary-background-color: rgba(229, 102, 117, 0.2);
   --tertiary-background-color: rgba(229, 102, 117, 0.8);
   --inactive-background-color: #b5b5b5;
 
   font-family: "Marhey", sans-serif;
 
-  /* font-family: system-ui, Avenir, Helvetica, Arial, sans-serif; */
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
-  /* color: rgba(17, 142, 219, 1); */
   color: var(--a);
-  background-color: var(--primary-background-color);
+  background-color: var(--inactive-background-color);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -47,7 +42,6 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
-  /* font-family: "Inter", sans-serif; */
 }
 
 h1 {
@@ -663,6 +657,31 @@ path.leaflet-interactive:nth-child(2) {
   width: min(50vw, 400px);
   gap: 1.5rem;
   height: auto;
+}
+
+.language-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.lang-btn {
+  display: inline-flex;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 6px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lang-btn:hover {
+  transform: scale(1.2);
+}
+
+.lang-btn.active {
+  border-color: var(--f);
+  background: var(--secondary-background-color);
 }
 
 .edit-cd {

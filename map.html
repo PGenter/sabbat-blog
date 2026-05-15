@@ -26,8 +26,10 @@
                 <div id="thumbnail-gallery" class="thumbnail-gallery"></div>
                 <div class="gallery-buttons">
                     <div class="arrows">
-                        <button id="prev" class="nav-button rnd-button glassy"><i class="bi bi-caret-left-fill"></i></i></button>
-                        <button id="next" class="nav-button rnd-button glassy"><i class="bi bi-caret-right-fill"></i></i></button>
+                        <button id="prev" class="nav-button rnd-button glassy"><i
+                                class="bi bi-caret-left-fill"></i></i></button>
+                        <button id="next" class="nav-button rnd-button glassy"><i
+                                class="bi bi-caret-right-fill"></i></i></button>
                     </div>
                     <button class="nav-button rnd-button glassy" id="edit-gallery" title="Einträge bearbeiten"><i
                             class="bi bi-pencil-square"></i></button>
@@ -79,6 +81,16 @@
                         <input type="text" id="firstName" placeholder="Vorname" required />
                         <input type="text" id="lastName" placeholder="Nachname" required />
                         <input type="email" id="email" placeholder="Email" required />
+                        <div class="language-selector">
+                            <button type="button" class="lang-btn active" data-language="german" title="Deutsch">
+                                <img src="https://flagcdn.com/w20/de.png" srcset="https://flagcdn.com/w40/de.png 2x"
+                                    width="20" alt="Deutsch" />
+                            </button>
+                            <button type="button" class="lang-btn" data-language="spanish" title="Español">
+                                <img src="https://flagcdn.com/w20/es.png" srcset="https://flagcdn.com/w40/es.png 2x"
+                                    width="20" alt="Español" />
+                            </button>
+                        </div>
                         <button class="nav-button lg-button" id="inviteBtn"><i class="bi bi-person-add"></i>Einladung
                             versenden</button>
                     </div>

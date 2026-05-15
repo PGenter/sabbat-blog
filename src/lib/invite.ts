@@ -2,8 +2,24 @@ import { hideModal } from "../page/main";
 import { supabase } from "./supabase";
 import { handleError } from "./errorHandler";
 
+let selectedLanguage = "german";
+
 const { data: userData } = await supabase.auth.getUser();
 const button = document.getElementById("inviteBtn") as HTMLButtonElement;
+const languageButtons = document.querySelectorAll(".lang-btn");
+
+languageButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    languageButtons.forEach((btn) =>
+      btn.classList.remove("active"),
+    );
+
+    button.classList.add("active");
+
+    selectedLanguage =
+      button.getAttribute("data-language") || "german";
+  });
+});
 
 button.addEventListener("click", async () => {
   try {
@@ -30,7 +46,7 @@ button.addEventListener("click", async () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session?.access_token}`,
         },
-        body: JSON.stringify({ email, firstName, lastName }),
+        body: JSON.stringify({ email, firstName, lastName, selectedLanguage }),
       },
     );
     if (!res.ok) {

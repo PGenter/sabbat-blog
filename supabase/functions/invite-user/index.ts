@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Fehlende Berechtigung", code: "FORBIDDEN" }, 403);
   }
 
-  const { email, firstName, lastName } = await req.json();
+  const { email, firstName, lastName, selectedLanguage } = await req.json();
 
   if (!email) {
     return jsonResponse({ error: "Email-Adresse erforderlich", code: "VALIDATION_ERROR" }, 400);
@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
         display_name: displayName,
         first_name: firstName,
         last_name: lastName,
+        language: selectedLanguage,        
       },
       redirectTo: "https://localhost:5173/auth/confirm?type=invite&next=/reset-password.html"
     },

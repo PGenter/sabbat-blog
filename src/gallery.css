@@ -51,17 +51,17 @@
 
 .gallery-header .close-button {
   color: var(--primary-color);
-  /* border: 2px solid var(--primary-color);
-  border-radius: 50%;
-  background-color: var(--f); */
-  /* padding-top: 5px; */
-  /* background-color: var(--primary-color); */
+  border: 2px solid var(--primary-color);
+  padding-top: 3px;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: x-large;
 }
 
 .gallery-header .close-button:hover {
   /* color: var(--primary-color); */
-  /* color: var(--f);
-  background-color: var(--primary-color); */
+  /* color: var(--f); */
+  background-color: var(--f);
 }
 
 .close-button-container {
@@ -175,6 +175,7 @@
   font-size: x-large;
   z-index: 100;
   color: var(--primary-color);
+  border: 1px solid var(--primary-color);
 }
 
 .gallery-container .carousel-gallery .item:nth-child(1) {

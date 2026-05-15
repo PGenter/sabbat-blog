@@ -132,12 +132,15 @@ export async function setCardText(country: CountryCode) {
   const card = document.getElementById("country-card") as HTMLDivElement;
   const user = await getUser();
   card.innerHTML = `<h2>Hallo ${user?.user_metadata?.first_name},</h2>
-  <p> schön, dass du hier bist! Auf dieser Seite kannst du uns auf unserer Reise begleiten.</p>
+  <p>schön, dass du hier bist! Auf dieser Seite kannst du uns auf unserer Reise begleiten.</p>
+  <p>Die Marker auf der Karte zeigen die Stationen, die wir bislang besucht haben.</p>
   <p>Aktuell befinden wir uns in <u><b>${COUNTRIES[country].name}</b></u>.</p>`;
-  if (unvisitedEntries > 0) {
-    card.innerHTML += `<p>Es gibt noch ${unvisitedEntries} unserer Stationen, die du noch nicht entdeckt hast. </p>`;
-  } else {
+  if (unvisitedEntries == 0) {
     card.innerHTML += `<p>Es gibt aktuell leider keine neuen Stationen zu entdecken. Wir werden bald neue Bilder hochladen. Bis dahin kannst du unsere bisherigen Stationen noch einmal erkunden.</p>`;
+  } else if(unvisitedEntries == 1) {
+    card.innerHTML += `<p>Es gibt noch <u>${unvisitedEntries} Station</u>, die du noch nicht entdeckt hast. </p>`;
+  } else {
+    card.innerHTML += `<p>Es gibt noch <u>${unvisitedEntries} Stationen</u>, die du noch nicht entdeckt hast. </p>`;
   }
 }
 
