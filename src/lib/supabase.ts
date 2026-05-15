@@ -15,6 +15,17 @@ export async function getRole() {
   return user?.app_metadata?.role ?? "user";
 }
 
+export async function getUserLanguage() {
+  const user = await getUser();
+  const language = user?.user_metadata?.language;
+  return language === "spanish" ? "spanish" : "german";
+}
+
+export async function updateUserLanguage(language: "german" | "spanish") {
+  const { error } = await supabase.auth.updateUser({ data: { language } });
+  return error;
+}
+
 export async function requireAuth(redirectTo = "/index.html") {
   const { data } = await supabase.auth.getSession();
   // console.log("data aus requireAuth: "+data.session?.access_token);

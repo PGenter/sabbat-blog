@@ -3,8 +3,9 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import L from "leaflet";
 import { supabase, getUser } from "../lib/supabase";
+import { t, getCurrentLanguage, getLanguageCode, formatCountText } from "../lib/i18n.ts";
 import "leaflet.markercluster";
-import { COUNTRIES, type CountryCode } from "./geo";
+import { COUNTRIES, getCountryName, type CountryCode } from "./geo";
 // import "./slider.ts";
 import "./gallery.ts";
 
@@ -131,16 +132,17 @@ export function selectCountry(country: CountryCode) {
 export async function setCardText(country: CountryCode) {
   const card = document.getElementById("country-card") as HTMLDivElement;
   const user = await getUser();
-  card.innerHTML = `<h2>Hallo ${user?.user_metadata?.first_name},</h2>
-  <p>schön, dass du hier bist! Auf dieser Seite kannst du uns auf unserer Reise begleiten.</p>
-  <p>Die Marker auf der Karte zeigen die Stationen, die wir bislang besucht haben.</p>
-  <p>Aktuell befinden wir uns in <u><b>${COUNTRIES[country].name}</b></u>.</p>`;
-  if (unvisitedEntries == 0) {
-    card.innerHTML += `<p>Es gibt aktuell leider keine neuen Stationen zu entdecken. Wir werden bald neue Bilder hochladen. Bis dahin kannst du unsere bisherigen Stationen noch einmal erkunden.</p>`;
-  } else if(unvisitedEntries == 1) {
-    card.innerHTML += `<p>Es gibt noch <u>${unvisitedEntries} Station</u>, die du noch nicht entdeckt hast. </p>`;
+  const firstName = user?.user_metadata?.first_name ?? "";
+
+  card.innerHTML = `<h2>${t("hello")} ${firstName},</h2>
+  <p>${t("welcomeLine1")}</p>
+  <p>${t("welcomeLine2")}</p>
+  <p>${t("currentLocation")} <u><b>${getCountryName(country, getCurrentLanguage())}</b></u>.</p>`;
+
+  if (unvisitedEntries === 0) {
+    card.innerHTML += `<p>${t("noNewStations")}</p>`;
   } else {
-    card.innerHTML += `<p>Es gibt noch <u>${unvisitedEntries} Stationen</u>, die du noch nicht entdeckt hast. </p>`;
+    card.innerHTML += `<p>${formatCountText(unvisitedEntries)}</p>`;
   }
 }
 
@@ -258,7 +260,7 @@ function createMarker(
   });
 
   const editHint = isEditMode
-    ? `<div class="tooltip-edit-hint"><i class="bi bi-pencil"></i> Bearbeiten</div>`
+    ? `<div class="tooltip-edit-hint"><i class="bi bi-pencil"></i> ${t("editHint")}</div>`
     : "";
 
   marker.bindTooltip(
@@ -266,17 +268,19 @@ function createMarker(
       <div class="tooltip-title">
         ${title}
       </div>
-     <div class="tooltip-date">
-       Upload: ${new Date(createdAt).toLocaleDateString("de-DE")}
-     </div>
-     <div class="bi bi-images tooltip-views">
-      ${images}
-     </div>
-     <div class="bi bi-eye-fill tooltip-views">
-      ${views}
-     </div>
-     ${editHint}
-   </div>`,
+      <div class="tooltip-date">
+        ${t("uploadLabel")}: ${new Date(createdAt).toLocaleDateString(
+          getLanguageCode(getCurrentLanguage()),
+        )}
+      </div>
+      <div class="bi bi-images tooltip-views">
+        ${images}
+      </div>
+      <div class="bi bi-eye-fill tooltip-views">
+        ${views}
+      </div>
+      ${editHint}
+    </div>`,
     {
       className: isVisited ? "visited-marker" : "unvisited-marker",
       direction: "top",
@@ -305,15 +309,15 @@ async function showEditMenu(entryId: string, currentTitle: string) {
     editModal.innerHTML = `
       <div class="card edit-cd glassy modal-content">
         <div class="card-head">
-          <h2>Marker bearbeiten</h2>
+          <h2>${t("editMarker")}</h2>
           <div class="reset-link">
             <button class="close-button" id="edit-close-button">X</button>
           </div>
         </div>
         <div class="edit-container">
-          <input type="text" id="edit-title" placeholder="Titel" required/>
-          <button class="nav-button lg-button" id="save-edit-btn"><i class="bi bi-check"></i>Speichern</button>
-          ${role === "administrator" ? '<button class="nav-button lg-button delete-btn" id="delete-entry-btn"><i class="bi bi-trash"></i>Löschen</button>' : ""}
+          <input type="text" id="edit-title" placeholder="${t("titlePlaceholder")}" required/>
+          <button class="nav-button lg-button" id="save-edit-btn"><i class="bi bi-check"></i>${t("save")}</button>
+          ${role === "administrator" ? `<button class="nav-button lg-button delete-btn" id="delete-entry-btn"><i class="bi bi-trash"></i>${t("delete")}</button>` : ""}
         </div>
       </div>
     `;
@@ -364,9 +368,9 @@ async function showEditMenu(entryId: string, currentTitle: string) {
 
     if (error) {
       console.error("Error updating entry:", error);
-      alert("Fehler beim Speichern: " + error.message);
+      alert(t("errorSaving") + error.message);
     } else {
-      alert("Titel gespeichert");
+      alert(t("save"));
       closeModal();
       // Reload markers to reflect changes
       clearMarkers();
@@ -376,11 +380,7 @@ async function showEditMenu(entryId: string, currentTitle: string) {
 
   if (deleteBtn) {
     deleteBtn.onclick = async () => {
-      if (
-        confirm(
-          "Bist du sicher, dass du diesen Eintrag löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.",
-        )
-      ) {
+      if (confirm(t("confirmDeleteEntry"))) {
         const { error } = await supabase
           .from("entries")
           .delete()
@@ -388,9 +388,9 @@ async function showEditMenu(entryId: string, currentTitle: string) {
 
         if (error) {
           console.error("Error deleting entry:", error);
-          alert("Fehler beim Löschen");
+          alert(t("errorDeleting"));
         } else {
-          alert("Eintrag gelöscht");
+          alert(t("entryDeleted"));
           closeModal();
           // Reload markers
           clearMarkers();
@@ -427,7 +427,7 @@ async function loadPhotosOfMarker(entryId: string, description: string) {
 async function renderPhotos(photos: any[], description: string) {
   const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
   const header = document.getElementById("photo-header") as HTMLDivElement;
-  header.innerHTML = `<h2>${COUNTRIES[currentCountry!].name}</h2> 
+  header.innerHTML = `<h2>${getCountryName(currentCountry!, getCurrentLanguage())}</h2> 
                       <div class="close-button-container">
                         <button class="nav-button rnd-button glassy close-button" id="close-button"><i class="bi bi-x"></i></button>
                       </div>`;
@@ -484,15 +484,18 @@ async function renderPhotos(photos: any[], description: string) {
     const itemContent = document.createElement("div");
     const itemNo = document.createElement("div");
     const itemTakenAt = document.createElement("div");
-    const takenAt = new Date(photo.taken_at).toLocaleDateString("de-DE", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+    const takenAt = new Date(photo.taken_at).toLocaleDateString(
+      getLanguageCode(getCurrentLanguage()),
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      },
+    );
 
     img.src = photo.image_url;
     img.alt = description;
-    itemNo.textContent = `Bild ${index + 1} von ${total}`;
+    itemNo.textContent = `${t("photoNumber")} ${index + 1} ${t("of")} ${total}`;
     itemTakenAt.textContent = takenAt;
 
     const itemDescriptionElement = canEditDescription
@@ -505,7 +508,7 @@ async function renderPhotos(photos: any[], description: string) {
     if (canEditDescription) {
       const textarea = itemDescriptionElement as HTMLTextAreaElement;
       textarea.value = description || "";
-      textarea.placeholder = "Beschreibung bearbeiten...";
+      textarea.placeholder = t("editDescriptionPlaceholder");
       textarea.rows = 4;
     } else {
       itemDescriptionElement.textContent = description || "";
@@ -530,7 +533,7 @@ async function renderPhotos(photos: any[], description: string) {
     if (canEditDescription) {
       const saveButton = document.createElement("button");
       saveButton.className = "nav-button lg-button item-save-button";
-      saveButton.innerHTML = '<i class="bi bi-check"></i> Speichern';
+      saveButton.innerHTML = `<i class="bi bi-check"></i> ${t("save")}`;
       saveButton.addEventListener("click", async () => {
         const newDescription = (
           itemDescriptionElement as HTMLTextAreaElement
@@ -544,7 +547,7 @@ async function renderPhotos(photos: any[], description: string) {
 
         if (error) {
           console.error("Error updating description:", error);
-          alert("Fehler beim Speichern der Beschreibung");
+          alert(t("errorSavingDescription"));
           return;
         }
 
@@ -559,7 +562,7 @@ async function renderPhotos(photos: any[], description: string) {
           }
         });
 
-        alert("Beschreibung gespeichert");
+        alert(t("descriptionSaved"));
       });
       itemContent.appendChild(saveButton);
     }
@@ -570,8 +573,7 @@ async function renderPhotos(photos: any[], description: string) {
       deleteButton.innerHTML = '<i class="bi bi-trash"></i>';
       deleteButton.addEventListener("click", async (event) => {
         event.stopPropagation();
-        if (!confirm("Bist du sicher, dass du dieses Bild löschen möchtest?"))
-          return;
+        if (!confirm(t("confirmDeletePhoto"))) return;
 
         const { error } = await supabase
           .from("photos")
@@ -580,7 +582,7 @@ async function renderPhotos(photos: any[], description: string) {
 
         if (error) {
           console.error("Error deleting photo:", error);
-          alert("Fehler beim Löschen des Bildes");
+          alert(t("errorDeletingPhoto"));
           return;
         }
 
@@ -617,8 +619,7 @@ async function renderPhotos(photos: any[], description: string) {
       deleteButton.innerHTML = '<i class="bi bi-trash"></i>';
       deleteButton.addEventListener("click", async (event) => {
         event.stopPropagation();
-        if (!confirm("Bist du sicher, dass du dieses Bild löschen möchtest?"))
-          return;
+        if (!confirm(t("confirmDeletePhoto"))) return;
 
         const { error } = await supabase
           .from("photos")
@@ -627,7 +628,7 @@ async function renderPhotos(photos: any[], description: string) {
 
         if (error) {
           console.error("Error deleting photo:", error);
-          alert("Fehler beim Löschen des Bildes");
+          alert(t("errorDeletingPhoto"));
           return;
         }
 
@@ -701,6 +702,17 @@ async function loadMarkersInView() {
     lastRouteKey = routeKey;
     animateRoute(data);
   }
+}
+
+export async function refreshLanguage() {
+  if (!isInitialized) return;
+  if (currentCountry) {
+    await setCardText(currentCountry);
+  }
+  clearMarkers();
+  // Reset the cached route key so the route is re-animated after markers reload.
+  lastRouteKey = null;
+  await loadMarkersInView();
 }
 
 async function getLatestEntry() {

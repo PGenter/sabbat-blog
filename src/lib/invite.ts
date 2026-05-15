@@ -1,6 +1,7 @@
 import { hideModal } from "../page/main";
 import { supabase } from "./supabase";
 import { handleError } from "./errorHandler";
+import { t } from "./i18n.ts";
 
 let selectedLanguage = "german";
 
@@ -10,16 +11,33 @@ const languageButtons = document.querySelectorAll(".lang-btn");
 
 languageButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    languageButtons.forEach((btn) =>
-      btn.classList.remove("active"),
-    );
+    languageButtons.forEach((btn) => btn.classList.remove("active"));
 
     button.classList.add("active");
 
-    selectedLanguage =
-      button.getAttribute("data-language") || "german";
+    selectedLanguage = button.getAttribute("data-language") || "german";
   });
 });
+
+function applyInviteTranslations() {
+  const inviteTitle = document.querySelector(
+    "#invitation-section .card-head h2",
+  ) as HTMLElement | null;
+  const firstName = document.getElementById("firstName") as HTMLInputElement | null;
+  const lastName = document.getElementById("lastName") as HTMLInputElement | null;
+  const email = document.getElementById("email") as HTMLInputElement | null;
+  const inviteBtn = document.getElementById("inviteBtn") as HTMLButtonElement | null;
+
+  if (inviteTitle) inviteTitle.textContent = t("newUserInvite");
+  if (firstName) firstName.placeholder = t("firstNamePlaceholder");
+  if (lastName) lastName.placeholder = t("lastNamePlaceholder");
+  if (email) email.placeholder = t("emailPlaceholder");
+  if (inviteBtn) inviteBtn.innerHTML = `<i class="bi bi-person-add"></i> ${t(
+    "inviteSend",
+  )}`;
+}
+
+applyInviteTranslations();
 
 button.addEventListener("click", async () => {
   try {
@@ -30,7 +48,7 @@ button.addEventListener("click", async () => {
       .value;
 
     if (!userData.user) {
-      alert("Login erforderlich!");
+      alert(t("loginRequired"));
       return;
     }
 

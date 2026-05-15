@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import imageCompression from "browser-image-compression";
 import * as exifr from "exifr";
 import { handleError } from "../lib/errorHandler";
+import { t } from "../lib/i18n.ts";
 
 export async function startUpload() {
   const { data: userData } = await supabase.auth.getUser();
@@ -26,11 +27,18 @@ export async function startUpload() {
     "description",
   ) as HTMLTextAreaElement;
   const button = document.getElementById("uploadBtn") as HTMLButtonElement;
+  const fileLabel = document.querySelector(".file-label") as HTMLElement | null;
+
+  if (titleEl) titleEl.placeholder = t("titlePlaceholder");
+  if (descriptionEl) descriptionEl.placeholder = t("descriptionPlaceholder");
+  if (fileLabel) fileLabel.textContent = t("chooseImages");
+  if (button)
+    button.innerHTML = `<i class="bi bi-cloud-arrow-up"></i> ${t("uploadStart")}`;
 
   button.addEventListener("click", async () => {
     if (!userData.user) {
       console.error("Kein Benutzer eingeloggt");
-      alert("Login erforderlich!");
+      alert(t("loginRequired"));
       return;
     }
     const files = input.files;
@@ -38,24 +46,24 @@ export async function startUpload() {
     const description = descriptionEl.value;
 
     if (!files || files.length === 0) {
-      alert("Keine Bilder ausgewählt");
+      alert(t("noImagesSelected"));
       return;
     }
 
     if (!title) {
-      alert("Bitte gib einen Titel an");
+      alert(t("pleaseProvideTitle"));
       return;
     }
 
     if (!description) {
-      alert("Bitte gib eine Beschreibung ein");
+      alert(t("pleaseProvideDescription"));
       return;
     }
 
     const processedFiles: ProcessedFile[] = [];
 
     button.disabled = true;
-    button.textContent = "Upload läuft...";
+    button.innerHTML = `<i class="bi bi-cloud-arrow-up"></i> ${t("uploadRunning")}`;
 
     for (const originalFile of Array.from(files)) {
       // Bild komprimieren
@@ -95,7 +103,7 @@ export async function startUpload() {
     const gpsFiles = processedFiles.filter((f) => f.latitude && f.longitude);
 
     if (gpsFiles.length === 0) {
-      alert("Keines der Bilder enthält GPS-Daten.");
+      alert(t("noGpsData"));
       return;
     }
 
@@ -188,7 +196,7 @@ export async function startUpload() {
       handleError(error);
     }
     button.disabled = false;
-    button.textContent = "Upload starten";
+    button.innerHTML = `<i class="bi bi-cloud-arrow-up"></i> ${t("uploadStart")}`;
   });
 
   async function processAndUploadImage(

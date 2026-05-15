@@ -1,9 +1,9 @@
 // import { selectCountry } from "./map";
-import { COUNTRIES, type CountryCode } from "./geo";
+import { COUNTRIES, getCountryName, type CountryCode } from "./geo";
+import { getCurrentLanguage } from "./i18n.ts";
 
 const stops = Object.entries(COUNTRIES).map(([code, data]) => ({
   country: code as CountryCode,
-  label: data.name,
   img: data.img,
 }));
 
@@ -22,11 +22,11 @@ stops.forEach((_stop, index) => {
   const tooltipImg = document.createElement("img");
   tooltip.className = "slider-tooltip";
   tooltip.id = `tooltip-${_stop.country}`;
-  tooltipText.textContent = _stop.label;
+  tooltipText.textContent = getCountryName(_stop.country, getCurrentLanguage());
   tooltipText.classList.add("slider-tooltip-text");
   tooltip.appendChild(tooltipText);
   tooltipImg.src = COUNTRIES[_stop.country].img;
-  tooltipImg.title = COUNTRIES[_stop.country].name;
+  tooltipImg.title = getCountryName(_stop.country, getCurrentLanguage());
   tooltip.appendChild(tooltipImg);
   el.appendChild(tooltip);
 
@@ -37,6 +37,21 @@ stops.forEach((_stop, index) => {
 
 export function setOnCountryChange(callback: (country: CountryCode) => void) {
   onCountryChange = callback;
+}
+
+export function updateCountryLabels() {
+  document.querySelectorAll(".slider-tooltip").forEach((tooltip) => {
+    const id = tooltip.id;
+    const countryCode = id.replace("tooltip-", "") as CountryCode;
+    const text = tooltip.querySelector("span") as HTMLElement | null;
+    const img = tooltip.querySelector("img") as HTMLImageElement | null;
+    if (text) {
+      text.textContent = getCountryName(countryCode, getCurrentLanguage());
+    }
+    if (img) {
+      img.title = getCountryName(countryCode, getCurrentLanguage());
+    }
+  });
 }
 
 function getPercentFromEvent(e: MouseEvent | TouchEvent) {

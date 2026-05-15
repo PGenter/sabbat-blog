@@ -140,6 +140,13 @@ button {
   z-index: 5;
 }
 
+.button_container{
+  display: flex;
+  flex-flow: row-reverse;
+  gap: 2rem;
+  pointer-events: auto;
+}
+
 .button_wrapper {
   display: flex;
   flex-direction: column;
@@ -1009,4 +1016,23 @@ path.leaflet-interactive:nth-child(2) {
   button {
     background-color: #f9f9f9;
   }
+}
+
+#language-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+}
+
+#language-toggle img {
+  display: block;
+  width: 20px;
+  height: auto;
+}
+
+.card-head h2 {
+  margin: 0;
 }
