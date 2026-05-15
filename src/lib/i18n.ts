@@ -54,6 +54,23 @@ const translations = {
     confirmDeletePhoto: "Bist du sicher, dass du dieses Bild löschen möchtest?",
     errorDeletingPhoto: "Fehler beim Löschen des Bildes",
     errorSavingDescription: "Fehler beim Speichern der Beschreibung",
+    loginTitle: "Bitte melde dich an",
+    loginButton: "Login",
+    forgotPassword: "Passwort vergessen?",
+    resetRequestTitle: "Passwort zurücksetzen",
+    resetRequestButton: "Reset-Link senden",
+    resetPasswordTitle: "Neues Passwort setzen",
+    newPasswordPlaceholder: "Neues Passwort",
+    confirmPasswordPlaceholder: "Neues Passwort bestätigen",
+    passwordRuleLength: "Mindestens 8 Zeichen",
+    passwordRuleLetter: "Mindestens ein Buchstabe",
+    passwordRuleNumber: "Mindestens eine Zahl",
+    passwordRuleSpecial: "Mindestens ein Sonderzeichen",
+    passwordRuleMatch: "Passwörter stimmen überein",
+    passwordRequirementsNotMet: "Bitte erfülle alle Passwort-Anforderungen.",
+    resetLinkSent: "Reset-Link wurde gesendet! Bitte prüfe deine Email.",
+    passwordSetSuccess: "Passwort erfolgreich gesetzt! Weiterleitung...",
+    passwordPlaceholder: "Passwort",
   },
   spanish: {
     logout: "Cerrar sesión",
@@ -107,14 +124,45 @@ const translations = {
     confirmDeletePhoto: "¿Estás seguro de que deseas eliminar esta foto?",
     errorDeletingPhoto: "Error al eliminar la foto",
     errorSavingDescription: "Error al guardar la descripción",
+    loginTitle: "Por favor inicia sesión",
+    loginButton: "Iniciar sesión",
+    forgotPassword: "¿Olvidaste tu contraseña?",
+    resetRequestTitle: "Restablecer contraseña",
+    resetRequestButton: "Enviar enlace de restablecimiento",
+    resetPasswordTitle: "Establecer nueva contraseña",
+    newPasswordPlaceholder: "Nueva contraseña",
+    confirmPasswordPlaceholder: "Confirmar nueva contraseña",
+    passwordRuleLength: "Al menos 8 caracteres",
+    passwordRuleLetter: "Al menos una letra",
+    passwordRuleNumber: "Al menos un número",
+    passwordRuleSpecial: "Al menos un carácter especial",
+    passwordRuleMatch: "Las contraseñas coinciden",
+    passwordRequirementsNotMet: "Por favor cumple todos los requisitos de la contraseña.",
+    resetLinkSent: "¡Enlace de restablecimiento enviado! Por favor revisa tu correo.",
+    passwordSetSuccess: "¡Contraseña establecida correctamente! Redirigiendo...",
+    passwordPlaceholder: "Contraseña",
   },
 } as const;
 
+const LANGUAGE_STORAGE_KEY = "sabbat-blog-language";
 let currentLanguage: Language = "german";
+
+function isSupportedLanguage(value: unknown): value is Language {
+  return typeof value === "string" && SUPPORTED_LANGUAGES.includes(value as Language);
+}
+
+export function getStoredLanguage(): Language | null {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  return isSupportedLanguage(stored) ? stored : null;
+}
 
 export function setLanguage(language: Language) {
   currentLanguage = language;
   document.documentElement.lang = getLanguageCode(language);
+  if (typeof window !== "undefined") {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  }
 }
 
 export function getCurrentLanguage(): Language {
@@ -127,13 +175,13 @@ export function t<Key extends keyof typeof translations["german"]>(key: Key): st
 }
 
 export function getLanguageFlag(language: Language) {
-  return language === "spanish"
+  return language === "german"
     ? "https://flagcdn.com/w20/de.png"
     : "https://flagcdn.com/w20/es.png";
 }
 
 export function getLanguageFlagSet(language: Language) {
-  return language === "spanish"
+  return language === "german"
     ? "https://flagcdn.com/w40/de.png"
     : "https://flagcdn.com/w40/es.png";
 }

@@ -23,6 +23,7 @@ import {
   t,
   getLanguageFlag,
   getCurrentLanguage,
+  getStoredLanguage,
   getLanguageFlagSet,
 } from "../lib/i18n.ts";
 
@@ -244,8 +245,9 @@ input.addEventListener("change", () => {
 
 await requireAuth();
 const userLanguage = await getUserLanguage();
-setLanguage(userLanguage);
-updateLanguageToggleIcon(userLanguage);
+const initialLanguage = getStoredLanguage() || userLanguage;
+setLanguage(initialLanguage);
+updateLanguageToggleIcon(initialLanguage);
 applyTranslations();
 await startUpload();
 

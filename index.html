@@ -11,11 +11,20 @@
 
 <body>
   <div class="main_wrapper">
+    
     <div id="modal-backdrop" class="modal-backdrop active"></div>
     <div class="map_wrapper">
       <img style="width: 100%; height: 100%; object-fit: cover;" src="assets/login-bg.png" alt="">
       <!-- <div id="map" class="map-container"></div> -->
     </div>
+    <div class="login_container" id="map-section">
+      <div class="button_container">
+          
+          <button class="nav-button rnd-button glassy" id="language-toggle" title="Sprache wechseln">
+            <img src="https://flagcdn.com/w20/de.png" srcset="https://flagcdn.com/w40/de.png 2x" width="20"
+            alt="Deutsch" />
+          </button>
+      </div>
     <div class="login_wrapper" id="login_wrapper">
       <div class="card login-cd glassy modal" id="login-section">
         <h2>Bitte melde dich an</h2>
@@ -24,13 +33,15 @@
           <input type="password" id="password" placeholder="Passwort" required />
           <div class="lg-button-container">
             <div class="reset-link">
-              <a href="reset-request.html" title="Passwort vergessen?">Passwort vergessen?</a>
+              <a href="/reset-request.html" title="Passwort vergessen?">Passwort vergessen?</a>
             </div>
             <button type="submit" class="nav-button lg-button" id="login" title="Login"><i
               class="bi bi-box-arrow-in-right"></i>Login</button>
             </div>
         </form>
       </div>
+        
+            </div>
     </div>
   </div>
   <script type="module" src="/src/lib/confirm.ts"></script>
