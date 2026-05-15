@@ -8,6 +8,7 @@ import "leaflet.markercluster";
 import { COUNTRIES, getCountryName, type CountryCode } from "./geo";
 // import "./slider.ts";
 import "./gallery.ts";
+import { snapTo, getCountryIndex } from "./slider.ts";
 
 // const editMarkerIconUrl = new URL("../../assets/marker/camera-48.png", import.meta.url).href;
 // const visitedMarkerIconUrl = new URL("../../assets/marker/camera-48-visited.png", import.meta.url).href;
@@ -125,6 +126,11 @@ export function selectCountry(country: CountryCode) {
   map.flyTo(config.center, config.zoom, {
     duration: 2,
   });
+  // Slider-Stop aktualisieren
+  const countryIndex = getCountryIndex(country);
+  if (countryIndex !== -1) {
+    snapTo(countryIndex);
+  }
   // const card = document.getElementById("country-card") as HTMLDivElement;
   // card.innerHTML = `<h2>${COUNTRIES[country].name}</h2>`;
 }

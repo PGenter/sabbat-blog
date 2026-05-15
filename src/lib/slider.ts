@@ -39,6 +39,10 @@ export function setOnCountryChange(callback: (country: CountryCode) => void) {
   onCountryChange = callback;
 }
 
+export function getCountryIndex(country: CountryCode): number {
+  return stops.findIndex((stop) => stop.country === country);
+}
+
 export function updateCountryLabels() {
   document.querySelectorAll(".slider-tooltip").forEach((tooltip) => {
     const id = tooltip.id;
@@ -276,5 +280,39 @@ document.querySelectorAll(".slider-stop").forEach((stop, i) => {
   stop.addEventListener("click", (e) => {
     e.stopPropagation();
     snapTo(i);
+  });
+  
+  // Hover-Events zum Anzeigen des Tooltips
+  stop.addEventListener("mouseenter", () => {
+    if (dragging) return;
+    const tooltip = stop.querySelector(".slider-tooltip") as HTMLElement;
+    if (tooltip) {
+      const tooltipText = tooltip.querySelector("span") as HTMLElement;
+      tooltip.classList.add("active");
+      if (tooltipText) {
+        tooltipText.classList.add("active");
+      }
+      // Transform mit -150% auf Y-Achse, wie beim Dragging
+      tooltip.style.transform = "translate(-50%, -150%) scale(1)";
+      tooltip.style.backgroundColor = "white";
+      tooltip.style.boxShadow = "0 4px 10px #0004";
+      tooltip.style.padding = "6px 10px";
+    }
+  });
+  
+  stop.addEventListener("mouseleave", () => {
+    if (dragging) return;
+    const tooltip = stop.querySelector(".slider-tooltip") as HTMLElement;
+    if (tooltip) {
+      const tooltipText = tooltip.querySelector("span") as HTMLElement;
+      tooltip.classList.remove("active");
+      if (tooltipText) {
+        tooltipText.classList.remove("active");
+      }
+      tooltip.style.transform = "";
+      tooltip.style.backgroundColor = "";
+      tooltip.style.boxShadow = "";
+      tooltip.style.padding = "";
+    }
   });
 });
