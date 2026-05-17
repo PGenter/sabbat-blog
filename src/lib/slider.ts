@@ -302,17 +302,20 @@ document.querySelectorAll(".slider-stop").forEach((stop, i) => {
   
   stop.addEventListener("mouseleave", () => {
     if (dragging) return;
-    const tooltip = stop.querySelector(".slider-tooltip") as HTMLElement;
-    if (tooltip) {
-      const tooltipText = tooltip.querySelector("span") as HTMLElement;
-      tooltip.classList.remove("active");
-      if (tooltipText) {
-        tooltipText.classList.remove("active");
+    // Nur entfernen, wenn dieser Stop nicht aktiv/selektiert ist
+    if (!stop.classList.contains("active")) {
+      const tooltip = stop.querySelector(".slider-tooltip") as HTMLElement;
+      if (tooltip) {
+        const tooltipText = tooltip.querySelector("span") as HTMLElement;
+        tooltip.classList.remove("active");
+        if (tooltipText) {
+          tooltipText.classList.remove("active");
+        }
+        tooltip.style.transform = "";
+        tooltip.style.backgroundColor = "";
+        tooltip.style.boxShadow = "";
+        tooltip.style.padding = "";
       }
-      tooltip.style.transform = "";
-      tooltip.style.backgroundColor = "";
-      tooltip.style.boxShadow = "";
-      tooltip.style.padding = "";
     }
   });
 });
