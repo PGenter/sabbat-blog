@@ -68,7 +68,7 @@ function getPercentFromEvent(e: MouseEvent | TouchEvent) {
   return percent;
 }
 
-export function snapTo(index: number) {
+export function snapTo(index: number, notify = true) {
   const percent = index / (stops.length - 1);
 
   handle.style.left = `${percent * 100}%`;
@@ -84,7 +84,7 @@ export function snapTo(index: number) {
   }
 
   resetAllTooltips();
-  if (onCountryChange) {
+  if (notify && onCountryChange) {
     onCountryChange(stops[index].country);
   }
 }
