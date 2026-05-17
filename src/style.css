@@ -339,17 +339,13 @@ button {
 
 .slider-tooltip.active {
   opacity: 1;
-  /* background-color: var(--secondary-background-color); */
   border-radius: 0.7rem;
   transform: translate(-50%) scale(1);
-  /* transform: translate(-50%, -150%) scale(1); */
   padding: 6px 10px;
-  /* box-shadow: 0 4px 10px #0004; */
-  /* transition-delay: 0.05s; */
 }
 
 .dragging .slider-tooltip:not(.active) {
-  transform: translate(-50%, 0%) !important;
+  transform: translate(-50%, 0%);
 }
 
 .slider-tooltip span {

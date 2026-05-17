@@ -124,12 +124,12 @@ export function selectCountry(country: CountryCode) {
   const config = COUNTRIES[country];
   if (!config) return;
   map.flyTo(config.center, config.zoom, {
-    duration: 2,
+    duration: 1,
   });
-  // Slider-Stop aktualisieren
+  // Slider-Stop aktualisieren ohne Rückkopplung
   const countryIndex = getCountryIndex(country);
   if (countryIndex !== -1) {
-    snapTo(countryIndex);
+    snapTo(countryIndex, false);
   }
   // const card = document.getElementById("country-card") as HTMLDivElement;
   // card.innerHTML = `<h2>${COUNTRIES[country].name}</h2>`;
