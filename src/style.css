@@ -1,13 +1,11 @@
 @import url("https://fonts.cdnfonts.com/css/marhey");
 
 :root {
-  /* --a: #768542; */
   --a: #4e4e4e;
   --b: #abbe6e;
   --c: rgb(110, 125, 188);
   --d: #91233e;
   --e: #a31023;
-  /* --f: #e7ded5; */
   --f: rgba(229, 102, 117, 1);
   --i: #2f3777;
 
@@ -45,12 +43,12 @@ body {
 }
 
 h1 {
-  font-size: 3.2em;
+  font-size: clamp(1.8rem, calc(3vw + 1rem), 3.2rem);
   line-height: 1.1;
 }
 
 h2 {
-  font-size: 2.4em;
+  font-size: clamp(1.2rem, calc(1vw + 1rem), 2.4rem);
   line-height: 1.1;
 }
 
@@ -62,7 +60,7 @@ form {
 
 input {
   font-family: inherit;
-  font-size: 1em;
+  font-size: clamp(0.5rem, calc(1vw + 0.5rem), 1rem);
   display: block;
   box-sizing: border-box;
   width: 100%;
@@ -79,7 +77,7 @@ input {
 
 textarea {
   font-family: inherit;
-  font-size: 1em;
+  font-size: clamp(0.5rem, calc(1vw + 0.5rem), 1rem);
   display: block;
   box-sizing: border-box;
   width: 100%;
@@ -316,26 +314,11 @@ button {
   white-space: nowrap;
   color: var(--a);
   border-radius: 6px;
-  font-size: 12px;
-  /* pointer-events: none; */
+  font-size: 0.8rem;
   transition:
     transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1),
     opacity 0.15s ease;
 }
-
-/* .slider-stop:hover .slider-tooltip > span {
-  display: block;
-  transform: translate(-30%, -200%) scale(1);
-  background-color: white;
-  box-shadow: 0 4px 10px #0004;
-  opacity: 1;
-  border-radius: 0.7rem;
-  padding: 6px 10px;
-}
-
-.slider-stop:hover .slider-tooltip > img {
-  transform: translate(150%);
-} */
 
 .slider-tooltip.active {
   opacity: 1;
@@ -350,7 +333,6 @@ button {
 
 .slider-tooltip span {
   display: none;
-  /* transition: display 1s ease-in; */
 }
 
 .slider-tooltip.active span.active {
@@ -478,7 +460,7 @@ button {
   gap: 2px;
   padding: 6px 10px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 0.8rem;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 
   backdrop-filter: blur(6px);
@@ -519,7 +501,7 @@ button {
 }
 
 .tooltip-views {
-  font-size: 14px;
+  font-size: 1.1rem;
   opacity: 0.8;
 }
 
@@ -528,7 +510,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 12px;
+  font-size: 0.8rem;
   opacity: 0.9;
   color: rgba(17, 17, 17, 0.9);
 }
@@ -620,17 +602,16 @@ path.leaflet-interactive:nth-child(2) {
 .card-head {
   display: flex;
   justify-content: space-between;
-  align-items: top;
+  /* align-items: center; */
   padding-top: 2em;
 }
 
 .card-head h2 {
-  margin-top: 0;
+  margin: 0;
 }
 
 .card-head .reset-link a {
   color: var(--a);
-  /* font-size: 0.9em; */
   transition: color 0.2s ease;
   text-decoration: none;
   font-weight: bold;
@@ -722,13 +703,13 @@ path.leaflet-interactive:nth-child(2) {
   gap: 1rem;
 }
 
-.edit-container input {
+/* .edit-container input {
   padding: 0.5em;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background-color: var(--secondary-background-color);
   color: currentColor;
-}
+} */
 
 .delete-btn {
   background-color: #dc3545 !important;
@@ -816,7 +797,7 @@ path.leaflet-interactive:nth-child(2) {
   /* margin-top: 1rem; */
   padding: 0.5em 1.5em;
   border-radius: 8px;
-  font-size: 1.1em;
+  font-size: clamp(0.5rem, calc(1vw + 0.5rem), 1rem);
   font-weight: 500;
   box-shadow: 0 2px 10px #0004;
   /* border: 1px solid var(--primary-background-color); */
@@ -938,11 +919,18 @@ path.leaflet-interactive:nth-child(2) {
 }
 
 .close-button {
-  height: 3rem;
-  width: 3rem;
+  /* display: flex;
+  justify-content: flex-end; */
+  padding: 0;  
+  position: relative;
+  top: -0.5rem;
+  right: -0.5rem;
+  /* align-items: start; */
+  height: 2rem;
+  width: 2rem;
   background: transparent;
   border: none;
-  font-size: 1.5rem;
+  font-size: clamp(1.4rem, calc(2vw + 1rem), 2.4rem);
   cursor: pointer;
   color: currentColor;
   transition:
@@ -974,7 +962,7 @@ path.leaflet-interactive:nth-child(2) {
   list-style: none;
   padding: 0;
   margin-top: 10px;
-  font-size: 0.9rem;
+  font-size: clamp(0.5rem, calc(0.9vw + 0.1rem), 0.9rem);
 }
 
 #password-rules li.valid {
@@ -1047,8 +1035,4 @@ path.leaflet-interactive:nth-child(2) {
   display: block;
   width: 20px;
   height: auto;
-}
-
-.card-head h2 {
-  margin: 0;
 }

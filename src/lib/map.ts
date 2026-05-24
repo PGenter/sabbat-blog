@@ -317,7 +317,7 @@ async function showEditMenu(entryId: string, currentTitle: string) {
         <div class="card-head">
           <h2>${t("editMarker")}</h2>
           <div class="reset-link">
-            <button class="close-button" id="edit-close-button">X</button>
+            <button class="close-button" id="edit-close-button"><i class="bi bi-x"></i></button>
           </div>
         </div>
         <div class="edit-container">
@@ -435,6 +435,8 @@ async function renderPhotos(photos: any[], description: string) {
   const header = document.getElementById("photo-header") as HTMLDivElement;
   header.innerHTML = `<h2>${getCountryName(currentCountry!, getCurrentLanguage())}</h2> 
                       <div class="close-button-container">
+                      <button class="nav-button rnd-button glassy close-button" id="edit-gallery" title="Einträge bearbeiten"><i
+                            class="bi bi-pencil-square"></i></button>
                         <button class="nav-button rnd-button glassy close-button" id="close-button"><i class="bi bi-x"></i></button>
                       </div>`;
 
