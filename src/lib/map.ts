@@ -3,7 +3,12 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import L from "leaflet";
 import { supabase, getUser } from "../lib/supabase";
-import { t, getCurrentLanguage, getLanguageCode, formatCountText } from "../lib/i18n.ts";
+import {
+  t,
+  getCurrentLanguage,
+  getLanguageCode,
+  formatCountText,
+} from "../lib/i18n.ts";
 import "leaflet.markercluster";
 import { COUNTRIES, getCountryName, type CountryCode } from "./geo";
 // import "./slider.ts";
@@ -275,9 +280,11 @@ function createMarker(
         ${title}
       </div>
       <div class="tooltip-date">
-        ${t("uploadLabel")}: ${new Date(createdAt).toLocaleDateString(
-          getLanguageCode(getCurrentLanguage()),
-        )}
+        ${t("uploadLabel")}: ${new Date(createdAt).toLocaleDateString("de-DE", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })}
       </div>
       <div class="bi bi-images tooltip-views">
         ${images}
@@ -439,8 +446,12 @@ async function renderPhotos(photos: any[], description: string) {
 
   header.innerHTML = `<h2>${getCountryName(currentCountry!, getCurrentLanguage())}</h2> 
                       <div class="close-button-container">
-                      ${showEditButton ? `<button class="nav-button rnd-button glassy close-button" id="edit-gallery" title="Einträge bearbeiten"><i
-                            class="bi bi-pencil-square"></i></button>` : ""}
+                      ${
+                        showEditButton
+                          ? `<button class="nav-button rnd-button glassy close-button" id="edit-gallery" title="Einträge bearbeiten"><i
+                            class="bi bi-pencil-square"></i></button>`
+                          : ""
+                      }
                         <button class="nav-button rnd-button glassy close-button" id="close-button"><i class="bi bi-x"></i></button>
                       </div>`;
 

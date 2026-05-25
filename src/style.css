@@ -70,7 +70,6 @@ input {
   border-left: none;
   border-right: none;
   border-bottom: 1px solid;
-  /* border-radius: 8px; */
   background-color: transparent;
   color: currentColor;
 }
@@ -89,7 +88,6 @@ textarea {
   border-right: none;
   border-bottom: 1px solid;
   align-content: end;
-  /* border-radius: 8px; */
   background-color: transparent;
   color: currentColor;
 }
@@ -107,7 +105,6 @@ button {
 }
 
 .main_wrapper {
-  /* position: relative; */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -138,10 +135,15 @@ button {
   z-index: 5;
 }
 
-.button_container{
+.button_container {
   display: flex;
   flex-flow: row-reverse;
   gap: 2rem;
+  height: min-content;
+  pointer-events: none;
+}
+
+.button_container > * {
   pointer-events: auto;
 }
 
@@ -159,7 +161,6 @@ button {
   align-items: center;
   position: fixed;
   bottom: 0;
-  /* margin-bottom: 2rem; */
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
@@ -178,10 +179,8 @@ button {
 .nav_wrapper:hover {
   transform: translateX(-50%) scale(1.1);
   background-color: var(--tertiary-background-color);
-  /* background-color: oklch(from var(--primary-background-color) calc(l ) c h / 0.2); */
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(4px);
-  /* border-radius: 16px; */
 }
 
 .nav_wrapper:hover .slider-track {
@@ -242,11 +241,7 @@ button {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  transition:
-    /* width 0.2s ease,
-    height 0.2s ease,
-    background 0.2s ease, */ all
-    0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .slider-stop::before {
@@ -320,10 +315,6 @@ button {
     opacity 0.15s ease;
 }
 
-/* .dragging .slider-tooltip {
-  transition: none;
-} */
-
 .slider-tooltip.active {
   opacity: 1;
   border-radius: 0.7rem;
@@ -349,7 +340,6 @@ button {
   height: 1rem;
   object-fit: cover;
   border-radius: 5px;
-  /* border: 1px solid var(--c); */
   transition: transform 0.15s;
 }
 
@@ -397,7 +387,6 @@ button {
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   pointer-events: none;
-  /* background-color: var(--secondary-background-color); */
 }
 
 .inactive-background {
@@ -409,30 +398,6 @@ button {
   width: 100%;
   z-index: 3;
 }
-
-/* .map-marker {
-  width: 14px;
-  height: 14px;
-
-  background: currentColor;
-  border-radius: 50%;
-
-  opacity: 0;
-  transform: scale(0.4);
-
-  transition:
-    opacity 0.4s ease,
-    transform 0.4s ease;
-} */
-
-/* .map-marker.visible {
-  opacity: 1;
-  transform: scale(1);
-} */
-
-/* #map {
-  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8);
-} */
 
 #map::after {
   content: "";
@@ -506,7 +471,6 @@ button {
 }
 
 .tooltip-views {
-  /* font-size: 1.1rem; */
   opacity: 0.8;
 }
 
@@ -540,7 +504,6 @@ body.edit-mode #map {
 }
 
 body.edit-mode .leaflet-marker-icon {
-  
   filter: drop-shadow(0 0 18px rgba(191, 226, 100, 0.45));
   transition: filter 0.2s ease;
   cursor: pointer;
@@ -548,11 +511,11 @@ body.edit-mode .leaflet-marker-icon {
 
 body.edit-mode .leaflet-marker-icon.editable-marker {
   animation: editGlow 1.8s ease-in-out infinite;
-  
 }
 
 @keyframes editGlow {
-  0%, 100% {
+  0%,
+  100% {
     filter: drop-shadow(0 0 18px rgba(191, 226, 100, 0.45)) brightness(1.05);
   }
   50% {
@@ -577,7 +540,6 @@ path.leaflet-interactive:nth-child(2) {
 
 .glassy {
   background-color: var(--secondary-background-color);
-  /* background-color: oklch(from currentColor calc(l + 0.8) c h / 0.2); */
   backdrop-filter: blur(4px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
@@ -592,7 +554,6 @@ path.leaflet-interactive:nth-child(2) {
   flex-direction: column;
   height: 100%;
   bottom: 0;
-  /* z-index: 5; */
   border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 0 2.5em 1.5em 1.5em;
   border-radius: 16px;
@@ -607,7 +568,6 @@ path.leaflet-interactive:nth-child(2) {
 .card-head {
   display: flex;
   justify-content: space-between;
-  /* align-items: center; */
   padding-top: 2em;
 }
 
@@ -619,16 +579,11 @@ path.leaflet-interactive:nth-child(2) {
   margin: 0.5rem;
   font-family: inherit;
   font-size: clamp(0.5rem, calc(1vw + 0.5rem), 1rem);
-  
-  /* color: var(--a);
-  transition: color 0.2s ease; */
-  /* text-decoration: none; */
-  /* font-weight: bold; */
 }
 
-.login_container{
- height: 100vh;
- width: 100vw; 
+.login_container {
+  height: 100vh;
+  width: 100vw;
   display: inline-block;
   z-index: 1000;
   pointer-events: auto;
@@ -638,7 +593,7 @@ path.leaflet-interactive:nth-child(2) {
   box-sizing: border-box;
 }
 
-.login_wrapper{
+.login_wrapper {
   height: 100%;
   width: 100%;
   display: flex;
@@ -659,7 +614,6 @@ path.leaflet-interactive:nth-child(2) {
 .lg-button-container {
   display: flex;
   flex-direction: column;
-  /* align-items: flex-end; */
   justify-content: space-between;
   width: 100%;
   gap: 1.5rem;
@@ -714,14 +668,6 @@ path.leaflet-interactive:nth-child(2) {
   gap: 1rem;
 }
 
-/* .edit-container input {
-  padding: 0.5em;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background-color: var(--secondary-background-color);
-  color: currentColor;
-} */
-
 .delete-btn {
   background-color: #dc3545 !important;
   color: white !important;
@@ -747,7 +693,6 @@ path.leaflet-interactive:nth-child(2) {
   display: flex;
   flex-direction: row;
   align-items: center;
-  /* justify-content: center; */
   gap: 1.5rem;
 }
 
@@ -765,7 +710,6 @@ path.leaflet-interactive:nth-child(2) {
 .progress-bar {
   width: 0%;
   height: 100%;
-  /* background: #4caf50; */
   background: currentColor;
   transition: width 0.3s ease;
 }
@@ -801,7 +745,7 @@ path.leaflet-interactive:nth-child(2) {
   transition:
     transform 0.2s ease,
     background-color 0.2s ease,
-    /* border-color 0.2s ease, */ box-shadow 0.2s ease;
+    box-shadow 0.2s ease;
 }
 
 .lg-button {
@@ -811,14 +755,12 @@ path.leaflet-interactive:nth-child(2) {
   font-size: clamp(0.5rem, calc(1vw + 0.5rem), 1rem);
   font-weight: 500;
   box-shadow: 0 2px 10px #0004;
-  /* border: 1px solid var(--primary-background-color); */
 }
 
 .rnd-button {
   border-radius: 16px;
   height: 3rem;
   width: 3rem;
-  /* border: 1px solid var(--secondary-background-color); */
 }
 
 .rnd-button.active {
@@ -878,7 +820,6 @@ path.leaflet-interactive:nth-child(2) {
   position: absolute;
   top: 0%;
   right: 0%;
-  /* transform: translate(-50%, -50%); */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -898,8 +839,7 @@ path.leaflet-interactive:nth-child(2) {
 }
 
 .thumbnail-delete-button i {
-  transition:
-    transform 0.5s ease;
+  transition: transform 0.5s ease;
 }
 
 .edit-mode .image-delete-button,
@@ -930,13 +870,10 @@ path.leaflet-interactive:nth-child(2) {
 }
 
 .close-button {
-  /* display: flex;
-  justify-content: flex-end; */
-  padding: 0;  
+  padding: 0;
   position: relative;
   top: -1rem;
   right: -0.5rem;
-  /* align-items: start; */
   height: 2rem;
   width: 2rem;
   background: transparent;
@@ -959,14 +896,11 @@ path.leaflet-interactive:nth-child(2) {
 .lg-button:hover {
   transform: scale(1.02);
   background-color: var(--f);
-  /* box-shadow: 0 2px 20px rgba(0, 0, 0, 0.25); */
 }
 
 .rnd-button:hover {
   transform: scale(1.2);
   background-color: var(--f);
-  /* background-color: oklch(from currentColor calc(l + 0.8) c h / 0.2); */
-  /* border-color: oklch(from currentColor calc(l + 0.8) c h / 0.2); */
 }
 
 #password-rules {
