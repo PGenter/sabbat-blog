@@ -58,3 +58,48 @@ function showSlider(type: string) {
     carouselDom?.classList.remove("prev");
   }, timeRunning);
 }
+
+// Touch / swipe support for small touch devices
+let touchStartX = 0;
+let touchCurrentX = 0;
+const touchThreshold = 50; // px
+
+if (carouselDom) {
+  carouselDom.addEventListener(
+    "touchstart",
+    (e) => {
+      const touchEvent = e as TouchEvent;
+      if (!touchEvent.touches || touchEvent.touches.length === 0) return;
+      touchStartX = touchEvent.touches[0].clientX;
+      touchCurrentX = touchStartX;
+    },
+    { passive: true },
+  );
+
+  carouselDom.addEventListener(
+    "touchmove",
+    (e) => {
+      const touchEvent = e as TouchEvent;
+      if (!touchEvent.touches || touchEvent.touches.length === 0) return;
+      touchCurrentX = touchEvent.touches[0].clientX;
+    },
+    { passive: true },
+  );
+
+  carouselDom.addEventListener(
+    "touchend",
+    () => {
+      const dx = touchCurrentX - touchStartX;
+      if (Math.abs(dx) > touchThreshold) {
+        if (dx < 0) {
+          showSlider("next");
+        } else {
+          showSlider("prev");
+        }
+      }
+      touchStartX = 0;
+      touchCurrentX = 0;
+    },
+    { passive: true },
+  );
+}

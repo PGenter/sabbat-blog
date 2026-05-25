@@ -433,10 +433,14 @@ async function loadPhotosOfMarker(entryId: string, description: string) {
 async function renderPhotos(photos: any[], description: string) {
   const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
   const header = document.getElementById("photo-header") as HTMLDivElement;
+  const user = await getUser();
+  const role = user?.app_metadata?.role || "user";
+  const showEditButton = role === "administrator" || role === "superuser";
+
   header.innerHTML = `<h2>${getCountryName(currentCountry!, getCurrentLanguage())}</h2> 
                       <div class="close-button-container">
-                      <button class="nav-button rnd-button glassy close-button" id="edit-gallery" title="Einträge bearbeiten"><i
-                            class="bi bi-pencil-square"></i></button>
+                      ${showEditButton ? `<button class="nav-button rnd-button glassy close-button" id="edit-gallery" title="Einträge bearbeiten"><i
+                            class="bi bi-pencil-square"></i></button>` : ""}
                         <button class="nav-button rnd-button glassy close-button" id="close-button"><i class="bi bi-x"></i></button>
                       </div>`;
 
@@ -467,8 +471,6 @@ async function renderPhotos(photos: any[], description: string) {
   thumbnailGallery.innerHTML = ""; // Clear previous thumbnails
   gallery.classList.add("active");
 
-  const user = await getUser();
-  const role = user?.app_metadata?.role || "user";
   const canEditDescription =
     isEditMode && (role === "administrator" || role === "superuser");
   const canDeletePhotos = isEditMode && role === "administrator";

@@ -49,7 +49,9 @@ const invitesection = document.getElementById(
 ) as HTMLDivElement;
 const mapWrapper = document.getElementById("map") as HTMLDivElement;
 const navwrapper = document.getElementById("nav-wrapper") as HTMLDivElement;
-const modalBackdrop = document.getElementById("modal-backdrop") as HTMLDivElement;
+const modalBackdrop = document.getElementById(
+  "modal-backdrop",
+) as HTMLDivElement;
 const input = document.getElementById("images") as HTMLInputElement;
 const fileInfo = document.getElementById("file-info") as HTMLDivElement;
 
@@ -67,7 +69,7 @@ async function init() {
   } else {
     hideSuperuserButtons();
   }
-  
+
   if (role === "administrator") {
     showInvitationButton();
   } else {
@@ -85,10 +87,10 @@ function hideSuperuserButtons() {
   if (uploadButton) {
     uploadButton.style.display = "none";
   }
-  if(editGalleryButton){
+  if (editGalleryButton) {
     editGalleryButton.style.display = "none";
   }
-  if(editMapButton){
+  if (editMapButton) {
     editMapButton.style.display = "none";
   }
 }
@@ -98,12 +100,12 @@ function showInvitationButton() {
 }
 
 function hideInvitationButton() {
-  if(inviteButton){
+  if (inviteButton) {
     inviteButton.style.display = "none";
   }
 }
 
-function showModal(dialogType:HTMLDivElement){
+function showModal(dialogType: HTMLDivElement) {
   dialogType.style.visibility = "visible";
   dialogType.style.opacity = "1";
   modalBackdrop.classList.add("active");
@@ -112,7 +114,7 @@ function showModal(dialogType:HTMLDivElement){
   map.scrollWheelZoom.disable();
 }
 
-export function hideModal(dialogType:HTMLDivElement) {
+export function hideModal(dialogType: HTMLDivElement) {
   dialogType.style.visibility = "hidden";
   dialogType.style.opacity = "0";
   modalBackdrop.classList.remove("active");
@@ -123,7 +125,9 @@ export function hideModal(dialogType:HTMLDivElement) {
 
 function updateLanguageToggleIcon(language: "german" | "spanish") {
   if (!languageToggleButton) return;
-  const img = languageToggleButton.querySelector("img") as HTMLImageElement | null;
+  const img = languageToggleButton.querySelector(
+    "img",
+  ) as HTMLImageElement | null;
   if (!img) return;
   img.src = getLanguageFlag(language);
   img.srcset = getLanguageFlagSet(language);
@@ -141,13 +145,21 @@ function applyTranslations() {
     languageToggleButton.title = t("languageToggleTitle");
   }
 
-  const uploadTitle = uploadsection.querySelector(".card-head h2") as HTMLElement | null;
+  const uploadTitle = uploadsection.querySelector(
+    ".card-head h2",
+  ) as HTMLElement | null;
   if (uploadTitle) uploadTitle.textContent = t("photoUpload");
 
   const titleEl = document.getElementById("title") as HTMLInputElement | null;
-  const descriptionEl = document.getElementById("description") as HTMLTextAreaElement | null;
-  const fileLabel = uploadsection.querySelector(".file-label") as HTMLElement | null;
-  const uploadBtn = document.getElementById("uploadBtn") as HTMLButtonElement | null;
+  const descriptionEl = document.getElementById(
+    "description",
+  ) as HTMLTextAreaElement | null;
+  const fileLabel = uploadsection.querySelector(
+    ".file-label",
+  ) as HTMLElement | null;
+  const uploadBtn = document.getElementById(
+    "uploadBtn",
+  ) as HTMLButtonElement | null;
 
   if (titleEl) titleEl.placeholder = t("titlePlaceholder");
   if (descriptionEl) descriptionEl.placeholder = t("descriptionPlaceholder");
@@ -162,18 +174,29 @@ function applyTranslations() {
   if (uploadBtn)
     uploadBtn.innerHTML = `<i class="bi bi-cloud-arrow-up"></i> ${t("uploadStart")}`;
 
-  const inviteTitle = invitesection.querySelector(".card-head h2") as HTMLElement | null;
+  const inviteTitle = invitesection.querySelector(
+    ".card-head h2",
+  ) as HTMLElement | null;
   if (inviteTitle) inviteTitle.textContent = t("newUserInvite");
 
-  const firstName = document.getElementById("firstName") as HTMLInputElement | null;
-  const lastName = document.getElementById("lastName") as HTMLInputElement | null;
-  const emailInput = document.getElementById("email") as HTMLInputElement | null;
-  const inviteBtn = document.getElementById("inviteBtn") as HTMLButtonElement | null;
+  const firstName = document.getElementById(
+    "firstName",
+  ) as HTMLInputElement | null;
+  const lastName = document.getElementById(
+    "lastName",
+  ) as HTMLInputElement | null;
+  const emailInput = document.getElementById(
+    "email",
+  ) as HTMLInputElement | null;
+  const inviteBtn = document.getElementById(
+    "inviteBtn",
+  ) as HTMLButtonElement | null;
 
   if (firstName) firstName.placeholder = t("firstNamePlaceholder");
   if (lastName) lastName.placeholder = t("lastNamePlaceholder");
   if (emailInput) emailInput.placeholder = t("emailPlaceholder");
-  if (inviteBtn) inviteBtn.innerHTML = `<i class="bi bi-person-add"></i> ${t("inviteSend")}`;
+  if (inviteBtn)
+    inviteBtn.innerHTML = `<i class="bi bi-person-add"></i> ${t("inviteSend")}`;
 }
 
 logoutButton.addEventListener("click", async () => {
@@ -184,7 +207,7 @@ logoutButton.addEventListener("click", async () => {
 
 uploadButton.addEventListener("click", () => {
   showModal(uploadsection);
-}); 
+});
 
 editMapButton.addEventListener("click", () => {
   toggleEditMode("edit-map");
@@ -200,7 +223,7 @@ uploadCloseButton.addEventListener("click", () => {
 
 inviteButton.addEventListener("click", () => {
   showModal(invitesection);
-}); 
+});
 
 inviteCloseButton.addEventListener("click", () => {
   hideModal(invitesection);
@@ -219,14 +242,14 @@ languageToggleButton.addEventListener("click", async () => {
 });
 
 document.body.addEventListener("keydown", (event) => {
-    const key = event.key;
-    switch (key) {
-      case "Escape":
-        invitesection.checkVisibility() ? hideModal(invitesection) : ""
-        uploadsection.checkVisibility() ? hideModal(uploadsection) : ""
-        break;
-    }
-  });
+  const key = event.key;
+  switch (key) {
+    case "Escape":
+      invitesection.checkVisibility() ? hideModal(invitesection) : "";
+      uploadsection.checkVisibility() ? hideModal(uploadsection) : "";
+      break;
+  }
+});
 
 input.addEventListener("change", () => {
   const files = input.files!;

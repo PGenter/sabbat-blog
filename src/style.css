@@ -48,7 +48,7 @@ h1 {
 }
 
 h2 {
-  font-size: clamp(1.2rem, calc(1vw + 1rem), 2.4rem);
+  font-size: clamp(1.1rem, calc(0.8vw + 0.5rem), 2.4rem);
   line-height: 1.1;
 }
 
@@ -462,6 +462,7 @@ button {
   border-radius: 8px;
   font-size: 0.8rem;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  font-family: "Marhey", sans-serif;
 
   backdrop-filter: blur(6px);
 
@@ -501,7 +502,7 @@ button {
 }
 
 .tooltip-views {
-  font-size: 1.1rem;
+  /* font-size: 1.1rem; */
   opacity: 0.8;
 }
 
@@ -610,11 +611,15 @@ path.leaflet-interactive:nth-child(2) {
   margin: 0;
 }
 
-.card-head .reset-link a {
-  color: var(--a);
-  transition: color 0.2s ease;
-  text-decoration: none;
-  font-weight: bold;
+.reset-link a {
+  margin: 0.5rem;
+  font-family: inherit;
+  font-size: clamp(0.5rem, calc(1vw + 0.5rem), 1rem);
+  
+  /* color: var(--a);
+  transition: color 0.2s ease; */
+  /* text-decoration: none; */
+  /* font-weight: bold; */
 }
 
 .login_container{
@@ -623,7 +628,9 @@ path.leaflet-interactive:nth-child(2) {
   display: inline-block;
   z-index: 1000;
   pointer-events: auto;
-  padding: 4rem;
+  padding-top: 5vh;
+  padding-right: 5vw;
+  padding-left: 5vw;
   box-sizing: border-box;
 }
 
@@ -923,7 +930,7 @@ path.leaflet-interactive:nth-child(2) {
   justify-content: flex-end; */
   padding: 0;  
   position: relative;
-  top: -0.5rem;
+  top: -1rem;
   right: -0.5rem;
   /* align-items: start; */
   height: 2rem;
