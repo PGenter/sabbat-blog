@@ -13,6 +13,7 @@ const progress = document.querySelector(".slider-progress") as HTMLElement;
 
 let dragging = false;
 let dragPercentage = 0;
+let activeTooltip: HTMLElement | null = null;
 let onCountryChange: ((country: CountryCode) => void) | null = null;
 
 stops.forEach((_stop, index) => {
@@ -102,14 +103,39 @@ function updateProgress(percent: number) {
   progress.style.width = `${percent * 100}%`;
 }
 
+function clearTooltipState(tooltip: HTMLElement | null) {
+  if (!tooltip) return;
+
+  tooltip.style.transform = "";
+  tooltip.style.backgroundColor = "";
+  tooltip.style.boxShadow = "";
+  tooltip.style.padding = "";
+  tooltip.classList.remove("active");
+
+  const text = tooltip.querySelector("span") as HTMLElement | null;
+  text?.classList.remove("active");
+}
+
+function setTooltipActiveState(tooltip: HTMLElement | null) {
+  if (!tooltip) return;
+
+  tooltip.classList.add("active");
+  const text = tooltip.querySelector("span") as HTMLElement | null;
+  text?.classList.add("active");
+}
+
 function previewStop(percent: number) {
   const index = Math.round(percent * (stops.length - 1));
-  document
-    .querySelectorAll(".slider-tooltip")
-    .forEach((stop) => stop.classList.remove("active"));
-  document
-    .getElementById(`tooltip-${stops[index].country}`)
-    ?.classList.add("active");
+  const nextTooltip = document.getElementById(
+    `tooltip-${stops[index].country}`,
+  ) as HTMLElement | null;
+
+  if (activeTooltip && activeTooltip !== nextTooltip) {
+    clearTooltipState(activeTooltip);
+  }
+
+  activeTooltip = nextTooltip;
+  setTooltipActiveState(activeTooltip);
 }
 
 function setActiveStop(index: number) {
@@ -136,29 +162,21 @@ function magneticPercent(percent: number) {
 
 function resetAllTooltips() {
   document.querySelectorAll(".slider-tooltip").forEach((el) => {
-    (el as HTMLElement).style.transform = "";
-    (el as HTMLElement).style.backgroundColor = "";
-    (el as HTMLElement).style.boxShadow = "";
+    clearTooltipState(el as HTMLElement);
   });
-  document.querySelectorAll(".slider-tooltip span").forEach((el) => {
-    (el as HTMLElement).classList.remove("active");
-  });
+  activeTooltip = null;
 }
 
 function updateTooltipDuringDrag(percent: number) {
-  document.querySelectorAll(".slider-tooltip span").forEach((el) => {
-    (el as HTMLElement).classList.remove("active");
-  });
-
-  const tooltip = document.querySelector(
-    ".slider-tooltip.active",
-  ) as HTMLElement;
-
+  const tooltip = activeTooltip;
   const nav = document.querySelector(".nav_wrapper") as HTMLElement;
 
-  const tooltipText = tooltip.querySelector("span") as HTMLElement;
-
   if (!tooltip || !nav) return;
+
+  const tooltipText = tooltip.querySelector("span") as HTMLElement | null;
+  if (!tooltipText) return;
+
+  setTooltipActiveState(tooltip);
 
   const navWidth = nav.clientWidth;
   const tooltipWidth = tooltip.offsetWidth;
@@ -175,9 +193,7 @@ function updateTooltipDuringDrag(percent: number) {
   tooltip.style.transform = `translate(calc(-50% + ${offset}px), -150%)`;
   tooltip.style.backgroundColor = "white";
   tooltip.style.boxShadow = "0 4px 10px #0004";
-  // tooltipText.style.display = 'Block';
-  tooltip.classList.add("active");
-  tooltipText.classList.add("active");
+  tooltip.style.padding = "6px 10px";
 }
 
 function setDraggingState(state: boolean) {

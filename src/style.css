@@ -320,6 +320,10 @@ button {
     opacity 0.15s ease;
 }
 
+/* .dragging .slider-tooltip {
+  transition: none;
+} */
+
 .slider-tooltip.active {
   opacity: 1;
   border-radius: 0.7rem;
