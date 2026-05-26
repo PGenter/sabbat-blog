@@ -1,38 +1,29 @@
 .photo-gallery {
-  /* visibility: hidden; */
   position: fixed;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  width: 100vw;
+  height: 100dvh;
+  width: 100dvw;
   top: 0;
   left: 0;
   z-index: 1001;
   background-color: var(--secondary-background-color);
-  /* backdrop-filter: blur(0px);
-  -webkit-backdrop-filter: blur(0px); */
   opacity: 0;
   transform: scale(0.95);
   transition:
     opacity 0.5s ease,
     transform 0.5s ease;
-  /* backdrop-filter 0.2s ease,
-    background-color 0.2s ease; */
-  /* visibility 0.3s ease; */
   pointer-events: none;
 }
 
 .photo-gallery.active {
-  /* visibility: visible; */
   opacity: 1;
   transform: scale(1);
-  /* backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px); */
   pointer-events: auto;
 }
 
 .gallery-header {
-  width: 100vw;
+  width: 100dvw;
   max-width: 80%;
   margin: auto;
   height: 6rem;
@@ -64,8 +55,6 @@
 }
 
 .gallery-header .close-button:hover {
-  /* color: var(--primary-color); */
-  /* color: var(--f); */
   background-color: var(--f);
 }
 
@@ -77,8 +66,8 @@
 }
 
 .gallery-container {
-  width: 100vw;
-  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
   overflow: hidden;
   margin-top: -6rem;
   position: relative;
@@ -109,7 +98,6 @@
   width: 1140px;
   max-width: 80%;
   left: 10%;
-  /* transform: translatex(-40%); */
   padding-right: 30%;
   box-sizing: border-box;
   color: white;
@@ -125,14 +113,15 @@
 
 .gallery-container .carousel-gallery .item .item-content .item-date {
   font-weight: bold;
-  font-size: 5em;
+  /* font-size: 5em; */
+  font-size: clamp(2.5rem, calc(5vw + 1rem), 5rem);
   line-height: 1.3em;
   color: var(--primary-color);
 }
 
 .thumbnail-gallery {
   position: absolute;
-  bottom: 50px;
+  bottom: min(50px, 8%);
   left: 50%;
   width: max-content;
   z-index: 1002;
@@ -312,23 +301,32 @@
   .gallery-container .carousel-gallery .item .item-content {
     padding-right: 0;
   }
-  .gallery-container .carousel-gallery .item .item-content .item-date {
+  /* .gallery-container .carousel-gallery .item .item-content .item-date {
     font-size: 30px;
-  }
+  } */
+  
 }
 
 @media screen and (max-width: 1023px) {
+  .thumbnail-gallery {
+    left: 70%;
+  }
+  
   .gallery-container .thumbnail-gallery .item {
+    max-width: 100px;
     max-height: 150px;
   }
 
-  .gallery-container .carousel-gallery .item .item-content .item-date {
-    font-size: 4em;
+  .gallery-container .arrows {
+    display: none;
   }
+  /* .gallery-container .carousel-gallery .item .item-content .item-date {
+    font-size: 4em;
+  } */
 
   @keyframes outImage {
     to {
-      width: 150px;
+      width: 100px;
       height: 150px;
       border-radius: 20px;
       left: 50%;
