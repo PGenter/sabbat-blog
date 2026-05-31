@@ -24,22 +24,28 @@
       </div>
       <div class="login_wrapper" id="login_wrapper">
         <div class="card upload-cd glassy modal" id="login-section">
+          <div id="dialog-header" class="dialog-header">
+                        <div class="close-button-container">
+                            <button class="header-button close-button" id="close-button"><i
+                                    class="bi bi-x"></i></button>
+                        </div>
+                    </div>
+                    
           <div class="card-head">
             <h2>Passwort zurücksetzen</h2>
-            <div class="reset-link">
-              <button class="close-button" id="close-button"><i class="bi bi-x"></i></button>
-              <!-- <a href="index.html" title="Zurück">X</a> -->
-            </div>
           </div>
-          <form id="reset-form" class="lg-button-container">
-            <input type="email" id="email" placeholder="Email" required />
-            <div class="lg-button-container">
-              
-              <button type="submit" class="nav-button lg-button" id="reset" title="Reset-Link senden"><i
-                class="bi bi-key"></i>Reset-Link senden</button>
-              </div>
-            </form>
-            <div id="message" class="msg-container"></div>
+          <div class="modal-container">
+
+            <form id="reset-form" class="lg-button-container">
+              <input type="email" id="email" placeholder="Email" required />
+              <div class="lg-button-container">
+                
+                <button type="submit" class="nav-button lg-button" id="reset" title="Reset-Link senden"><i
+                  class="bi bi-key"></i>Reset-Link senden</button>
+                </div>
+              </form>
+              <div id="message" class="msg-container"></div>
+            </div>
           </div>
       </div>
     </div>

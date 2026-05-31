@@ -14,14 +14,16 @@
     <div class="main_wrapper">
         <div id="modal-backdrop" class="modal-backdrop"></div>
         <div id="photo-gallery" class="photo-gallery">
-            <!-- <div id="gallery-container" class="gallery-container"> -->
-            <div id="photo-header" class="gallery-header">
-                <h2>Foto Galerie</h2>
+            <div id="gallery-header" class="gallery-header">
                 <div class="close-button-container">
-                    <button class="nav-button rnd-button glassy" id="edit-gallery" title="Einträge bearbeiten"><i
+                    <button class="header-button edit-button" id="edit-gallery" title="Einträge bearbeiten"><i
                             class="bi bi-pencil-square"></i></button>
-                    <button class="nav-button rnd-button glassy" id="close-button">X</button>
+                    <button class="header-button close-button" id="close-button">X</button>
                 </div>
+            </div>
+            <!-- <div id="gallery-container" class="gallery-container"> -->
+            <div id="photo-header" class="photo-header">
+                <h2>Foto Galerie</h2>
             </div>
             <div class="gallery-container">
                 <div id="carousel-gallery" class="carousel-gallery"></div>
@@ -34,36 +36,33 @@
                                 class="bi bi-caret-right-fill"></i></i></button>
                     </div>
                 </div>
-
             </div>
         </div>
         <div class="map_wrapper">
             <div id="map" class="map-container"></div>
         </div>
         <div class="interface_wrapper" id="map-section">
+            <div class="button_container">
+                <div class="button_wrapper" id="button_wrapper">
+                    <button class="nav-button rnd-button glassy" id="logout" title="Logout"><i
+                            class="bi bi-box-arrow-right"></i></button>
+
+                    <button class="nav-button rnd-button glassy" id="upload" title="Upload"><i
+                            class="bi bi-cloud-arrow-up"></i></button>
+                    <button class="nav-button rnd-button glassy" id="edit-map" title="Einträge bearbeiten"><i
+                            class="bi bi-pencil-square"></i></button>
+                    <button class="nav-button rnd-button glassy" id="invite" title="Freunde einladen"><i
+                            class="bi bi-person-add"></i></button>
+                </div>
+                <button class="nav-button rnd-button glassy" id="language-toggle" title="Sprache wechseln">
+                    <img src="https://flagcdn.com/w20/de.png" srcset="https://flagcdn.com/w40/de.png 2x" width="20"
+                        alt="Deutsch" />
+                </button>
+            </div>
             <div class="card_container">
                 <div class="card country-cd glassy" id="country-card">
                     <h2>Karte</h2>
                 </div>
-                <div class="button_container">
-                    <div class="button_wrapper" id="button_wrapper">
-                        <button class="nav-button rnd-button glassy" id="logout" title="Logout"><i
-                                class="bi bi-box-arrow-right"></i></button>
-
-                        <button class="nav-button rnd-button glassy" id="upload" title="Upload"><i
-                                class="bi bi-cloud-arrow-up"></i></button>
-                        <button class="nav-button rnd-button glassy" id="edit-map" title="Einträge bearbeiten"><i
-                                class="bi bi-pencil-square"></i></button>
-                        <button class="nav-button rnd-button glassy" id="invite" title="Freunde einladen"><i
-                                class="bi bi-person-add"></i></button>
-                    </div>
-                    <button class="nav-button rnd-button glassy" id="language-toggle" title="Sprache wechseln">
-                        <img src="https://flagcdn.com/w20/de.png" srcset="https://flagcdn.com/w40/de.png 2x" width="20"
-                            alt="Deutsch" />
-                    </button>
-
-                </div>
-
             </div>
             <div class="nav_wrapper" id="nav-wrapper">
                 <div class="navbar_wrapper " id="navbar">
@@ -75,19 +74,21 @@
             </div>
         </div>
         <div class="modal_dialog">
-
             <div class="invitation_wrapper">
                 <div class="card upload-cd glassy modal" id="invitation-section"
                     style="visibility: hidden; opacity: 0;">
+                    <div id="dialog-header" class="dialog-header">
+                        <div class="close-button-container">
+                            <button class="header-button close-button" id="invite-close-button"><i
+                                    class="bi bi-x"></i></button>
+                        </div>
+                    </div>
                     <div class="card-head">
                         <div>
                             <h2>Freunde einladen</h2>
                         </div>
-                        <div class="reset-link">
-                            <button class="close-button" id="invite-close-button"><i class="bi bi-x"></i></button>
-                        </div>
                     </div>
-                    <div class="invitation-container">
+                    <div class="modal-container invitation-container">
                         <input type="text" id="firstName" placeholder="Vorname" required />
                         <input type="text" id="lastName" placeholder="Nachname" required />
                         <input type="email" id="email" placeholder="Email" required />
@@ -108,36 +109,40 @@
             </div>
             <div class="upload_wrapper">
                 <div class="card upload-cd glassy modal" id="upload-section" style="visibility: hidden; opacity: 0;">
+                    <div id="dialog-header" class="dialog-header">
+                        <div class="close-button-container">
+                            <button class="header-button close-button" id="upload-close-button"><i
+                                    class="bi bi-x"></i></button>
+                        </div>
+                    </div>
                     <div class="card-head">
                         <div>
                             <h2>Foto Upload</h2>
                         </div>
-                        <div class="reset-link">
-                            <button class="close-button" id="upload-close-button"><i class="bi bi-x"></i></button>
+                    </div>
+                    <div class="modal-container">
+                        <input id="title" class="image-title" placeholder="Gib einen Titel für die Etappe an...">
+                        <textarea id="description" class="image-desc"
+                            placeholder="Beschreibe, was wir erlebt haben..."></textarea>
+                        <div class="file-container">
+                            <label class="nav-button lg-button"><i class="bi bi-image"></i>
+                                <span class="file-label">
+                                    Bilder auswählen
+                                </span>
+                                <input type="file" id="images" class="file-input" multiple accept="image/*" />
+                            </label>
+                            <span id="file-info">Kein Bild ausgewählt</span>
+                        </div>
+
+                        <button class="nav-button lg-button" id="uploadBtn"><i
+                                class="bi bi-cloud-arrow-up"></i>Upload</button>
+                        <div id="progressContainer" style="display:none; margin-top:16px;">
+                            <div class="progress-container">
+                                <div id="progressBar" class="progress-bar"></div>
+                            </div>
+                            <p id="progressText" style="margin-top:8px; font-size:14px;"></p>
                         </div>
                     </div>
-                    <input id="title" class="image-title" placeholder="Gib einen Titel für die Etappe an...">
-                    <textarea id="description" class="image-desc"
-                        placeholder="Beschreibe, was wir erlebt haben..."></textarea>
-                    <div class="file-container">
-                        <label class="nav-button lg-button"><i class="bi bi-image"></i>
-                            <span class="file-label">
-                                Bilder auswählen
-                            </span>
-                            <input type="file" id="images" class="file-input" multiple accept="image/*" />
-                        </label>
-                        <span id="file-info">Kein Bild ausgewählt</span>
-                    </div>
-
-                    <button class="nav-button lg-button" id="uploadBtn"><i
-                            class="bi bi-cloud-arrow-up"></i>Upload</button>
-                    <div id="progressContainer" style="display:none; margin-top:16px;">
-                        <div class="progress-container">
-                            <div id="progressBar" class="progress-bar"></div>
-                        </div>
-                        <p id="progressText" style="margin-top:8px; font-size:14px;"></p>
-                    </div>
-
                 </div>
             </div>
 

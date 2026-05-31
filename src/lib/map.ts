@@ -99,8 +99,8 @@ export async function initMap() {
 }
 
 export function toggleEditMode(buttonName: string) {
-  // console.log("Starte Edit-Mode");
-  // console.log("Geklickter Button ist " + buttonName);
+  console.log("Starte Edit-Mode");
+  console.log("Geklickter Button ist " + buttonName);
   isEditMode = !isEditMode;
   const editButton = document.getElementById(buttonName) as HTMLButtonElement;
   if (isEditMode) {
@@ -321,13 +321,17 @@ async function showEditMenu(entryId: string, currentTitle: string) {
     editModal.className = "modal";
     editModal.innerHTML = `
       <div class="card edit-cd glassy modal-content">
+      <div id="dialog-header" class="dialog-header">
+                        <div class="close-button-container">
+                            <button class="header-button close-button" id="edit-close-button"><i
+                                    class="bi bi-x"></i></button>
+                        </div>
+                    </div>
+                    
         <div class="card-head">
           <h2>${t("editMarker")}</h2>
-          <div class="reset-link">
-            <button class="close-button" id="edit-close-button"><i class="bi bi-x"></i></button>
-          </div>
         </div>
-        <div class="edit-container">
+        <div class="modal-container edit-container">
           <input type="text" id="edit-title" placeholder="${t("titlePlaceholder")}" required/>
           <button class="nav-button lg-button" id="save-edit-btn"><i class="bi bi-check"></i>${t("save")}</button>
           ${role === "administrator" ? `<button class="nav-button lg-button delete-btn" id="delete-entry-btn"><i class="bi bi-trash"></i>${t("delete")}</button>` : ""}
@@ -439,21 +443,18 @@ async function loadPhotosOfMarker(entryId: string, description: string) {
 
 async function renderPhotos(photos: any[], description: string) {
   const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
-  const header = document.getElementById("photo-header") as HTMLDivElement;
+  // const galleryHeader = document.getElementById("gallery-header") as HTMLDivElement;
+  const editButton = document.getElementById("edit-gallery") as HTMLDivElement;
+  const photoHeader = document.getElementById("photo-header") as HTMLDivElement;
   const user = await getUser();
   const role = user?.app_metadata?.role || "user";
   const showEditButton = role === "administrator" || role === "superuser";
 
-  header.innerHTML = `<h2>${getCountryName(currentCountry!, getCurrentLanguage())}</h2> 
-                      <div class="close-button-container">
-                      ${
-                        showEditButton
-                          ? `<button class="nav-button rnd-button glassy close-button" id="edit-gallery" title="Einträge bearbeiten"><i
-                            class="bi bi-pencil-square"></i></button>`
-                          : ""
-                      }
-                        <button class="nav-button rnd-button glassy close-button" id="close-button"><i class="bi bi-x"></i></button>
-                      </div>`;
+  photoHeader.innerHTML = `<h2>${getCountryName(currentCountry!, getCurrentLanguage())}</h2>`;
+                      
+  if(!showEditButton){
+    editButton.style.display = "none";
+  }
 
   const closeButton = document.getElementById(
     "close-button",
