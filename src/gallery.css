@@ -1,4 +1,4 @@
-:root{
+:root {
   --header-background: #2b2b2b;
   --gallery-background: #525252;
 }
@@ -41,8 +41,9 @@
 .photo-header h2 {
   color: white;
   margin-top: 4rem;
-  text-shadow: 0 0 8px rgba(0,0,0,.8),
-    0 2px 4px rgba(0,0,0,.8);
+  text-shadow:
+    0 0 8px rgba(0, 0, 0, 0.8),
+    0 2px 4px rgba(0, 0, 0, 0.8);
   letter-spacing: 3px;
 }
 
@@ -70,14 +71,13 @@
   background-color: var(--header-background);
   display: flex;
   justify-content: flex-end;
-  
 }
 
 .close-button-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: .3rem;
+  gap: 0.3rem;
 }
 
 .gallery-container {
@@ -96,24 +96,26 @@
 
 .gallery-container .carousel-gallery .item .item-img {
   display: flex;
-  width: 100%;
-  height: 100%;
+  margin: 1rem;
+  width: calc(100% - 2rem);
+  height: calc(100% - 2rem);
   justify-content: center;
-  /* align-items: center; */
+  /* overflow: hidden; */
+  align-items: center;
   /* object-fit: contain; */
 }
 
 .gallery-container .carousel-gallery .item img {
   border-radius: 20px;
   box-shadow: 0 5px 10px #0004;
-  margin: 1rem;
   object-fit: contain;
-  max-width: calc(100vw - 2rem);
-  max-height: calc(100vh - 2rem);
+  max-width: 100%;
+  max-height: 100%;
   width: auto;
   height: auto;
   display: block;
-  box-sizing: border-box;
+  /* box-sizing: border-box;
+  background: #0004; */
 }
 
 .gallery-container .carousel-gallery .item .item-content {
@@ -125,8 +127,9 @@
   padding-right: 30%;
   box-sizing: border-box;
   color: white;
-  text-shadow: 0 0 8px rgba(0,0,0,.8),
-    0 2px 4px rgba(0,0,0,.8);
+  text-shadow:
+    0 0 8px rgba(0, 0, 0, 0.8),
+    0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .gallery-container .carousel-gallery .item .item-content .item-no,
@@ -236,16 +239,17 @@
   width: 150px;
   height: 220px;
   position: absolute;
-  left: 50%;
-  bottom: 50px;
+  left: 70%;
+  bottom: min(50px, 8%);
   border-radius: 20px;
   animation: showImage 0.5s linear 1 forwards;
 }
 
 @keyframes showImage {
   to {
-    width: 100%;
-    height: 100%;
+    margin: 1rem;
+    width: calc(100% - 2rem);
+    height: calc(100% - 2rem);
     left: 0;
     bottom: 0;
     border-radius: 0;
@@ -333,7 +337,7 @@
 } */
 
 @media screen and (max-width: 1023px) {
-  .thumbnail-gallery {
+  /* .thumbnail-gallery {
     left: 70%;
   }
   .gallery-container .thumbnail-gallery {
@@ -342,28 +346,129 @@
   .gallery-container .carousel-gallery .item .item-content {
     padding-right: 0;
     bottom: 15%;
-    top:auto
+    top: auto;
   }
 
-  /* .gallery-container .thumbnail-gallery .item {
-    max-width: 100px;
-    max-height: 150px;
-  } */
+  .gallery-container.prev .carousel-gallery .item:nth-child(2) .item-img {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    animation: outImage 0.8s linear 1 forwards;
+  }
+
+  .gallery-container.next .carousel-gallery .item:last-child .item-img {
+    position: absolute;
+    right: 0;
+    left: auto;
+    width: 150px;
+    height: 220px;
+    border-radius: 20px;
+    animation: outImageRight 0.8s linear 1 forwards;
+  }
 
   .gallery-container .arrows {
     display: none;
   }
-  /* .gallery-container .carousel-gallery .item .item-content .item-date {
-    font-size: 4em;
-  } */
 
-  /* @keyframes outImage {
+  @keyframes outImage {
     to {
       width: 100px;
       height: 150px;
       border-radius: 20px;
-      left: 70%;
-      bottom: 50px;
+      bottom: 50%;
+      transform: translateX(-150%) scale(0.75);
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes outImageRight {
+    from {
+      right: 0;
+      transform: scale(1);
+      opacity: 1;
+    }
+    to {
+      right: -160px;
+      transform: scale(0.75);
+      opacity: 0.8;
     }
   } */
+
+  .thumbnail-gallery {
+    display: none;
+  }
+
+  .gallery-buttons {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 2rem;
+    width: auto;
+    max-width: 90%;
+  }
+
+  .gallery-container .carousel-gallery .item .item-content {
+    padding-right: 0;
+    bottom: 15%;
+    top: auto;
+  }
+
+  .gallery-container .carousel-gallery .item {
+    position: absolute;
+    inset: 0;
+    transform: translateX(0);
+  }
+
+  .gallery-container.next .carousel-gallery .item:nth-child(1) {
+    animation: slideInFromRight 0.45s ease forwards;
+    z-index: 2;
+  }
+
+  .gallery-container.next .carousel-gallery .item:nth-child(2) {
+    animation: slideOutLeft 0.45s ease forwards;
+  }
+
+  .gallery-container.prev .carousel-gallery .item:nth-child(1) {
+    animation: slideInFromLeft 0.45s ease forwards;
+    z-index: 2;
+  }
+
+  .gallery-container.prev .carousel-gallery .item:nth-child(2) {
+    animation: slideOutRight 0.45s ease forwards;
+  }
+
+  @keyframes slideInFromRight {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInFromLeft {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideOutLeft {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+
+  @keyframes slideOutRight {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
 }
