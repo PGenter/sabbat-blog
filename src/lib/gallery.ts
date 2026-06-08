@@ -102,4 +102,12 @@ if (carouselDom) {
     },
     { passive: true },
   );
+
+  carouselDom.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement;
+    const itemImg = target.closest(".item-img") as HTMLElement | null;
+    if (itemImg) {
+      carouselDom.classList.toggle("hide-controls");
+    }
+  });
 }
