@@ -51,7 +51,7 @@ h1 {
 }
 
 h2 {
-  font-size: clamp(1.5rem, calc(2vw + 0.5rem), 2.4rem);
+  font-size: clamp(1rem, calc(1vw + 0.5rem), 2.4rem);
   line-height: 1.1;
 }
 
@@ -917,9 +917,15 @@ path.leaflet-interactive:nth-child(2) {
     all ease 0.3s;
 }
 
-.edit-button:hover {
+.edit-button.active,
+.edit-button:not(.active):hover {
   background-color: whitesmoke;
   color: currentColor;
+}
+
+.edit-button.active:hover {
+  background-color: #525252;
+  color: whitesmoke;
 }
 
 .close-button{
@@ -928,7 +934,13 @@ path.leaflet-interactive:nth-child(2) {
   background: red;
 }
 
-.close-button:hover {
+.close-button:disabled {
+  background-color:  oklch(from red calc(l - 0.1) c h / 0.5);
+  color: var(--a);
+  cursor: not-allowed;
+}
+
+.close-button:enabled:hover {
   /* transform: scale(1.2); */
   color: whitesmoke;
   background-color:  oklch(from red calc(l - 0.1) c h / 0.5);

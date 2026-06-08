@@ -1,3 +1,5 @@
+import { isEditMode } from "./map";
+
 let nextDom = document.getElementById("next");
 let prevDom = document.getElementById("prev");
 let carouselDom = document.querySelector(".gallery-container");
@@ -17,14 +19,16 @@ prevDom!.onclick = () => {
 
 document.body.addEventListener("keydown", (event) => {
   const key = event.key;
-  switch (key) {
-    case "ArrowLeft":
-      showSlider("prev");
-      break;
-    case "ArrowRight":
-      showSlider("next");
-      break;
-  }
+  if(!isEditMode){
+    switch (key) {
+      case "ArrowLeft":
+        showSlider("prev");
+        break;
+        case "ArrowRight":
+          showSlider("next");
+          break;
+        }
+      }
 });
 
 let timeRunning = 500;

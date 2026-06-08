@@ -44,7 +44,7 @@ let routeLine: L.Polyline;
 let routeGlow: L.Polyline;
 let routeAnimationFrame: number | null = null;
 let lastRouteKey: string | null = null;
-let isEditMode = false;
+export let isEditMode = false;
 let currentGalleryEntryId: string | null = null;
 let currentGalleryDescription: string | null = null;
 
@@ -103,11 +103,14 @@ export function toggleEditMode(buttonName: string) {
   console.log("Geklickter Button ist " + buttonName);
   isEditMode = !isEditMode;
   const editButton = document.getElementById(buttonName) as HTMLButtonElement;
+  const closeButton = document.getElementById("close-button") as HTMLButtonElement;
   if (isEditMode) {
     editButton.classList.add("active");
+    closeButton.disabled = true;
     document.body.classList.add("edit-mode");
   } else {
     editButton.classList.remove("active");
+    closeButton.disabled = false;
     document.body.classList.remove("edit-mode");
   }
   // Reload markers to update click handlers (without clearing the route)
@@ -451,8 +454,8 @@ async function renderPhotos(photos: any[], description: string) {
   const showEditButton = role === "administrator" || role === "superuser";
 
   photoHeader.innerHTML = `<h2>${getCountryName(currentCountry!, getCurrentLanguage())}</h2>`;
-                      
-  if(!showEditButton){
+
+  if (!showEditButton) {
     editButton.style.display = "none";
   }
 
@@ -460,16 +463,20 @@ async function renderPhotos(photos: any[], description: string) {
     "close-button",
   ) as HTMLButtonElement;
   closeButton.addEventListener("click", () => {
-    closeGallery();
-  });
-  document.body.addEventListener("keydown", (event) => {
-    const key = event.key;
-    switch (key) {
-      case "Escape":
-        closeGallery();
-        break;
+    if (!isEditMode) {
+      closeGallery();
     }
   });
+  document.body.addEventListener("keydown", (event) => {
+      if (!isEditMode) {
+      const key = event.key;
+      switch (key) {
+        case "Escape":
+          closeGallery();
+          break;
+      }
+    }
+    });
 
   const carouselGallery = document.getElementById(
     "carousel-gallery",
