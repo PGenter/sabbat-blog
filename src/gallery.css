@@ -65,7 +65,7 @@
 
 .gallery-header {
   width: 100%;
-  height: 4vh;
+  height: 1.5rem;
   background-color: var(--header-background);
   display: flex;
   justify-content: flex-end;
@@ -98,14 +98,21 @@
   width: 100%;
   height: 100%;
   justify-content: center;
-  object-fit: contain;
+  /* align-items: center; */
+  /* object-fit: contain; */
 }
 
 .gallery-container .carousel-gallery .item img {
   border-radius: 20px;
   box-shadow: 0 5px 10px #0004;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin: 1rem;
+  object-fit: contain;
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 2rem);
+  width: auto;
+  height: auto;
+  display: block;
+  box-sizing: border-box;
 }
 
 .gallery-container .carousel-gallery .item .item-content {
@@ -129,8 +136,8 @@
 
 .gallery-container .carousel-gallery .item .item-content .item-date {
   font-weight: bold;
-  /* font-size: 5em; */
-  font-size: clamp(2.5rem, calc(5vw + 1rem), 5rem);
+  font-size: 2.5rem;
+  /* font-size: clamp(2.5rem, calc(2.5vw + 1rem), 2.5rem); */
   line-height: 1.3em;
   color: var(--primary-color);
 }
@@ -138,7 +145,7 @@
 .thumbnail-gallery {
   position: absolute;
   bottom: min(50px, 8%);
-  left: 50%;
+  left: 70%;
   width: max-content;
   z-index: 1002;
   display: flex;
@@ -282,7 +289,7 @@
     width: 150px;
     height: 220px;
     border-radius: 20px;
-    left: 50%;
+    left: 70%;
     bottom: 50px;
   }
 }
@@ -313,15 +320,15 @@
   pointer-events: none;
 }
 
-@media screen and (max-width: 678px) {
+/* @media screen and (max-width: 678px) {
   .gallery-container .carousel-gallery .item .item-content {
     padding-right: 0;
   }
-  /* .gallery-container .carousel-gallery .item .item-content .item-date {
+  .gallery-container .carousel-gallery .item .item-content .item-date {
     font-size: 30px;
-  } */
+  }
   
-}
+} */
 
 @media screen and (max-width: 1023px) {
   .thumbnail-gallery {
@@ -330,7 +337,11 @@
   .gallery-container .thumbnail-gallery {
     display: none;
   }
-  
+  .gallery-container .carousel-gallery .item .item-content {
+    padding-right: 0;
+    bottom: 15%;
+    top:auto
+  }
 
   /* .gallery-container .thumbnail-gallery .item {
     max-width: 100px;
