@@ -41,7 +41,8 @@
 .photo-header h2 {
   color: white;
   margin-top: 4rem;
-  text-shadow: 0 5px 10px #0004;
+  text-shadow: 0 0 8px rgba(0,0,0,.8),
+    0 2px 4px rgba(0,0,0,.8);
   letter-spacing: 3px;
 }
 
@@ -124,7 +125,8 @@
   padding-right: 30%;
   box-sizing: border-box;
   color: white;
-  text-shadow: 0 5px 10px #0004;
+  text-shadow: 0 0 8px rgba(0,0,0,.8),
+    0 2px 4px rgba(0,0,0,.8);
 }
 
 .gallery-container .carousel-gallery .item .item-content .item-no,
@@ -355,13 +357,13 @@
     font-size: 4em;
   } */
 
-  @keyframes outImage {
+  /* @keyframes outImage {
     to {
       width: 100px;
       height: 150px;
       border-radius: 20px;
-      left: 50%;
+      left: 70%;
       bottom: 50px;
     }
-  }
+  } */
 }
