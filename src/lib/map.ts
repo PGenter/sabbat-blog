@@ -446,14 +446,15 @@ async function loadPhotosOfMarker(entryId: string, description: string) {
 
 async function renderPhotos(photos: any[], description: string) {
   const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
-  // const galleryHeader = document.getElementById("gallery-header") as HTMLDivElement;
+  const galleryHeader = document.getElementById("gallery-title") as HTMLDivElement;
   const editButton = document.getElementById("edit-gallery") as HTMLDivElement;
   const photoHeader = document.getElementById("photo-header") as HTMLDivElement;
   const user = await getUser();
   const role = user?.app_metadata?.role || "user";
   const showEditButton = role === "administrator" || role === "superuser";
 
-  photoHeader.innerHTML = `<h2>${getCountryName(currentCountry!, getCurrentLanguage())}</h2>`;
+  galleryHeader.innerHTML = `<h2>${getCountryName(currentCountry!, getCurrentLanguage())}</h2>`;
+  // photoHeader.innerHTML = `<h2>${getCountryName(currentCountry!, getCurrentLanguage())}</h2>`;
 
   if (!showEditButton) {
     editButton.style.display = "none";

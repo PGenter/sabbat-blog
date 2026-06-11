@@ -28,10 +28,14 @@
 }
 
 .photo-header {
-  width: 100dvw;
-  max-width: 80%;
+  position: sticky;
+  width: 90%;
+  max-width: calc(70%);
+  left: 10%;
   margin: auto;
-  height: 6rem;
+  min-height: 2rem;
+  height: calc(10vh - 2rem);
+  max-height: 3rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -41,34 +45,67 @@
 
 .photo-header h2 {
   color: white;
-  margin-top: 4rem;
+  /* margin-top: 4rem; */
   text-shadow:
     0 0 8px rgba(0, 0, 0, 0.8),
     0 2px 4px rgba(0, 0, 0, 0.8);
   letter-spacing: 3px;
+  align-content: center;
+  margin: 0;
 }
 
 .gallery-header {
-  width: 100%;
-  height: 1.5rem;
+  width: 100dvw;
+  /* height: 1.5rem; */
   /* background-color: var(--header-background); */
   background-color: var(--gallery-background);
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  /* padding: 0  2vw; */
 }
 
-.close-button-container {
+.gallery-header .close-button-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
+  margin: 1rem 0;
+  padding-right: 2vw;
+  min-height: 2rem;
+    height: calc(10vh - 2rem);
+    max-height: 3rem;
+}
+
+.galleryheader-button {
+  background-color: transparent;
+  color: whitesmoke;
+  border: none;
+  cursor: pointer;
+  margin: 0.7vh 0.3vw;
+  height: 100%;
+  aspect-ratio: 1/1;
+  border-radius: 12px;
+  transition: all 0.5s ease;
+}
+
+.galleryheader-button:hover,
+.galleryheader-button.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.galleryheader-button.active:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.galleryheader-button i {
+  font-size: clamp(1rem, 1.3vw, large);
 }
 
 .gallery-container {
   width: 100dvw;
   height: 100dvh;
   overflow: hidden;
-  margin-top: -6rem;
+  /* margin-top: -6rem; */
   position: relative;
 }
 
@@ -129,8 +166,11 @@
   font-weight: bold;
   font-size: clamp(0.7rem, calc(2vh + 0.1rem), 1rem);
   padding-top: 0.5em;
-  max-height: 3rem;
-  overflow: hidden;
+  min-height: 2rem;
+  height: fit-content;
+  max-height: 4rem;
+  overflow-y: auto;
+  pointer-events: auto;
 }
 
 .gallery-container .carousel-gallery .item .item-content .item-date {
@@ -433,13 +473,13 @@
       opacity: 0.8;
     }
   } */
-  .photo-header {
+  /* .photo-header {
     align-items: start;
   }
 
   .photo-header h2 {
     margin-top: 4vh;
-  }
+  } */
 
   .thumbnail-gallery {
     display: none;
