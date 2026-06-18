@@ -14,7 +14,36 @@
     <div class="main_wrapper">
         <div id="modal-backdrop" class="modal-backdrop"></div>
         <div id="photo-gallery" class="photo-gallery">
-            <div id="gallery-header" class="gallery-header">
+            <aside id="comments-panel" class="comments-panel collapsed">
+                    <div class="comments-header">
+                        <!-- <div class="comments-toggle"> -->
+                            <span class="comments-toggle-label">Kommentare</span>
+                            <!-- <span class="comments-count">0</span> -->
+                        <!-- </div> -->
+                    </div>
+                    <div class="comments-body" hidden>
+                        <ul class="comments-list"></ul>
+                        <div class="comments-empty">Noch keine Kommentare</div>
+                        <div class="comments-input-wrap">
+                            <textarea class="comment-input" rows="3"></textarea>
+                            <button class="nav-button lg-button comments-submit" type="button">Kommentar senden</button>
+                        </div>
+                    </div>
+                </aside>
+                <div class="comment-divider"></div>
+                <div class="comment-button">
+                    <button class="comments-toggle" type="button">
+                        <span class="comments-toggle-button"><i class="bi bi-chat-left-text-fill"></i></span>
+                        <span class="comments-toggle-number"></span>
+                    </button>
+                </div>
+            
+            <!-- <div id="gallery-container" class="gallery-container"> -->
+            <!-- <div id="photo-header" class="photo-header"> -->
+                <!-- <h2>Foto Galerie</h2> -->
+            <!-- </div> -->
+            <div id="gallery-layout">
+                <div id="gallery-header" class="gallery-header">
                 <div id="gallery-title" class="photo-header">
                     <h2>Foto Galerie</h2>
                 </div>
@@ -24,21 +53,39 @@
                     <button class="galleryheader-button" id="close-button"><i class="bi bi-x-lg"></i></button>
                 </div>
             </div>
-            <!-- <div id="gallery-container" class="gallery-container"> -->
-            <!-- <div id="photo-header" class="photo-header"> -->
-                <!-- <h2>Foto Galerie</h2> -->
-            <!-- </div> -->
-            <div class="gallery-container">
-                <div id="carousel-gallery" class="carousel-gallery"></div>
-                <div id="thumbnail-gallery" class="thumbnail-gallery"></div>
-                <div class="gallery-buttons">
-                    <div class="arrows">
-                        <button id="prev" class="nav-button rnd-button glassy"><i
-                                class="bi bi-caret-left-fill"></i></i></button>
-                        <button id="next" class="nav-button rnd-button glassy"><i
-                                class="bi bi-caret-right-fill"></i></i></button>
+                
+                <div class="gallery-container">
+                    <template id="gallery-item-template">
+                        <div class="item">
+                            <div class="item-media">
+                                <div class="item-img">
+                                    <img src="" alt="" />
+                                </div>
+                                <div class="item-content">
+                                    <div class="item-no"></div>
+                                    <div class="item-date"></div>
+                                    <div class="item-description"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <template id="thumbnail-template">
+                        <div class="item">
+                            <img src="" alt="" />
+                        </div>
+                    </template>
+                    <div id="carousel-gallery" class="carousel-gallery"></div>
+                    <div id="thumbnail-gallery" class="thumbnail-gallery"></div>
+                    <div class="gallery-buttons">
+                        <div class="arrows">
+                            <button id="prev" class="nav-button rnd-button glassy"><i
+                                    class="bi bi-caret-left-fill"></i></i></button>
+                            <button id="next" class="nav-button rnd-button glassy"><i
+                                    class="bi bi-caret-right-fill"></i></i></button>
+                        </div>
                     </div>
                 </div>
+                
             </div>
         </div>
         <div class="map_wrapper">

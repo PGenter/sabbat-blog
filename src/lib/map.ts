@@ -48,6 +48,131 @@ export let isEditMode = false;
 let currentGalleryEntryId: string | null = null;
 let currentGalleryDescription: string | null = null;
 
+type GalleryComment = {
+  id: string;
+  content: string;
+  user_id: string | null;
+  author_name?: string | null;
+  author_email?: string | null;
+  created_at: string;
+};
+
+type GalleryUser = Awaited<ReturnType<typeof getUser>>;
+
+function getCommentAuthorName(user: GalleryUser) {
+  const firstName = user?.user_metadata?.first_name?.trim() ?? "";
+  const lastName = user?.user_metadata?.last_name?.trim() ?? "";
+  const fullName = [firstName, lastName].filter(Boolean).join(" ");
+  return fullName || user?.email || t("anonymousUser");
+}
+
+function getCommentDisplayName(comment: GalleryComment, currentUser: GalleryUser) {
+  if (comment.author_name) return comment.author_name;
+  if (currentUser?.id && comment.user_id === currentUser.id) {
+    return getCommentAuthorName(currentUser);
+  }
+  return comment.author_email || t("commentAuthor");
+}
+
+function formatCommentDate(value: string) {
+  return new Date(value).toLocaleString(getLanguageCode(getCurrentLanguage()), {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+async function loadCommentsForPhoto(
+  entryId: string,
+  commentsList: HTMLUListElement,
+  emptyState: HTMLElement,
+  countBadge: HTMLElement,
+  currentUser: GalleryUser,
+) {
+  const { data, error } = await supabase
+    .from("comments")
+    .select("id, content, user_id, author_name, author_email, created_at")
+    .eq("entry_id", entryId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error loading comments:", error);
+    return;
+  }
+
+  commentsList.innerHTML = "";
+  countBadge.replaceChildren();
+
+  const commentNo = data?.length ?? 0;
+  if (commentNo > 0) {
+    const icon = document.createElement("i");
+    icon.className =
+      commentNo > 9
+        ? "bi bi-airplane-fill"
+        : `bi bi-${commentNo}-circle-fill`;
+    countBadge.appendChild(icon);
+  }
+
+  if (!data?.length) {
+    emptyState.hidden = false;
+    return;
+  }
+
+  emptyState.hidden = true;
+  data.forEach((comment: GalleryComment) => {
+    const item = document.createElement("li");
+    item.className = "comment-item";
+
+    const meta = document.createElement("div");
+    meta.className = "comment-meta";
+    const author = document.createElement("strong");
+    const isOwnComment = !!currentUser?.id && comment.user_id === currentUser.id;
+    author.textContent = getCommentDisplayName(comment, currentUser);
+    const date = document.createElement("span");
+    date.textContent = formatCommentDate(comment.created_at);
+    meta.appendChild(author);
+    meta.appendChild(date);
+
+    if (isOwnComment) {
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "comment-delete-button";
+      deleteButton.type = "button";
+      deleteButton.innerHTML = '<i class="bi bi-trash"></i>';
+      deleteButton.addEventListener("click", async () => {
+        if (!confirm(t("confirmDeleteComment"))) return;
+        const { error } = await supabase
+          .from("comments")
+          .delete()
+          .eq("id", comment.id)
+          .eq("user_id", currentUser.id);
+
+        if (error) {
+          console.error("Error deleting comment:", error);
+          alert(t("errorDeletingComment"));
+          return;
+        }
+
+        item.remove();
+        await loadCommentsForPhoto(
+          entryId,
+          commentsList,
+          emptyState,
+          countBadge,
+          currentUser,
+        );
+      });
+      meta.appendChild(deleteButton);
+    }
+
+    const text = document.createElement("div");
+    text.className = "comment-text";
+    text.textContent = comment.content;
+
+    item.appendChild(meta);
+    item.appendChild(text);
+    commentsList.appendChild(item);
+  });
+}
+
 export async function initMap() {
   if (isInitialized) return;
   isInitialized = true;
@@ -448,10 +573,10 @@ async function renderPhotos(photos: any[], description: string) {
   const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
   const galleryHeader = document.getElementById("gallery-title") as HTMLDivElement;
   const editButton = document.getElementById("edit-gallery") as HTMLDivElement;
-  const photoHeader = document.getElementById("photo-header") as HTMLDivElement;
   const user = await getUser();
   const role = user?.app_metadata?.role || "user";
   const showEditButton = role === "administrator" || role === "superuser";
+  const currentUser = user;
 
   galleryHeader.innerHTML = `<h2>${getCountryName(currentCountry!, getCurrentLanguage())}</h2>`;
   // photoHeader.innerHTML = `<h2>${getCountryName(currentCountry!, getCurrentLanguage())}</h2>`;
@@ -485,11 +610,132 @@ async function renderPhotos(photos: any[], description: string) {
   const thumbnailGallery = document.getElementById(
     "thumbnail-gallery",
   ) as HTMLDivElement;
+  const commentsPanel = document.getElementById(
+    "comments-panel",
+  ) as HTMLElement;
+  const commentsToggle = document.querySelector(
+    ".comment-button .comments-toggle",
+  ) as HTMLButtonElement;
+  const commentsCount = document.querySelector(
+    ".comment-button .comments-toggle-number",
+  ) as HTMLSpanElement;
+  const commentsBody = commentsPanel.querySelector(
+    ".comments-body",
+  ) as HTMLDivElement;
+  const commentsList = commentsPanel.querySelector(
+    ".comments-list",
+  ) as HTMLUListElement;
+  const emptyState = commentsPanel.querySelector(
+    ".comments-empty",
+  ) as HTMLDivElement;
+  const commentInput = commentsPanel.querySelector(
+    ".comment-input",
+  ) as HTMLTextAreaElement;
+  const submitCommentButton = commentsPanel.querySelector(
+    ".comments-submit",
+  ) as HTMLButtonElement;
+  const commentDivider = document.querySelector(
+    "#photo-gallery .comment-divider",
+  ) as HTMLDivElement;
   const firstPhoto = photos[0];
   const total = photos.length;
   carouselGallery.innerHTML = ""; // Clear previous photos
   thumbnailGallery.innerHTML = ""; // Clear previous thumbnails
   gallery.classList.add("active");
+  commentsPanel.classList.add("collapsed");
+  commentsBody.hidden = true;
+  // commentsCount.textContent = "0";
+  commentInput.placeholder = t("commentPlaceholder");
+  submitCommentButton.textContent = t("addComment");
+  emptyState.textContent = t("noCommentsYet");
+
+  void loadCommentsForPhoto(
+    currentGalleryEntryId || firstPhoto.id,
+    commentsList,
+    emptyState,
+    commentsCount,
+    currentUser,
+  );
+
+  const clampWidth = (value: number, min: number, max: number) =>
+    Math.min(max, Math.max(min, value));
+
+  commentsToggle.addEventListener("click", async () => {
+    const shouldOpen = commentsPanel.classList.contains("collapsed");
+    commentsPanel.classList.toggle("collapsed", !shouldOpen);
+    commentsBody.hidden = !shouldOpen;
+
+    if (shouldOpen) {
+      void loadCommentsForPhoto(
+        currentGalleryEntryId || firstPhoto.id,
+        commentsList,
+        emptyState,
+        commentsCount,
+        currentUser,
+      );
+    }
+  });
+
+  commentDivider.addEventListener("pointerdown", (event) => {
+    if (commentsPanel.classList.contains("collapsed")) return;
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = commentsPanel.getBoundingClientRect().width;
+    const move = (moveEvent: PointerEvent) => {
+      const nextWidth = clampWidth(
+        startWidth + (moveEvent.clientX - startX),
+        160,
+        520,
+      );
+      commentsPanel.style.width = `${nextWidth}px`;
+      commentsPanel.style.flexBasis = `${nextWidth}px`;
+    };
+    const stop = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", stop);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", stop, { once: true });
+  });
+
+  submitCommentButton.addEventListener("click", async () => {
+    const commentText = commentInput.value.trim();
+    if (!commentText) return;
+
+    if (!currentUser) {
+      alert(t("loginRequiredComment"));
+      return;
+    }
+
+    const { error } = await supabase.from("comments").insert({
+      entry_id: currentGalleryEntryId,
+      user_id: currentUser.id,
+      content: commentText,
+      author_name: getCommentAuthorName(currentUser),
+      author_email: currentUser.email,
+    });
+
+    if (error) {
+      console.error("Error saving comment:", error);
+      alert(t("errorSavingComment"));
+      return;
+    }
+
+    commentInput.value = "";
+    commentsPanel.classList.remove("collapsed");
+    commentsBody.hidden = false;
+    await loadCommentsForPhoto(
+      currentGalleryEntryId || firstPhoto.id,
+      commentsList,
+      emptyState,
+      commentsCount,
+      currentUser,
+    );
+  });
 
   const canEditDescription =
     isEditMode && (role === "administrator" || role === "superuser");
@@ -508,12 +754,27 @@ async function renderPhotos(photos: any[], description: string) {
   createThumbnail(firstPhoto);
 
   function createPhoto(photo: any, index: number) {
-    const imgContainer = document.createElement("div");
-    const img = document.createElement("img");
-    const itemImg = document.createElement("div");
-    const itemContent = document.createElement("div");
-    const itemNo = document.createElement("div");
-    const itemTakenAt = document.createElement("div");
+    const itemTemplate = document.getElementById(
+      "gallery-item-template",
+    ) as HTMLTemplateElement;
+    const imgContainer = itemTemplate.content.firstElementChild!.cloneNode(
+      true,
+    ) as HTMLElement;
+    const img = imgContainer.querySelector("img") as HTMLImageElement;
+    const itemNo = imgContainer.querySelector(".item-no") as HTMLDivElement;
+    const itemDate = imgContainer.querySelector(".item-date") as HTMLDivElement;
+    let itemDescription = imgContainer.querySelector(
+      ".item-description",
+    ) as HTMLElement;
+    const itemMedia = imgContainer.querySelector(
+      ".item-media",
+    ) as HTMLDivElement;
+    const itemImg = imgContainer.querySelector(
+      ".item-img",
+    ) as HTMLDivElement;
+    const itemContent = imgContainer.querySelector(
+      ".item-content",
+    ) as HTMLDivElement;
     const takenAt = new Date(photo.taken_at).toLocaleDateString(
       getLanguageCode(getCurrentLanguage()),
       {
@@ -526,39 +787,30 @@ async function renderPhotos(photos: any[], description: string) {
     img.src = photo.image_url;
     img.alt = description;
     itemNo.textContent = `${t("photoNumber")} ${index + 1} ${t("of")} ${total}`;
-    itemTakenAt.textContent = takenAt;
-
-    const itemDescriptionElement = canEditDescription
-      ? document.createElement("textarea")
-      : document.createElement("div");
-    itemDescriptionElement.className = canEditDescription
-      ? "item-description item-description-input"
-      : "item-description";
+    itemDate.textContent = takenAt;
 
     if (canEditDescription) {
-      const textarea = itemDescriptionElement as HTMLTextAreaElement;
+      const textarea = document.createElement("textarea");
       textarea.value = description || "";
       textarea.placeholder = t("editDescriptionPlaceholder");
       textarea.rows = 4;
+      textarea.className = "item-description item-description-input";
+      itemContent.replaceChild(textarea, itemDescription);
+      itemDescription = textarea;
     } else {
-      itemDescriptionElement.textContent = description || "";
+      itemDescription.textContent = description || "";
     }
 
     imgContainer.classList.add("item");
     imgContainer.dataset.photoId = photo.id;
+    itemMedia.classList.add("item-media");
     itemImg.classList.add("item-img");
     itemContent.classList.add("item-content");
     itemNo.classList.add("item-no");
-    itemTakenAt.classList.add("item-date");
-    itemDescriptionElement.classList.add("item-description");
+    itemDate.classList.add("item-date");
+    itemDescription.classList.add("item-description");
 
     carouselGallery.appendChild(imgContainer);
-    imgContainer.appendChild(itemImg);
-    imgContainer.appendChild(itemContent);
-    itemImg.appendChild(img);
-    itemContent.appendChild(itemNo);
-    itemContent.appendChild(itemTakenAt);
-    itemContent.appendChild(itemDescriptionElement);
 
     if (canEditDescription) {
       const saveButton = document.createElement("button");
@@ -566,7 +818,7 @@ async function renderPhotos(photos: any[], description: string) {
       saveButton.innerHTML = `<i class="bi bi-check"></i> ${t("save")}`;
       saveButton.addEventListener("click", async () => {
         const newDescription = (
-          itemDescriptionElement as HTMLTextAreaElement
+          itemDescription as HTMLTextAreaElement
         ).value.trim();
         if (!currentGalleryEntryId) return;
 
@@ -635,13 +887,17 @@ async function renderPhotos(photos: any[], description: string) {
   }
 
   function createThumbnail(photo: any) {
-    const thumbItem = document.createElement("div");
-    const thumbImg = document.createElement("img");
+    const thumbTemplate = document.getElementById(
+      "thumbnail-template",
+    ) as HTMLTemplateElement;
+    const thumbItem = thumbTemplate.content.firstElementChild!.cloneNode(
+      true,
+    ) as HTMLElement;
+    const thumbImg = thumbItem.querySelector("img") as HTMLImageElement;
     thumbImg.src = photo.thumbnail_url;
     thumbImg.alt = description;
     thumbItem.classList.add("item");
     thumbItem.dataset.photoId = photo.id;
-    thumbItem.appendChild(thumbImg);
 
     if (canDeletePhotos) {
       const deleteButton = document.createElement("button");
