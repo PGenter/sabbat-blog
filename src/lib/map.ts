@@ -2,22 +2,18 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import L from "leaflet";
-import { supabase, getUser } from "../lib/supabase";
+import { getUser, supabase } from "../lib/supabase";
 import {
-  t,
+  formatCountText,
   getCurrentLanguage,
   getLanguageCode,
-  formatCountText,
+  t,
 } from "../lib/i18n.ts";
 import "leaflet.markercluster";
-import { COUNTRIES, getCountryName, type CountryCode } from "./geo";
-// import "./slider.ts";
+import { COUNTRIES, type CountryCode, getCountryName } from "./geo";
 import "./gallery.ts";
-import { snapTo, getCountryIndex } from "./slider.ts";
+import { getCountryIndex, snapTo } from "./slider.ts";
 
-// const editMarkerIconUrl = new URL("../../assets/marker/camera-48.png", import.meta.url).href;
-// const visitedMarkerIconUrl = new URL("../../assets/marker/camera-48-visited.png", import.meta.url).href;
-// const newMarkerIconUrl = new URL("../../assets/marker/camera-48-new.png", import.meta.url).href;
 const newMarkerIconUrl = new URL(
   "../../assets/marker/cameraMarker-new.png",
   import.meta.url,
@@ -66,7 +62,10 @@ function getCommentAuthorName(user: GalleryUser) {
   return fullName || user?.email || t("anonymousUser");
 }
 
-function getCommentDisplayName(comment: GalleryComment, currentUser: GalleryUser) {
+function getCommentDisplayName(
+  comment: GalleryComment,
+  currentUser: GalleryUser,
+) {
   if (comment.author_name) return comment.author_name;
   if (currentUser?.id && comment.user_id === currentUser.id) {
     return getCommentAuthorName(currentUser);
@@ -106,9 +105,7 @@ async function loadCommentsForPhoto(
   if (commentNo > 0) {
     const icon = document.createElement("i");
     icon.className =
-      commentNo > 9
-        ? "bi bi-airplane-fill"
-        : `bi bi-${commentNo}-circle-fill`;
+      commentNo > 9 ? "bi bi-airplane-fill" : `bi bi-${commentNo}-circle-fill`;
     countBadge.appendChild(icon);
   }
 
@@ -124,13 +121,20 @@ async function loadCommentsForPhoto(
 
     const meta = document.createElement("div");
     meta.className = "comment-meta";
+    const tail = document.createElement("div");
+    tail.className = "comment-tail";
     const author = document.createElement("strong");
-    const isOwnComment = !!currentUser?.id && comment.user_id === currentUser.id;
+    const isOwnComment =
+      !!currentUser?.id && comment.user_id === currentUser.id;
     author.textContent = getCommentDisplayName(comment, currentUser);
+    const seperator = document.createElement("span");
+    seperator.textContent = "-";
     const date = document.createElement("span");
     date.textContent = formatCommentDate(comment.created_at);
-    meta.appendChild(author);
-    meta.appendChild(date);
+    meta.appendChild(tail);
+    tail.appendChild(author);
+    tail.appendChild(seperator);
+    tail.appendChild(date);
 
     if (isOwnComment) {
       const deleteButton = document.createElement("button");
@@ -214,7 +218,6 @@ export async function initMap() {
   await loadVisitedMarkers();
   await loadUnvisitedEntryCount();
 
-  // const latestEntry = await getLatestEntry();
   if (latestEntry?.section && latestEntry?.section != null) {
     currentCountry = latestEntry.section;
     selectCountry(latestEntry.section);
@@ -224,11 +227,13 @@ export async function initMap() {
 }
 
 export function toggleEditMode(buttonName: string) {
-  console.log("Starte Edit-Mode");
-  console.log("Geklickter Button ist " + buttonName);
+  // console.log("Starte Edit-Mode");
+  // console.log("Geklickter Button ist " + buttonName);
   isEditMode = !isEditMode;
   const editButton = document.getElementById(buttonName) as HTMLButtonElement;
-  const closeButton = document.getElementById("close-button") as HTMLButtonElement;
+  const closeButton = document.getElementById(
+    "close-button",
+  ) as HTMLButtonElement;
   if (isEditMode) {
     editButton.classList.add("active");
     closeButton.disabled = true;
@@ -264,8 +269,6 @@ export function selectCountry(country: CountryCode) {
   if (countryIndex !== -1) {
     snapTo(countryIndex, false);
   }
-  // const card = document.getElementById("country-card") as HTMLDivElement;
-  // card.innerHTML = `<h2>${COUNTRIES[country].name}</h2>`;
 }
 
 export async function setCardText(country: CountryCode) {
@@ -276,7 +279,10 @@ export async function setCardText(country: CountryCode) {
   card.innerHTML = `<h2>${t("hello")} ${firstName},</h2>
   <p>${t("welcomeLine1")}</p>
   <p>${t("welcomeLine2")}</p>
-  <p>${t("currentLocation")} <u><b>${getCountryName(country, getCurrentLanguage())}</b></u>.</p>`;
+  <p>${t("currentLocation")} <u><b>${getCountryName(
+    country,
+    getCurrentLanguage(),
+  )}</b></u>.</p>`;
 
   if (unvisitedEntries === 0) {
     card.innerHTML += `<p>${t("noNewStations")}</p>`;
@@ -356,9 +362,7 @@ function createMarker(
   title: string,
   desc: string,
   id: string,
-  // takenAt: string,
   createdAt: string,
-  // userId: string,
   views: number,
   images: number,
 ) {
@@ -377,14 +381,6 @@ function createMarker(
   });
 
   var markerOptions: L.MarkerOptions = {
-    // title:
-    //   title +
-    //   "</br>Upload am " +
-    //   new Date(createdAt).toLocaleDateString("de-DE", {
-    //     day: "2-digit",
-    //     month: "2-digit",
-    //     year: "numeric",
-    //   }),
     icon: customIcon,
     opacity: 0,
   };
@@ -399,7 +395,9 @@ function createMarker(
   });
 
   const editHint = isEditMode
-    ? `<div class="tooltip-edit-hint"><i class="bi bi-pencil"></i> ${t("editHint")}</div>`
+    ? `<div class="tooltip-edit-hint"><i class="bi bi-pencil"></i> ${t(
+        "editHint",
+      )}</div>`
     : "";
 
   marker.bindTooltip(
@@ -460,9 +458,19 @@ async function showEditMenu(entryId: string, currentTitle: string) {
           <h2>${t("editMarker")}</h2>
         </div>
         <div class="modal-container edit-container">
-          <input type="text" id="edit-title" placeholder="${t("titlePlaceholder")}" required/>
-          <button class="nav-button lg-button" id="save-edit-btn"><i class="bi bi-check"></i>${t("save")}</button>
-          ${role === "administrator" ? `<button class="nav-button lg-button delete-btn" id="delete-entry-btn"><i class="bi bi-trash"></i>${t("delete")}</button>` : ""}
+          <input type="text" id="edit-title" placeholder="${t(
+            "titlePlaceholder",
+          )}" required/>
+          <button class="nav-button lg-button" id="save-edit-btn"><i class="bi bi-check"></i>${t(
+            "save",
+          )}</button>
+          ${
+            role === "administrator"
+              ? `<button class="nav-button lg-button delete-btn" id="delete-entry-btn"><i class="bi bi-trash"></i>${t(
+                  "delete",
+                )}</button>`
+              : ""
+          }
         </div>
       </div>
     `;
@@ -571,15 +579,19 @@ async function loadPhotosOfMarker(entryId: string, description: string) {
 
 async function renderPhotos(photos: any[], description: string) {
   const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
-  const galleryHeader = document.getElementById("gallery-title") as HTMLDivElement;
+  const galleryHeader = document.getElementById(
+    "gallery-title",
+  ) as HTMLDivElement;
   const editButton = document.getElementById("edit-gallery") as HTMLDivElement;
   const user = await getUser();
   const role = user?.app_metadata?.role || "user";
   const showEditButton = role === "administrator" || role === "superuser";
   const currentUser = user;
 
-  galleryHeader.innerHTML = `<h2>${getCountryName(currentCountry!, getCurrentLanguage())}</h2>`;
-  // photoHeader.innerHTML = `<h2>${getCountryName(currentCountry!, getCurrentLanguage())}</h2>`;
+  galleryHeader.innerHTML = `<h2>${getCountryName(
+    currentCountry!,
+    getCurrentLanguage(),
+  )}</h2>`;
 
   if (!showEditButton) {
     editButton.style.display = "none";
@@ -588,21 +600,16 @@ async function renderPhotos(photos: any[], description: string) {
   const closeButton = document.getElementById(
     "close-button",
   ) as HTMLButtonElement;
-  closeButton.addEventListener("click", () => {
+  closeButton.onclick = () => {
     if (!isEditMode) {
       closeGallery();
     }
-  });
-  document.body.addEventListener("keydown", (event) => {
-      if (!isEditMode) {
-      const key = event.key;
-      switch (key) {
-        case "Escape":
-          closeGallery();
-          break;
-      }
+  };
+  document.body.onkeydown = (event) => {
+    if (!isEditMode && event.key === "Escape") {
+      closeGallery();
     }
-    });
+  };
 
   const carouselGallery = document.getElementById(
     "carousel-gallery",
@@ -646,7 +653,7 @@ async function renderPhotos(photos: any[], description: string) {
   commentsBody.hidden = true;
   // commentsCount.textContent = "0";
   commentInput.placeholder = t("commentPlaceholder");
-  submitCommentButton.textContent = t("addComment");
+  // submitCommentButton.textContent = t("addComment");
   emptyState.textContent = t("noCommentsYet");
 
   void loadCommentsForPhoto(
@@ -660,10 +667,18 @@ async function renderPhotos(photos: any[], description: string) {
   const clampWidth = (value: number, min: number, max: number) =>
     Math.min(max, Math.max(min, value));
 
-  commentsToggle.addEventListener("click", async () => {
+  commentsToggle.title = t("commentsToggle");
+
+  commentsToggle.onclick = () => {
     const shouldOpen = commentsPanel.classList.contains("collapsed");
     commentsPanel.classList.toggle("collapsed", !shouldOpen);
+    commentDivider.classList.toggle("collapsed", !shouldOpen);
     commentsBody.hidden = !shouldOpen;
+
+    if (!shouldOpen) {
+      commentsPanel.style.width = "";
+      commentsPanel.style.flexBasis = "";
+    }
 
     if (shouldOpen) {
       void loadCommentsForPhoto(
@@ -674,9 +689,9 @@ async function renderPhotos(photos: any[], description: string) {
         currentUser,
       );
     }
-  });
+  };
 
-  commentDivider.addEventListener("pointerdown", (event) => {
+  commentDivider.onpointerdown = (event) => {
     if (commentsPanel.classList.contains("collapsed")) return;
     event.preventDefault();
     const startX = event.clientX;
@@ -700,9 +715,9 @@ async function renderPhotos(photos: any[], description: string) {
     document.body.style.userSelect = "none";
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", stop, { once: true });
-  });
+  };
 
-  submitCommentButton.addEventListener("click", async () => {
+  submitCommentButton.onclick = async () => {
     const commentText = commentInput.value.trim();
     if (!commentText) return;
 
@@ -735,7 +750,10 @@ async function renderPhotos(photos: any[], description: string) {
       commentsCount,
       currentUser,
     );
-  });
+  };
+
+  commentInput.oninput = () => autoResizeCommentInput(commentInput);
+  // autoResizeCommentInput();
 
   const canEditDescription =
     isEditMode && (role === "administrator" || role === "superuser");
@@ -769,9 +787,7 @@ async function renderPhotos(photos: any[], description: string) {
     const itemMedia = imgContainer.querySelector(
       ".item-media",
     ) as HTMLDivElement;
-    const itemImg = imgContainer.querySelector(
-      ".item-img",
-    ) as HTMLDivElement;
+    const itemImg = imgContainer.querySelector(".item-img") as HTMLDivElement;
     const itemContent = imgContainer.querySelector(
       ".item-content",
     ) as HTMLDivElement;
@@ -943,7 +959,16 @@ async function renderPhotos(photos: any[], description: string) {
 
   function closeGallery() {
     const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
+    const commentsPanel = document.getElementById(
+      "comments-panel",
+    ) as HTMLElement;
+    const commentsBody = commentsPanel.querySelector(
+      ".comments-body",
+    ) as HTMLDivElement;
+
     gallery.classList.remove("active");
+    commentsPanel.classList.add("collapsed");
+    commentsBody.hidden = true;
   }
 }
 
@@ -1038,9 +1063,7 @@ function renderMarkers(entries: any[]) {
       entry.title,
       entry.description,
       entry.id,
-      // entry.taken_at,
       entry.created_at,
-      // entry.user_id,
       entry.visited_entries?.[0]?.count ?? 0,
       entry.photos?.[0].count ?? 0,
     );
@@ -1154,4 +1177,7 @@ function removeMarkersOutsideViewport() {
   });
 }
 
-// initMap();
+function autoResizeCommentInput(el: HTMLTextAreaElement) {
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}

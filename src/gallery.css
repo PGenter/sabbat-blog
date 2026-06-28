@@ -1,6 +1,16 @@
 :root {
-  --header-background: #2b2b2b;
+  /* --comments-background: #2b2b2b;
   --gallery-background: #525252;
+  --gallery-primary-text-color: white;
+  --gallery-secondary-text-color: whitesmoke; */
+
+  --comments-background: whitesmoke;
+  --comments-header-background: #c9c8c8;
+  --gallery-background: rgb(231, 228, 228);
+  --gallery-primary-text-color: white;
+  --gallery-secondary-text-color: black;
+  --divider-background: #b1b0b0;
+  --divider-background-hover: #9b9a9a;
 }
 
 .photo-gallery {
@@ -12,7 +22,7 @@
   top: 0;
   left: 0;
   z-index: 1001;
-  background-color: var(--secondary-background-color);
+  background-color: var(--gallery-background);
   opacity: 0;
   transform: scale(0.95);
   transition:
@@ -44,7 +54,7 @@
 }
 
 .photo-header h2 {
-  color: white;
+  color: var(--gallery-primary-text-color);
   /* margin-top: 4rem; */
   text-shadow:
     0 0 8px rgba(0, 0, 0, 0.8),
@@ -55,13 +65,9 @@
 }
 
 .gallery-header {
-  /* width: 100dvw; */
-  /* height: 1.5rem; */
-  /* background-color: var(--header-background); */
   background-color: var(--gallery-background);
   display: flex;
   justify-content: space-between;
-  /* padding: 0  2vw; */
 }
 
 .gallery-header .close-button-container {
@@ -77,7 +83,7 @@
 
 .galleryheader-button {
   background-color: transparent;
-  color: whitesmoke;
+  color: var(--gallery-secondary-text-color);
   border: none;
   cursor: pointer;
   margin: 0.7vh 0.3vw;
@@ -89,12 +95,13 @@
 
 .galleryheader-button:hover,
 .galleryheader-button.active {
-  background-color: rgba(255, 255, 255, 0.1);
+  /* background-color: rgba(255, 255, 255, 0.1); */
+  background-color: var(--divider-background);
   transform: scale(1.1);
 }
 
 .galleryheader-button.active:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--divider-background-hover);
 }
 
 .galleryheader-button i {
@@ -152,7 +159,7 @@
 
 .gallery-container .carousel-gallery .item img {
   border-radius: 20px;
-  box-shadow: 0 5px 10px #0004;
+  box-shadow: 0 0 7px 5px #0004;
   object-fit: contain;
   max-width: 100%;
   max-height: 100%;
@@ -169,7 +176,7 @@
   left: 5%;
   padding-right: 5%;
   box-sizing: border-box;
-  color: white;
+  color: var(--gallery-primary-text-color);
   text-shadow:
     0 0 8px rgba(0, 0, 0, 0.8),
     0 2px 4px rgba(0, 0, 0, 0.8);
@@ -204,16 +211,25 @@
 
 .comment-divider {
   width: 12px;
-  background: whitesmoke;
+  background: var(--divider-background);
   cursor: col-resize;
   flex: 0 0 12px;
   position: relative;
   z-index: 2;
   touch-action: none;
   box-shadow: 0 5px 10px #0004;
+  transition: all 0.3s ease;
 }
 
-.comment-divider::after {
+.comment-divider.collapsed {
+  cursor: auto;
+}
+
+.comment-divider:not(.collapsed):hover {
+  background:  var(--divider-background-hover);
+}
+
+.comment-divider:not(.collapsed)::after {
   content: "";
   position: absolute;
   top: 50%;
@@ -221,13 +237,13 @@
   width: 2px;
   height: 48px;
   transform: translate(-50%, -50%);
-  background: var(--gallery-background);
+  background: var(--gallery-secondary-text-color);
   border-radius: 99px;
 }
 
 #comments-panel {
-  flex: 0 0 18dvw;
-  width: 18dvw;
+  flex: 0 0 21dvw;
+  width: 21dvw;
   min-width: 10rem;
   max-width: 30dvw;
   display: flex;
@@ -236,6 +252,8 @@
   border-left: 1px solid rgba(255, 255, 255, 0.07);
   pointer-events: auto;
   transition: all 0.5s ease;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  
 }
 
 #comments-panel.collapsed {
@@ -253,8 +271,8 @@
   justify-content: flex-start;
   padding: 0.75rem 0.8rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: #242424;
-  color: #f5f5f5;
+  background: var(--comments-header-background);
+  color: var(--gallery-secondary-text-color);
   font-size: 0.95rem;
   font-weight: 600;
   text-shadow: none;
@@ -296,7 +314,6 @@
   font-size: larger;
   position: absolute;
   translate: 0.8rem 0.5rem;
-  /* background-color: var(--header-background); */
   color: var(--primary-color);
 }
 
@@ -321,7 +338,7 @@
   flex-direction: column;
   gap: 0.75rem;
   padding: 0.9rem;
-  background: #181818;
+  background: var(--gallery-background);
   height: 100%;
   overflow-y: auto;
 }
@@ -329,13 +346,9 @@
 #comments-panel .comments-input-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.65rem;
-  background: #111;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  position: sticky;
-  top: 0;
+  justify-content: end;
+  border: none; 
+  position: relative;
   z-index: 1;
 }
 
@@ -345,14 +358,16 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 1rem;
 }
 
 #comments-panel .comment-item {
-  padding: 0.65rem 0.7rem;
+  padding: 0.85rem 1.2rem;
   border-radius: 12px;
-  background: #222;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow-wrap: break-word;
+  box-shadow: 0 5px 10px #0004;
+  background-color: var(--comments-background);
 }
 
 #comments-panel .comment-meta {
@@ -360,9 +375,19 @@
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.78rem;
+  font-size: 0.69rem;
   margin-bottom: 0.35rem;
-  color: #bbb;
+  color: var(--gallery-secondary-text-color);
+  
+}
+
+#comments-panel .comment-tail {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.69rem;
+  margin-bottom: 0.35rem;
 }
 
 #comments-panel .comment-delete-button {
@@ -376,30 +401,71 @@
 #comments-panel .comment-text {
   font-size: 0.92rem;
   line-height: 1.45;
-  color: #f2f2f2;
 }
 
 #comments-panel .comments-empty {
   font-size: 0.9rem;
-  color: #aaa;
 }
 
 #comments-panel .comment-input {
   width: 100%;
-  min-height: 5rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  min-height: 3rem;
+  border: 1px solid var(--primary-color);
   border-radius: 10px;
   padding: 0.75rem;
-  resize: vertical;
-  background: #151515;
-  color: #f2f2f2;
+  margin: 0;
+  padding-right: 3.5rem;
+  overflow-y: hidden;
+  resize: none;
+  background: var(--comments-background);
+  color: var(--gallery-secondary-text-color);
   box-sizing: border-box;
+  box-shadow: 0 0 5px var(--gallery-secondary-text-color);
+  position: relative;
+}
+
+#comments-panel .comment-input::placeholder {
+  font-size: clamp(0.7rem, 1vw, 1.1rem);
+  display: block;
+  box-sizing: content-box;
+  position: relative;
+  top: -4px;
 }
 
 #comments-panel .comments-submit {
-  width: fit-content;
-  padding: 0.45rem 0.8rem;
+  width: 2rem;
+  height: 2rem;
   align-self: flex-end;
+  border: none;
+  position: absolute;
+  font-size: medium;
+  color: var(--gallery-secondary-text-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0.5rem;
+  background-color: var(--primary-color);
+  border-radius: 20px;
+  box-shadow: 0 5px 10px #0004;
+}
+
+#comments-panel .comments-submit i{
+  transition: all 0.3s ease;
+}
+
+#comments-panel .comments-submit:hover, 
+#comments-panel .comments-submit:focus-visible {
+  display: flex;
+  color: var(--gallery-secondary-text-color);
+  transform: scale(1.2);
+  border: none;
+}
+
+#comments-panel .comments-submit:hover i, 
+#comments-panel .comments-submit:focus-visible i {
+  transform: rotate(45deg);
 }
 
 .thumbnail-gallery {
@@ -452,7 +518,7 @@
   left: 10%;
   padding-right: 30%;
   box-sizing: border-box;
-  color: white;
+  color: var(--gallery-primary-text-color);
   text-shadow:
     0 0 8px rgba(0, 0, 0, 0.8),
     0 2px 4px rgba(0, 0, 0, 0.8);
@@ -502,14 +568,21 @@
 .gallery-buttons button {
   width: 50px;
   height: 50px;
-  background-color: #eee4;
+  background-color: var(--primary-color);
   font-family: monospace;
   font-weight: bold;
   font-size: x-large;
   z-index: 100;
-  color: var(--primary-color);
+  color: var(--gallery-secondary-text-color);
   border: 1px solid var(--primary-color);
+  border-radius: 16px;
   pointer-events: auto;
+  transition: all 0.5s ease;
+  box-shadow: 0 0 5px 2px #0004;
+}
+
+.gallery-buttons button:hover {
+  transform: scale(1.2);
 }
 
 .gallery-container .carousel-gallery .item:nth-child(1) {
