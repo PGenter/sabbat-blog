@@ -29,6 +29,7 @@ type GalleryComment = {
 };
 
 type GalleryUser = Awaited<ReturnType<typeof getUser>>;
+// type LayoutState = { comments: number };
 
 nextDom!.onclick = () => {
   showSlider("next");
@@ -261,6 +262,21 @@ function destroyGallerySplit() {
   gallerySplit = null;
 }
 
+function getIsMobile() {
+  return window.innerWidth < 1024;
+}
+
+// function applyLayout(state: LayoutState) {
+//   const isMobile = getIsMobile();
+
+//   if (isMobile) {
+//     // inverted visual order durch column-reverse
+//     gallerySplit.setSizes([state.comments, 100 - state.comments]);
+//   } else {
+//     gallerySplit.setSizes([state.comments, 100 - state.comments]);
+//   }
+// }
+
 function initGallerySplit(initialOpenSize = 0) {
   if (gallerySplit) return;
 
@@ -268,7 +284,7 @@ function initGallerySplit(initialOpenSize = 0) {
   const galleryShell = document.getElementById("gallery-shell");
   if (!commentsShell || !galleryShell) return;
 
-  const isMobile = window.innerWidth < 1024;
+  const isMobile = getIsMobile();
   const direction = isMobile ? "vertical" : "horizontal";
   const sizes = [initialOpenSize, 100 - initialOpenSize];
   const snapOffset = isMobile ? 40 : 80;
@@ -297,6 +313,34 @@ function updateGallerySplitForViewport() {
   });
 }
 
+function animateComments(targetComments: number, duration = 350) {
+  if (!gallerySplit) return;
+
+  const isMobile = getIsMobile();
+  const [start] = gallerySplit.getSizes();
+
+  const startTime = performance.now();
+
+  function frame(now: number) {
+    const t = Math.min((now - startTime) / duration, 1);
+
+    const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+    let value = start + (targetComments - start) * eased;
+
+    // 🔥 MOBILE INVERSION (entscheidend)
+    if (isMobile) {
+      value = 100 - value;
+    }
+
+    gallerySplit.setSizes([value, 100 - value]);
+
+    if (t < 1) requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+}
+
 function setCommentsPanelState(isCollapsed: boolean) {
   const commentsPanel = document.getElementById(
     "comments-panel",
@@ -310,21 +354,19 @@ function setCommentsPanelState(isCollapsed: boolean) {
 
   if (document.getElementById("photo-gallery")?.classList.contains("active")) {
     requestAnimationFrame(() => {
-      destroyGallerySplit();
-      initGallerySplit(isCollapsed ? 0 : 20);
-      if (gallerySplit) {
-        const isMobile = window.innerWidth < 1024;
-        const panelSize =
-          isCollapsed && isMobile
-            ? 100
-            : !isCollapsed && isMobile
-              ? 70
-              : isCollapsed && !isMobile
-                ? 0
-                : 20;
-        const gallerySize = 100 - panelSize;
-        gallerySplit.setSizes([panelSize, gallerySize]);
-      }
+      if (!gallerySplit) return;
+
+      const isMobile = getIsMobile();
+
+      const targetComments = isMobile
+        ? isCollapsed
+          ? 0
+          : 30
+        : isCollapsed
+          ? 0
+          : 20;
+
+      animateComments(targetComments);
     });
   }
 }
@@ -420,9 +462,9 @@ async function renderPhotos(photos: any[], description: string) {
   carouselGallery.innerHTML = ""; // Clear previous photos
   thumbnailGallery.innerHTML = ""; // Clear previous thumbnails
   gallery.classList.add("active");
-  setCommentsPanelState(true);
   requestAnimationFrame(() => {
     initGallerySplit(0);
+    setCommentsPanelState(true);
   });
   // commentsCount.textContent = "0";
   commentInput.placeholder = t("commentPlaceholder");
@@ -705,3 +747,5 @@ function autoResizeCommentInput(el: HTMLTextAreaElement) {
   el.style.height = "auto";
   el.style.height = el.scrollHeight + "px";
 }
+
+
