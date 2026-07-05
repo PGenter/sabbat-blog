@@ -2,6 +2,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import L from "leaflet";
+import Split from "split.js";
 import { getUser, supabase } from "../lib/supabase";
 import {
   formatCountText,
@@ -43,6 +44,7 @@ let lastRouteKey: string | null = null;
 export let isEditMode = false;
 let currentGalleryEntryId: string | null = null;
 let currentGalleryDescription: string | null = null;
+let gallerySplit: any = null;
 
 type GalleryComment = {
   id: string;
@@ -554,6 +556,74 @@ async function showEditMenu(entryId: string, currentTitle: string) {
   }
 }
 
+function destroyGallerySplit() {
+  gallerySplit?.destroy?.();
+  gallerySplit = null;
+}
+
+function initGallerySplit(initialOpenSize = 0) {
+  if (gallerySplit) return;
+
+  const commentsShell = document.getElementById("comments-shell");
+  const galleryShell = document.getElementById("gallery-shell");
+  if (!commentsShell || !galleryShell) return;
+
+  const isMobile = window.innerWidth < 1024;
+  const direction = isMobile ? "vertical" : "horizontal";
+  const initialSize = isMobile ? 100 - 0 : initialOpenSize;
+  const sizes = isMobile ? [100, 0] : [initialSize, 100 - initialSize];
+  const snapOffset = isMobile ? 40 : 80;
+
+  gallerySplit = Split(["#comments-shell", "#gallery-shell"], {
+    sizes,
+    minSize: [0, 0],
+    gutterSize: 12,
+    cursor: isMobile ? "row-resize" : "col-resize",
+    direction,
+    snapOffset,
+  });
+}
+
+function updateGallerySplitForViewport() {
+  const gallery = document.getElementById("photo-gallery");
+  if (!gallery?.classList.contains("active")) {
+    destroyGallerySplit();
+    return;
+  }
+
+  destroyGallerySplit();
+  requestAnimationFrame(() => {
+    initGallerySplit();
+  });
+}
+
+function setCommentsPanelState(isCollapsed: boolean) {
+  const commentsPanel = document.getElementById(
+    "comments-panel",
+  ) as HTMLElement;
+  const commentsBody = commentsPanel.querySelector(
+    ".comments-body",
+  ) as HTMLDivElement;
+
+  commentsPanel.classList.toggle("collapsed", isCollapsed);
+  commentsBody.hidden = isCollapsed;
+
+  if (document.getElementById("photo-gallery")?.classList.contains("active")) {
+    requestAnimationFrame(() => {
+      destroyGallerySplit();
+      initGallerySplit(isCollapsed ? 0 : 20);
+      if (gallerySplit) {
+        const isMobile = window.innerWidth < 1024;
+        const panelSize = isCollapsed ? 0 : isMobile ? 20 : 20;
+        const gallerySize = 100 - panelSize;
+        gallerySplit.setSizes([panelSize, gallerySize]);
+      }
+    });
+  }
+}
+
+window.addEventListener("resize", updateGallerySplitForViewport);
+
 function showPhotoGallery(entryId: string, description: string) {
   currentGalleryEntryId = entryId;
   currentGalleryDescription = description;
@@ -626,9 +696,6 @@ async function renderPhotos(photos: any[], description: string) {
   const commentsCount = document.querySelector(
     ".comment-button .comments-toggle-number",
   ) as HTMLSpanElement;
-  const commentsBody = commentsPanel.querySelector(
-    ".comments-body",
-  ) as HTMLDivElement;
   const commentsList = commentsPanel.querySelector(
     ".comments-list",
   ) as HTMLUListElement;
@@ -641,16 +708,15 @@ async function renderPhotos(photos: any[], description: string) {
   const submitCommentButton = commentsPanel.querySelector(
     ".comments-submit",
   ) as HTMLButtonElement;
-  const commentDivider = document.querySelector(
-    "#photo-gallery .comment-divider",
-  ) as HTMLDivElement;
   const firstPhoto = photos[0];
   const total = photos.length;
   carouselGallery.innerHTML = ""; // Clear previous photos
   thumbnailGallery.innerHTML = ""; // Clear previous thumbnails
   gallery.classList.add("active");
-  commentsPanel.classList.add("collapsed");
-  commentsBody.hidden = true;
+  setCommentsPanelState(true);
+  requestAnimationFrame(() => {
+    initGallerySplit(0);
+  });
   // commentsCount.textContent = "0";
   commentInput.placeholder = t("commentPlaceholder");
   // submitCommentButton.textContent = t("addComment");
@@ -664,21 +730,11 @@ async function renderPhotos(photos: any[], description: string) {
     currentUser,
   );
 
-  const clampWidth = (value: number, min: number, max: number) =>
-    Math.min(max, Math.max(min, value));
-
   commentsToggle.title = t("commentsToggle");
 
   commentsToggle.onclick = () => {
     const shouldOpen = commentsPanel.classList.contains("collapsed");
-    commentsPanel.classList.toggle("collapsed", !shouldOpen);
-    commentDivider.classList.toggle("collapsed", !shouldOpen);
-    commentsBody.hidden = !shouldOpen;
-
-    if (!shouldOpen) {
-      commentsPanel.style.width = "";
-      commentsPanel.style.flexBasis = "";
-    }
+    setCommentsPanelState(!shouldOpen);
 
     if (shouldOpen) {
       void loadCommentsForPhoto(
@@ -689,32 +745,6 @@ async function renderPhotos(photos: any[], description: string) {
         currentUser,
       );
     }
-  };
-
-  commentDivider.onpointerdown = (event) => {
-    if (commentsPanel.classList.contains("collapsed")) return;
-    event.preventDefault();
-    const startX = event.clientX;
-    const startWidth = commentsPanel.getBoundingClientRect().width;
-    const move = (moveEvent: PointerEvent) => {
-      const nextWidth = clampWidth(
-        startWidth + (moveEvent.clientX - startX),
-        160,
-        520,
-      );
-      commentsPanel.style.width = `${nextWidth}px`;
-      commentsPanel.style.flexBasis = `${nextWidth}px`;
-    };
-    const stop = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", stop);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", stop, { once: true });
   };
 
   submitCommentButton.onclick = async () => {
@@ -741,8 +771,7 @@ async function renderPhotos(photos: any[], description: string) {
     }
 
     commentInput.value = "";
-    commentsPanel.classList.remove("collapsed");
-    commentsBody.hidden = false;
+    setCommentsPanelState(false);
     await loadCommentsForPhoto(
       currentGalleryEntryId || firstPhoto.id,
       commentsList,
@@ -959,16 +988,9 @@ async function renderPhotos(photos: any[], description: string) {
 
   function closeGallery() {
     const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
-    const commentsPanel = document.getElementById(
-      "comments-panel",
-    ) as HTMLElement;
-    const commentsBody = commentsPanel.querySelector(
-      ".comments-body",
-    ) as HTMLDivElement;
 
     gallery.classList.remove("active");
-    commentsPanel.classList.add("collapsed");
-    commentsBody.hidden = true;
+    setCommentsPanelState(true);
   }
 }
 

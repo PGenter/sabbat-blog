@@ -14,34 +14,39 @@
     <div class="main_wrapper">
         <div id="modal-backdrop" class="modal-backdrop"></div>
         <div id="photo-gallery" class="photo-gallery">
-            <aside id="comments-panel" class="comments-panel collapsed">
-                <div class="comments-header">
-                    <!-- <div class="comments-toggle"> -->
-                    <span class="comments-toggle-label">Kommentare</span>
-                    <!-- <span class="comments-count">0</span> -->
-                    <!-- </div> -->
-                </div>
-                <div class="comments-body" hidden>
-                    <div class="comments-input-wrap">
-                        <textarea class="comment-input" id="comment-input" rows="1"></textarea>
-                        <button class="comments-submit" type="button" title="Kommentar senden"><i class="bi bi-send-fill"></i></button>
+            <div id="comments-shell" class="comments-shell">
+                <aside id="comments-panel" class="comments-panel collapsed">
+                    <div class="comments-header">
+                        <span class="comments-toggle-label">Kommentare</span>
                     </div>
-                    <ul class="comments-list"></ul>
-                    <div class="comments-empty">Noch keine Kommentare</div>
-                </div>
-            </aside>
-            <div class="comment-divider collapsed"></div>
-            <div class="comment-button">
-                <button class="comments-toggle" type="button">
-                    <span class="comments-toggle-button"><i class="bi bi-chat-left-text-fill"></i></span>
-                    <span class="comments-toggle-number"></span>
-                </button>
+                    <div class="comments-body" hidden>
+                        <div class="comments-input-wrap">
+                            <textarea class="comment-input" id="comment-input" rows="1"></textarea>
+                            <button class="comments-submit" type="button" title="Kommentar senden"><i class="bi bi-send-fill"></i></button>
+                        </div>
+                        <ul class="comments-list"></ul>
+                        <div class="comments-empty">Noch keine Kommentare</div>
+                    </div>
+                </aside>
+                <!-- <div id="comment-button" class="comment-button">
+                    <button class="comments-toggle" type="button">
+                        <span class="comments-toggle-button"><i class="bi bi-chat-left-text-fill"></i></span>
+                        <span class="comments-toggle-number"></span>
+                    </button>
+                </div> -->
             </div>
 
             <!-- <div id="gallery-container" class="gallery-container"> -->
             <!-- <div id="photo-header" class="photo-header"> -->
             <!-- <h2>Foto Galerie</h2> -->
             <!-- </div> -->
+             <div id="gallery-shell" class="gallery-shell">
+<div id="comment-button" class="comment-button">
+                    <button class="comments-toggle" type="button">
+                        <span class="comments-toggle-button"><i class="bi bi-chat-left-text-fill"></i></span>
+                        <span class="comments-toggle-number"></span>
+                    </button>
+                </div>
             <div id="gallery-layout">
                 <div id="gallery-header" class="gallery-header">
                     <div id="gallery-title" class="photo-header">
@@ -86,6 +91,7 @@
                     </div>
                 </div>
 
+            </div>
             </div>
         </div>
         <div class="map_wrapper">
