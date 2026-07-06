@@ -3,6 +3,7 @@ import { t, getLanguageCode, getCurrentLanguage } from "./i18n";
 import { currentCountry, isEditMode } from "./map";
 import Split from "split.js";
 import { getUser, supabase } from "./supabase";
+import { orientation } from "exifr";
 
 let timeRunning = 500;
 let runTimeOut: NodeJS.Timeout;
@@ -286,18 +287,24 @@ function initGallerySplit(initialOpenSize = 0) {
 
   const isMobile = getIsMobile();
   const direction = isMobile ? "vertical" : "horizontal";
+  const minSize = isMobile ? [0, 0] : [0, 0];
+  const maxSize = isMobile ? [calculatePixel(0.5, 'height'), Infinity] : [600, Infinity]
   const sizes = [initialOpenSize, 100 - initialOpenSize];
   const snapOffset = isMobile ? 40 : 80;
   const gutterSize = isMobile ? 10 : 12;
 
   gallerySplit = Split(["#comments-shell", "#gallery-shell"], {
     sizes,
-    minSize: [0, 0],
+    minSize,
+    maxSize,
     gutterSize,
     cursor: isMobile ? "row-resize" : "col-resize",
     direction,
     snapOffset,
   });
+  // if(isMobile) {
+  //   gallerySplit.setSizes(0, 200);
+  // }
 }
 
 function updateGallerySplitForViewport() {
@@ -311,6 +318,17 @@ function updateGallerySplitForViewport() {
   requestAnimationFrame(() => {
     initGallerySplit();
   });
+}
+
+function calculatePixel(percentage: number, orientation: string) {
+  let maxValue = 0;
+  if(orientation === 'height'){
+    maxValue = window.innerHeight;
+  }
+  if(orientation === 'width'){
+    maxValue = window.innerWidth;
+  }
+  return maxValue * percentage;
 }
 
 function animateComments(targetComments: number, duration = 350) {
@@ -328,7 +346,6 @@ function animateComments(targetComments: number, duration = 350) {
 
     let value = start + (targetComments - start) * eased;
 
-    // 🔥 MOBILE INVERSION (entscheidend)
     if (isMobile) {
       value = 100 - value;
     }
@@ -342,30 +359,14 @@ function animateComments(targetComments: number, duration = 350) {
 }
 
 function setCommentsPanelState(isCollapsed: boolean) {
-  const commentsPanel = document.getElementById(
-    "comments-panel",
-  ) as HTMLElement;
-  const commentsBody = commentsPanel.querySelector(
-    ".comments-body",
-  ) as HTMLDivElement;
-
-  commentsPanel.classList.toggle("collapsed", isCollapsed);
-  commentsBody.hidden = isCollapsed;
-
   if (document.getElementById("photo-gallery")?.classList.contains("active")) {
     requestAnimationFrame(() => {
       if (!gallerySplit) return;
 
       const isMobile = getIsMobile();
 
-      const targetComments = isMobile
-        ? isCollapsed
-          ? 0
-          : 30
-        : isCollapsed
-          ? 0
-          : 20;
-
+      const targetComments = !isCollapsed ? 0 : isMobile ? 40 : 20;
+      console.log("targetComments = " + targetComments);
       animateComments(targetComments);
     });
   }
@@ -464,7 +465,7 @@ async function renderPhotos(photos: any[], description: string) {
   gallery.classList.add("active");
   requestAnimationFrame(() => {
     initGallerySplit(0);
-    setCommentsPanelState(true);
+    setCommentsPanelState(false);
   });
   // commentsCount.textContent = "0";
   commentInput.placeholder = t("commentPlaceholder");
@@ -482,10 +483,12 @@ async function renderPhotos(photos: any[], description: string) {
   commentsToggle.title = t("commentsToggle");
 
   commentsToggle.onclick = () => {
-    const shouldOpen = commentsPanel.classList.contains("collapsed");
-    setCommentsPanelState(!shouldOpen);
+    // const shouldOpen = commentsPanel.classList.contains("collapsed");
+    let isCommentOpen = gallerySplit.getSizes()[0] >= 2;
+    console.log("Kommentarbereich geöffnet? " + isCommentOpen);
+    setCommentsPanelState(!isCommentOpen);
 
-    if (shouldOpen) {
+    if (isCommentOpen) {
       void loadCommentsForPhoto(
         currentGalleryEntryId || firstPhoto.id,
         commentsList,
@@ -747,5 +750,3 @@ function autoResizeCommentInput(el: HTMLTextAreaElement) {
   el.style.height = "auto";
   el.style.height = el.scrollHeight + "px";
 }
-
-

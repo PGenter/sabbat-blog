@@ -15,17 +15,19 @@
         <div id="modal-backdrop" class="modal-backdrop"></div>
         <div id="photo-gallery" class="photo-gallery">
             <div id="comments-shell" class="comments-shell">
-                <aside id="comments-panel" class="comments-panel collapsed">
+                <aside id="comments-panel" class="comments-panel">
                     <div class="comments-header">
                         <span class="comments-toggle-label">Kommentare</span>
                     </div>
-                    <div class="comments-body" hidden>
-                        <div class="comments-input-wrap">
-                            <textarea class="comment-input" id="comment-input" rows="1"></textarea>
-                            <button class="comments-submit" type="button" title="Kommentar senden"><i class="bi bi-send-fill"></i></button>
+                    <div class="comments-body">
+                        <div class="comments-inner">
+                            <div class="comments-input-wrap">
+                                <textarea class="comment-input" id="comment-input" rows="1"></textarea>
+                                <button class="comments-submit" type="button" title="Kommentar senden"><i class="bi bi-send-fill"></i></button>
+                            </div>
+                            <ul class="comments-list"></ul>
+                            <div class="comments-empty">Noch keine Kommentare</div>
                         </div>
-                        <ul class="comments-list"></ul>
-                        <div class="comments-empty">Noch keine Kommentare</div>
                     </div>
                 </aside>
                 <!-- <div id="comment-button" class="comment-button">
