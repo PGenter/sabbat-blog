@@ -3,7 +3,6 @@ import { t, getLanguageCode, getCurrentLanguage } from "./i18n";
 import { currentCountry, isEditMode } from "./map";
 import Split from "split.js";
 import { getUser, supabase } from "./supabase";
-import { orientation } from "exifr";
 
 let timeRunning = 500;
 let runTimeOut: NodeJS.Timeout;
@@ -366,7 +365,6 @@ function setCommentsPanelState(isCollapsed: boolean) {
       const isMobile = getIsMobile();
 
       const targetComments = !isCollapsed ? 0 : isMobile ? 40 : 20;
-      console.log("targetComments = " + targetComments);
       animateComments(targetComments);
     });
   }
@@ -483,9 +481,7 @@ async function renderPhotos(photos: any[], description: string) {
   commentsToggle.title = t("commentsToggle");
 
   commentsToggle.onclick = () => {
-    // const shouldOpen = commentsPanel.classList.contains("collapsed");
     let isCommentOpen = gallerySplit.getSizes()[0] >= 2;
-    console.log("Kommentarbereich geöffnet? " + isCommentOpen);
     setCommentsPanelState(!isCommentOpen);
 
     if (isCommentOpen) {

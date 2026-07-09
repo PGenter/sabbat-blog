@@ -93,8 +93,6 @@ export async function initMap() {
 }
 
 export function toggleEditMode(buttonName: string) {
-  // console.log("Starte Edit-Mode");
-  // console.log("Geklickter Button ist " + buttonName);
   isEditMode = !isEditMode;
   const editButton = document.getElementById(buttonName) as HTMLButtonElement;
   const closeButton = document.getElementById(
@@ -376,7 +374,7 @@ async function showEditMenu(entryId: string, currentTitle: string) {
     const newTitle = titleInput.value.trim();
     if (!newTitle) return;
 
-    console.log("Updating entry", entryId, "with title", newTitle);
+    // console.log("Updating entry", entryId, "with title", newTitle);
 
     const { error } = await supabase
       .from("entries")
