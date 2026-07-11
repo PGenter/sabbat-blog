@@ -19,6 +19,17 @@ let gallerySplit: any = null;
 export let currentGalleryEntryId: string | null = null;
 export let currentGalleryDescription: string | null = null;
 
+let currentGalleryPhotoId: string | null = null;
+let activeCommentElements: {
+  commentsList: HTMLUListElement;
+  emptyState: HTMLDivElement;
+  countBadge: HTMLSpanElement;
+  commentInput: HTMLTextAreaElement;
+  submitCommentButton: HTMLButtonElement;
+  commentsToggle: HTMLButtonElement;
+} | null = null;
+let activeCommentUser: Awaited<ReturnType<typeof getUser>> = null;
+
 type GalleryComment = {
   id: string;
   content: string;
@@ -80,6 +91,8 @@ function showSlider(type: string) {
     carouselDom?.classList.remove("next");
     carouselDom?.classList.remove("prev");
   }, timeRunning);
+
+  void refreshCommentsForActivePhoto();
 }
 
 // Touch / swipe support for small touch devices
@@ -160,8 +173,30 @@ function formatCommentDate(value: string) {
   });
 }
 
+function getActivePhotoIdFromGallery() {
+  const activeItem = document.querySelector(
+    ".gallery-container .carousel-gallery .item[data-photo-id]",
+  ) as HTMLElement | null;
+
+  return activeItem?.dataset.photoId ?? currentGalleryPhotoId ?? null;
+}
+
+async function refreshCommentsForActivePhoto() {
+  const photoId = getActivePhotoIdFromGallery();
+  if (!photoId || !activeCommentElements) return;
+
+  currentGalleryPhotoId = photoId;
+  await loadCommentsForPhoto(
+    photoId,
+    activeCommentElements.commentsList,
+    activeCommentElements.emptyState,
+    activeCommentElements.countBadge,
+    activeCommentUser,
+  );
+}
+
 async function loadCommentsForPhoto(
-  entryId: string,
+  photoId: string,
   commentsList: HTMLUListElement,
   emptyState: HTMLElement,
   countBadge: HTMLElement,
@@ -170,7 +205,7 @@ async function loadCommentsForPhoto(
   const { data, error } = await supabase
     .from("comments")
     .select("id, content, user_id, author_name, author_email, created_at")
-    .eq("entry_id", entryId)
+    .eq("photo_id", photoId)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -236,13 +271,7 @@ async function loadCommentsForPhoto(
         }
 
         item.remove();
-        await loadCommentsForPhoto(
-          entryId,
-          commentsList,
-          emptyState,
-          countBadge,
-          currentUser,
-        );
+        await refreshCommentsForActivePhoto();
       });
       meta.appendChild(deleteButton);
     }
@@ -470,13 +499,18 @@ async function renderPhotos(photos: any[], description: string) {
   // submitCommentButton.textContent = t("addComment");
   emptyState.textContent = t("noCommentsYet");
 
-  void loadCommentsForPhoto(
-    currentGalleryEntryId || firstPhoto.id,
+  activeCommentElements = {
     commentsList,
     emptyState,
-    commentsCount,
-    currentUser,
-  );
+    countBadge: commentsCount,
+    commentInput,
+    submitCommentButton,
+    commentsToggle,
+  };
+  activeCommentUser = currentUser;
+  currentGalleryPhotoId = firstPhoto.id;
+
+  void refreshCommentsForActivePhoto();
 
   commentsToggle.title = t("commentsToggle");
 
@@ -485,13 +519,7 @@ async function renderPhotos(photos: any[], description: string) {
     setCommentsPanelState(!isCommentOpen);
 
     if (isCommentOpen) {
-      void loadCommentsForPhoto(
-        currentGalleryEntryId || firstPhoto.id,
-        commentsList,
-        emptyState,
-        commentsCount,
-        currentUser,
-      );
+      void refreshCommentsForActivePhoto();
     }
   };
 
@@ -504,8 +532,14 @@ async function renderPhotos(photos: any[], description: string) {
       return;
     }
 
+    const activePhotoId = getActivePhotoIdFromGallery();
+    if (!activePhotoId) {
+      alert(t("errorSavingComment"));
+      return;
+    }
+
     const { error } = await supabase.from("comments").insert({
-      entry_id: currentGalleryEntryId,
+      photo_id: activePhotoId,
       user_id: currentUser.id,
       content: commentText,
       author_name: getCommentAuthorName(currentUser),
@@ -520,13 +554,7 @@ async function renderPhotos(photos: any[], description: string) {
 
     commentInput.value = "";
     setCommentsPanelState(false);
-    await loadCommentsForPhoto(
-      currentGalleryEntryId || firstPhoto.id,
-      commentsList,
-      emptyState,
-      commentsCount,
-      currentUser,
-    );
+    await refreshCommentsForActivePhoto();
   };
 
   commentInput.oninput = () => autoResizeCommentInput(commentInput);
