@@ -3,6 +3,7 @@ export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
 const translations = {
   german: {
+    cancel: "Abbrechen",
     logout: "Logout",
     upload: "Upload",
     editMap: "Einträge bearbeiten",
@@ -56,6 +57,7 @@ const translations = {
     errorSavingDescription: "Fehler beim Speichern der Beschreibung",
     comments: "Kommentare",
     commentsToggle: "Kommentarbereich öffnen",
+    commentsActions: "Kommentaraktionen",
     commentPlaceholder: "Schreibe einen Kommentar...",
     addComment: "Kommentar senden",
     noCommentsYet: "Noch keine Kommentare",
@@ -63,6 +65,7 @@ const translations = {
     loginRequiredComment: "Bitte melde dich an, um zu kommentieren.",
     confirmDeleteComment: "Bist du sicher, dass du diesen Kommentar löschen möchtest?",
     errorDeletingComment: "Fehler beim Löschen des Kommentars",
+    errorEditingComment: "Fehler beim Bearbeiten des Kommentars",
     commentAuthor: "Benutzer",
     anonymousUser: "Anonym",
     loginTitle: "Bitte melde dich an",
@@ -84,6 +87,7 @@ const translations = {
     passwordPlaceholder: "Passwort",
   },
   spanish: {
+    cancel: "Cancelar",
     logout: "Cerrar sesión",
     upload: "Subir",
     editMap: "Editar entradas",
@@ -137,6 +141,7 @@ const translations = {
     errorSavingDescription: "Error al guardar la descripción",
     comments: "Comentarios",
     commentsToggle: "Abrir la sección de comentarios",
+    commentsActions: "Acciones de comentarios",
     commentPlaceholder: "Escribe un comentario...",
     addComment: "Enviar comentario",
     noCommentsYet: "Aún no hay comentarios",
@@ -144,6 +149,7 @@ const translations = {
     loginRequiredComment: "Por favor inicia sesión para comentar.",
     confirmDeleteComment: "¿Estás seguro de que deseas eliminar este comentario?",
     errorDeletingComment: "Error al eliminar el comentario",
+    errorEditingComment: "Error al editar el comentario",
     commentAuthor: "Usuario",
     anonymousUser: "Anónimo",
     loginTitle: "Por favor inicia sesión",

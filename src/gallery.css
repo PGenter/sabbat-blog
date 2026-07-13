@@ -13,6 +13,35 @@
   --divider-background-hover: #9b9a9a;
 }
 
+[popover]:popover-open {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+[popover] {
+  /* font-size: 1.2rem; */
+  padding: 10px;
+  background-color: var(--comments-background);
+  border:none;
+  border-radius: 10px;
+  box-shadow:  0 5px 10px #0004;
+
+  /* Final state of the exit animation */
+  opacity: 0;
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: all 0.7s allow-discrete;
+}
+
+/* Needs to be after the previous [popover]:popover-open rule
+to take effect, as the specificity is the same */
+@starting-style {
+  [popover]:popover-open {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+}
+
 .photo-gallery {
   position: fixed;
   display: flex;
@@ -441,12 +470,52 @@
   margin-bottom: 0.35rem;
 }
 
-#comments-panel .comment-delete-button {
+#comments-panel .comment-actions {
+  position: relative;  
+  display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.69rem;
+    margin-bottom: 0.35rem;
+}
+
+#comments-panel .comment-menu {
+  margin: 0;
+  inset: auto;
+  bottom: calc(anchor(top) - 20px);
+  left: anchor(left);
+  justify-self: anchor-center;
+}
+
+#comments-panel .comment-menu .comment-menu-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+#comments-panel .comment-button {
+  position: relative;
   border: none;
   background: transparent;
-  color: #f3a1a1;
   cursor: pointer;
   padding: 0.2rem;
+  color: var(--divider-background-hover);
+  transition: all 0.2s ease;
+  /* margin-bottom: 0.35rem; */
+}
+
+#comments-panel .comment-button:hover {
+  transform: scale(1.1);
+  color: var(--gallery-secondary-text-color)
+}
+
+#comments-panel .comment-delete-button {
+  color: #f3a1a1;
+}
+
+#comments-panel .comment-delete-button:hover {
+  color: #f88080;
 }
 
 #comments-panel .comment-text {
@@ -812,7 +881,7 @@
   .comment-button {
     /* width: 100%; */
     /* height: 3.2rem; */
-    flex-basis: 3.2rem;
+    flex-basis: 2.2rem;
     padding-top: 0;
     padding-left: 1rem;
     /* margin-top: auto;

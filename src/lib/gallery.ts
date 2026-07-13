@@ -3,6 +3,7 @@ import { t, getLanguageCode, getCurrentLanguage } from "./i18n";
 import { currentCountry, isEditMode } from "./map";
 import Split from "split.js";
 import { getUser, supabase } from "./supabase";
+import type { User } from "@supabase/supabase-js";
 
 let timeRunning = 500;
 let runTimeOut: NodeJS.Timeout;
@@ -20,15 +21,9 @@ export let currentGalleryEntryId: string | null = null;
 export let currentGalleryDescription: string | null = null;
 
 let currentGalleryPhotoId: string | null = null;
-let activeCommentElements: {
-  commentsList: HTMLUListElement;
-  emptyState: HTMLDivElement;
-  countBadge: HTMLSpanElement;
-  commentInput: HTMLTextAreaElement;
-  submitCommentButton: HTMLButtonElement;
-  commentsToggle: HTMLButtonElement;
-} | null = null;
+let activeCommentElements: CommentActionElements | null = null;
 let activeCommentUser: Awaited<ReturnType<typeof getUser>> = null;
+let activeCommentIsAdmin = false;
 
 type GalleryComment = {
   id: string;
@@ -40,6 +35,15 @@ type GalleryComment = {
 };
 
 type GalleryUser = Awaited<ReturnType<typeof getUser>>;
+
+type CommentActionElements = {
+  commentsList: HTMLUListElement;
+  emptyState: HTMLDivElement;
+  countBadge: HTMLSpanElement;
+  commentInput: HTMLTextAreaElement;
+  submitCommentButton: HTMLButtonElement;
+  commentsToggle: HTMLButtonElement;
+};
 // type LayoutState = { comments: number };
 
 nextDom!.onclick = () => {
@@ -173,6 +177,14 @@ function formatCommentDate(value: string) {
   });
 }
 
+function canEditComment(comment: GalleryComment, currentUser: GalleryUser) {
+  if (!currentUser) return false;
+  return (
+    activeCommentIsAdmin ||
+    (!!currentUser?.id && comment.user_id === currentUser.id)
+  );
+}
+
 function getActivePhotoIdFromGallery() {
   const activeItem = document.querySelector(
     ".gallery-container .carousel-gallery .item[data-photo-id]",
@@ -239,8 +251,7 @@ async function loadCommentsForPhoto(
     const tail = document.createElement("div");
     tail.className = "comment-tail";
     const author = document.createElement("strong");
-    const isOwnComment =
-      !!currentUser?.id && comment.user_id === currentUser.id;
+    const isEditable = canEditComment(comment, currentUser);
     author.textContent = getCommentDisplayName(comment, currentUser);
     const seperator = document.createElement("span");
     seperator.textContent = "-";
@@ -251,39 +262,158 @@ async function loadCommentsForPhoto(
     tail.appendChild(seperator);
     tail.appendChild(date);
 
-    if (isOwnComment) {
-      const deleteButton = document.createElement("button");
-      deleteButton.className = "comment-delete-button";
-      deleteButton.type = "button";
-      deleteButton.innerHTML = '<i class="bi bi-trash"></i>';
-      deleteButton.addEventListener("click", async () => {
-        if (!confirm(t("confirmDeleteComment"))) return;
-        const { error } = await supabase
-          .from("comments")
-          .delete()
-          .eq("id", comment.id)
-          .eq("user_id", currentUser.id);
-
-        if (error) {
-          console.error("Error deleting comment:", error);
-          alert(t("errorDeletingComment"));
-          return;
-        }
-
-        item.remove();
-        await refreshCommentsForActivePhoto();
-      });
-      meta.appendChild(deleteButton);
-    }
-
+    const contentContainer = document.createElement("div");
+    contentContainer.className = "comment-content";
     const text = document.createElement("div");
     text.className = "comment-text";
     text.textContent = comment.content;
+    contentContainer.appendChild(text);
+
+    let editableInput: HTMLInputElement | null = null;
+
+    if (isEditable) {
+      editableInput = renderEditComment(
+        item,
+        editableInput,
+        comment,
+        currentUser,
+        text,
+        contentContainer,
+        meta,
+      );
+    }
 
     item.appendChild(meta);
-    item.appendChild(text);
+    item.appendChild(contentContainer);
     commentsList.appendChild(item);
   });
+}
+
+function renderEditComment(
+  item: HTMLLIElement,
+  editableInput: HTMLInputElement | null,
+  comment: GalleryComment,
+  currentUser: User | null,
+  text: HTMLDivElement,
+  contentContainer: HTMLDivElement,
+  meta: HTMLDivElement,
+) {
+  const actionGroup = document.createElement("div");
+  actionGroup.className = "comment-actions";
+  const actionMenu = document.createElement("button");
+  actionMenu.className = "comment-button comment-menu-button";
+  actionMenu.type = "button";
+  actionMenu.innerHTML = '<i class="bi bi-three-dots-vertical"></i>';
+  actionMenu.setAttribute("aria-label", t("commentsActions"));
+  actionMenu.title = t("commentsActions");
+  const commentMenu = document.createElement("div");
+  commentMenu.id = "comment-menu";
+  commentMenu.className = "comment-menu";
+  commentMenu.popover = "auto";
+  actionMenu.popoverTargetElement = commentMenu;
+  actionMenu.popoverTargetAction = "toggle";
+  const commentMenuShell = document.createElement("div");
+  commentMenuShell.className = "comment-menu-shell";
+
+  const resetCommentEditingState = () => {
+    item.dataset.editing = "false";
+    editableInput?.remove();
+    editableInput = null;
+    text.hidden = false;
+    cancelButton.hidden = true;
+    deleteButton.hidden = false;
+    editButton.innerHTML = '<i class="bi bi-pencil-square"></i> ' + t("editHint");
+  };
+
+  commentMenu.addEventListener("toggle", () => {
+    if (!commentMenu.matches(":popover-open")) {
+      resetCommentEditingState();
+    }
+  });
+
+  const editButton = document.createElement("button");
+  editButton.className = "comment-button comment-edit-button";
+  editButton.type = "button";
+  editButton.innerHTML = '<i class="bi bi-pencil-square"></i> ' + t("editHint");
+  editButton.addEventListener("click", async () => {
+    const isEditing = item.dataset.editing === "true";
+    if (isEditing) {
+      const nextValue = editableInput?.value.trim();
+      if (!nextValue) return;
+
+      let updateQuery = supabase
+        .from("comments")
+        .update({ content: nextValue })
+        .eq("id", comment.id);
+
+      if (!activeCommentIsAdmin && currentUser?.id) {
+        updateQuery = updateQuery.eq("user_id", currentUser.id);
+      }
+
+      const { error } = await updateQuery;
+      if (error) {
+        console.error("Error updating comment:", error);
+        alert(t("errorEditingComment"));
+        return;
+      }
+
+      text.textContent = nextValue;
+      resetCommentEditingState();
+      return;
+    }
+
+    item.dataset.editing = "true";
+    editableInput = document.createElement("input");
+    editableInput.className = "comment-edit-input";
+    editableInput.type = "text";
+    editableInput.value = text.textContent ?? "";
+    contentContainer.insertBefore(editableInput, text);
+    text.hidden = true;
+    editButton.innerHTML = '<i class="bi bi-check"></i> ' + t("save");
+    deleteButton.hidden = true;
+    cancelButton.hidden = false;
+    editableInput.focus();
+  });
+
+  const cancelButton = document.createElement("button");
+  cancelButton.className = "comment-button comment-cancel-button";
+  cancelButton.type = "button";
+  cancelButton.innerHTML = '<i class="bi bi-x"></i> ' + t("cancel");
+  cancelButton.hidden = true;
+  cancelButton.addEventListener("click", () => {
+    resetCommentEditingState();
+  });
+
+  const deleteButton = document.createElement("button");
+  deleteButton.className = "comment-button comment-delete-button";
+  deleteButton.type = "button";
+  deleteButton.innerHTML = '<i class="bi bi-trash"></i> ' + t("delete");
+  deleteButton.addEventListener("click", async () => {
+    if (!confirm(t("confirmDeleteComment"))) return;
+    let deleteQuery = supabase.from("comments").delete().eq("id", comment.id);
+    if (!activeCommentIsAdmin && currentUser?.id) {
+      deleteQuery = deleteQuery.eq("user_id", currentUser.id);
+    }
+
+    const { error } = await deleteQuery;
+    if (error) {
+      console.error("Error deleting comment:", error);
+      alert(t("errorDeletingComment"));
+      return;
+    }
+
+    item.remove();
+    await refreshCommentsForActivePhoto();
+  });
+
+  actionGroup.appendChild(commentMenu);
+  commentMenu.appendChild(commentMenuShell);
+  commentMenuShell.appendChild(editButton)
+  commentMenuShell.appendChild(deleteButton);
+  commentMenuShell.appendChild(cancelButton);
+  meta.appendChild(actionGroup);
+  meta.appendChild(actionMenu);
+  return editableInput;
 }
 
 function destroyGallerySplit() {
@@ -316,7 +446,9 @@ function initGallerySplit(initialOpenSize = 0) {
   const isMobile = getIsMobile();
   const direction = isMobile ? "vertical" : "horizontal";
   const minSize = isMobile ? [0, 0] : [0, 0];
-  const maxSize = isMobile ? [calculatePixel(0.5, 'height'), Infinity] : [600, Infinity]
+  const maxSize = isMobile
+    ? [calculatePixel(0.5, "height"), Infinity]
+    : [600, Infinity];
   const sizes = [initialOpenSize, 100 - initialOpenSize];
   const snapOffset = isMobile ? 40 : 80;
   const gutterSize = isMobile ? 10 : 12;
@@ -350,10 +482,10 @@ function updateGallerySplitForViewport() {
 
 function calculatePixel(percentage: number, orientation: string) {
   let maxValue = 0;
-  if(orientation === 'height'){
+  if (orientation === "height") {
     maxValue = window.innerHeight;
   }
-  if(orientation === 'width'){
+  if (orientation === "width") {
     maxValue = window.innerWidth;
   }
   return maxValue * percentage;
@@ -508,6 +640,8 @@ async function renderPhotos(photos: any[], description: string) {
     commentsToggle,
   };
   activeCommentUser = currentUser;
+  activeCommentIsAdmin =
+    !!user && (role === "administrator" || role === "superuser");
   currentGalleryPhotoId = firstPhoto.id;
 
   void refreshCommentsForActivePhoto();
@@ -553,7 +687,6 @@ async function renderPhotos(photos: any[], description: string) {
     }
 
     commentInput.value = "";
-    setCommentsPanelState(false);
     await refreshCommentsForActivePhoto();
   };
 
