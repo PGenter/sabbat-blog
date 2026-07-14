@@ -24,6 +24,8 @@ let currentGalleryPhotoId: string | null = null;
 let activeCommentElements: CommentActionElements | null = null;
 let activeCommentUser: Awaited<ReturnType<typeof getUser>> = null;
 let activeCommentIsAdmin = false;
+// preserved comments panel size (percentage) across resizes
+let lastCommentsSize: number | null = null;
 
 type GalleryComment = {
   id: string;
@@ -474,9 +476,13 @@ function updateGallerySplitForViewport() {
     return;
   }
 
+  // preserve current comments panel size (percentage) so re-init keeps open/closed state
+  const prevSizes = gallerySplit?.getSizes?.();
+  const preservedSize = prevSizes?.[0] ?? lastCommentsSize ?? 0;
+
   destroyGallerySplit();
   requestAnimationFrame(() => {
-    initGallerySplit();
+    initGallerySplit(preservedSize);
   });
 }
 
@@ -496,6 +502,9 @@ function animateComments(targetComments: number, duration = 350) {
 
   const isMobile = getIsMobile();
   const [start] = gallerySplit.getSizes();
+
+  // remember target size so re-inits on resize can restore it
+  lastCommentsSize = targetComments;
 
   const startTime = performance.now();
 
@@ -526,6 +535,9 @@ function setCommentsPanelState(isCollapsed: boolean) {
       const isMobile = getIsMobile();
 
       const targetComments = !isCollapsed ? 0 : isMobile ? 40 : 20;
+
+      // persist chosen state so resize won't close the panel
+      lastCommentsSize = targetComments;
       animateComments(targetComments);
     });
   }
