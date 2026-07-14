@@ -57,7 +57,7 @@ button.addEventListener("click", async () => {
     } = await supabase.auth.getSession();
 
     const res = await fetch(
-      "https://xwlywwowqbruqbyiehwe.supabase.co/functions/v1/invite-user",
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invite-user`,
       {
         method: "POST",
         headers: {
