@@ -10,10 +10,12 @@
   --i: #2f3777;
 
   --primary-color: #bfe264;
+  --primary-color-light: #e3f6b8;
   --primary-background-color: rgb(191, 226, 100);
   --secondary-background-color: rgb(231, 228, 228);
   /* --secondary-background-color: rgba(229, 102, 117, 0.2); */
-  --tertiary-background-color: rgba(229, 102, 117, 0.8);
+  /* --tertiary-background-color: rgba(229, 102, 117, 0.8); */
+  --tertiary-background-color: #bfe264;
   --inactive-background-color: #b5b5b5;
 
   font-family: "Marhey", sans-serif;
@@ -180,12 +182,12 @@ button {
     box-shadow 0.2s ease,
     background-color 0.2s ease;
   pointer-events: auto;
-  background-color: var(--secondary-background-color);
+  background-color: var(--primary-color-light);
 }
 
 .nav_wrapper:hover {
   transform: translateX(-50%) scale(1.1);
-  background-color: var(--tertiary-background-color);
+  background-color: var(--primary-color);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(4px);
 }
@@ -201,7 +203,7 @@ button {
 .slider-track {
   position: relative;
   height: 2px;
-  background: var(--primary-background-color);
+  background: var(--a);
   border-radius: 2px;
   opacity: 0.7;
   transition:
@@ -241,8 +243,8 @@ button {
   transform: translate(-50%, -50%);
   width: 0.1rem;
   height: 0.1rem;
-  background: var(--primary-background-color);
-  border: 2px solid var(--primary-background-color);
+  background: var(--a);
+  border: 2px solid var(--a);
   border-radius: 5px;
   cursor: pointer;
   background-size: cover;
@@ -276,15 +278,14 @@ button {
 
 .slider-handle {
   position: absolute;
-  top: 50%;
+  top: 70%;
   transform: translate(-50%, -50%);
-  width: 1.25rem;
-  height: 1rem;
-  border-radius: 8px;
+  width: 1.1rem;
+  height: 0.9rem;
+  border-radius: 3px;
 
   box-shadow:
-    0 0 0 4px oklch(from var(--primary-color) calc(l + 0.2) c h / 0.2),
-    0 0 12px oklch(from var(--primary-color) calc(l + 0.8) c h / 0.2);
+    0 0 0 3px oklch(from black calc(l + 0.2) c h / 0.5);
 
   cursor: grab;
   transition:
@@ -546,9 +547,10 @@ path.leaflet-interactive:nth-child(2) {
 }
 
 .glassy {
-  background-color: var(--secondary-background-color);
+  /* background-color: var(--secondary-background-color); */
+  background-color: var(--primary-color-light);
   backdrop-filter: blur(4px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
 .modal {
@@ -572,10 +574,10 @@ path.leaflet-interactive:nth-child(2) {
 
 .dialog-header {
   width: 100%;
-  height: 2rem;
+  height: 3rem;
   display: flex;
   justify-content: flex-end;
-  background-color: var(--a);
+  background-color: var(--primary-color-light);
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
 }
@@ -770,7 +772,7 @@ path.leaflet-interactive:nth-child(2) {
   justify-content: center;
   gap: 0.5em;
   color: currentColor;
-  background-color: var(--secondary-background-color);
+  background-color: var(--primary-color-light);
   cursor: pointer;
   border: none;
   transition:
@@ -793,11 +795,12 @@ path.leaflet-interactive:nth-child(2) {
   border-radius: 16px;
   height: 3rem;
   width: 3rem;
+  background-color: var(--primary-color-light);
 }
 
 .rnd-button.active {
-  background-color: var(--tertiary-background-color) !important;
-  color: var(--primary-color);
+  background-color: var(--primary-color) !important;
+  color: currentColor;
 }
 
 .nav-button i {
@@ -940,7 +943,11 @@ path.leaflet-interactive:nth-child(2) {
 .close-button{
   color: currentColor;
   font-size: x-large;
-  background: red;
+  background: transparent;
+  width: 2rem;
+  height: 2rem;
+  margin: 1rem;
+  border-radius: 10px;
 }
 
 .close-button:disabled {
@@ -951,18 +958,20 @@ path.leaflet-interactive:nth-child(2) {
 
 .close-button:enabled:hover {
   /* transform: scale(1.2); */
-  color: whitesmoke;
-  background-color:  oklch(from red calc(l - 0.1) c h / 0.5);
+  /* color: whitesmoke; */
+  /* background-color:  oklch(from red calc(l - 0.1) c h / 0.5); */
+  background-color: var(--primary-color);
+  
 }
 
 .lg-button:hover {
   transform: scale(1.02);
-  background-color: var(--f);
+  background-color: var(--primary-color);
 }
 
 .rnd-button:hover {
   transform: scale(1.2);
-  background-color: var(--f);
+  background-color: var(--primary-color);
 }
 
 #password-rules {

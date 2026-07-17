@@ -1,4 +1,3 @@
-// import { selectCountry } from "./map";
 import { COUNTRIES, getCountryName, type CountryCode } from "./geo";
 import { getCurrentLanguage } from "./i18n.ts";
 

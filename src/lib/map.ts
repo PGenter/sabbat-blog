@@ -75,7 +75,7 @@ export async function initMap() {
   }).addTo(map);
   routeLine = L.polyline([], {
     color: "#bfe264",
-    opacity: 0.9,
+    opacity: 1,
     weight: 3,
     lineCap: "round",
     lineJoin: "round",

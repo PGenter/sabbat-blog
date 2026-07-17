@@ -1,7 +1,7 @@
 {
   "name": "Koala, Kiwi and Coconut",
   "short_name": "KoalaKiwiCoco",
-  "description": "DownUnder-Blog Web App",
+  "description": "Folge uns auf unserer Reise durch Australien, Neuseeland und die Südsee.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

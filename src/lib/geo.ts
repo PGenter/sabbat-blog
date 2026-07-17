@@ -1,9 +1,3 @@
-// import australia from "../geo/AU.json";
-// import tasmania from "../geo/TAS.json";
-// import newZealand from "../geo/NZ.json";
-// import germany from "../geo/DE.json";
-// import fiji from "../geo/FJ.json";
-
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
 import { point } from "@turf/helpers";
 
@@ -91,11 +85,6 @@ export async function determineSection(
   lat: number,
   lng: number,
 ): Promise<CountryCode | "Unknown"> {
-  // if (isInside(germany, lat, lng)) return "DE";
-  // if (isInside(tasmania, lat, lng)) return "TAS";
-  // if (isInside(australia, lat, lng)) return "AU";
-  // if (isInside(newZealand, lat, lng)) return "NZ";
-  // if (isInside(fiji, lat, lng)) return "FJ";
   for (const country of Object.keys(COUNTRIES) as CountryCode[]) {
     const geo = await loadGeo(country);
     if (isInside(geo, lat, lng)) {
