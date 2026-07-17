@@ -11,7 +11,8 @@
 
   --primary-color: #bfe264;
   --primary-background-color: rgb(191, 226, 100);
-  --secondary-background-color: rgba(229, 102, 117, 0.2);
+  --secondary-background-color: rgb(231, 228, 228);
+  /* --secondary-background-color: rgba(229, 102, 117, 0.2); */
   --tertiary-background-color: rgba(229, 102, 117, 0.8);
   --inactive-background-color: #b5b5b5;
 

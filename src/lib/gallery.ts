@@ -611,6 +611,9 @@ async function renderPhotos(photos: any[], description: string) {
   const commentsPanel = document.getElementById(
     "comments-panel",
   ) as HTMLElement;
+  const commentsHeader = document.getElementById(
+    "comments-toggle-label",
+  ) as HTMLDivElement;
   const commentsToggle = document.querySelector(
     ".comment-button .comments-toggle",
   ) as HTMLButtonElement;
@@ -638,7 +641,7 @@ async function renderPhotos(photos: any[], description: string) {
     initGallerySplit(0);
     setCommentsPanelState(false);
   });
-  // commentsCount.textContent = "0";
+  commentsHeader.innerHTML = t("comments");
   commentInput.placeholder = t("commentPlaceholder");
   // submitCommentButton.textContent = t("addComment");
   emptyState.textContent = t("noCommentsYet");
