@@ -10,7 +10,13 @@ import {
   t,
 } from "../lib/i18n.ts";
 import "leaflet.markercluster";
-import { COUNTRIES, determineSection, type CountryCode, getCountryName } from "./geo";
+import {
+  COUNTRIES,
+  determineSection,
+  type CountryCode,
+  getCountryName,
+  isCountryCode,
+} from "./geo";
 import "./gallery.ts";
 import { getCountryIndex, snapTo } from "./slider.ts";
 import { currentGalleryDescription, currentGalleryEntryId, loadPhotosOfMarker, showPhotoGallery } from "./gallery.ts";
@@ -89,9 +95,12 @@ export async function initMap() {
   map.on("zoomend", handleMapViewportChanged);
 
   if (latestEntry?.section && latestEntry?.section != null) {
-    currentCountry = latestEntry.section;
-    selectCountry(latestEntry.section);
-    await setCardText(latestEntry.section);
+    const initialCountry = isCountryCode(latestEntry.section)
+      ? latestEntry.section
+      : "DE";
+    currentCountry = initialCountry;
+    selectCountry(initialCountry);
+    await setCardText(initialCountry);
   }
 }
 
@@ -128,14 +137,15 @@ export function selectCountry(
   options: { flyTo?: boolean; syncSlider?: boolean } = {},
 ) {
   const { flyTo = true, syncSlider = true } = options;
+  const normalizedCountry = isCountryCode(country) ? country : "DE";
 
-  if (currentCountry === country && markers.size > 0) {
+  if (currentCountry === normalizedCountry && markers.size > 0) {
     return;
   }
 
-  currentCountry = country;
+  currentCountry = normalizedCountry;
   clearMarkers();
-  const config = COUNTRIES[country];
+  const config = COUNTRIES[normalizedCountry];
   if (!config) return;
 
   if (flyTo) {
@@ -145,10 +155,10 @@ export function selectCountry(
   }
 
   void loadMarkersInView();
-  void setCardText(country);
+  void setCardText(normalizedCountry);
 
   if (syncSlider) {
-    const countryIndex = getCountryIndex(country);
+    const countryIndex = getCountryIndex(normalizedCountry);
     if (countryIndex !== -1) {
       snapTo(countryIndex, false);
     }

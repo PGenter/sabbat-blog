@@ -74,11 +74,18 @@ export const COUNTRIES = {
 
 export type CountryCode = keyof typeof COUNTRIES;
 
+export function isCountryCode(
+  value: string | null | undefined,
+): value is CountryCode {
+  return typeof value === "string" && value in COUNTRIES;
+}
+
 export function getCountryName(
-  country: CountryCode,
+  country: string | CountryCode | null | undefined,
   language: "german" | "spanish",
 ) {
-  return COUNTRIES[country].name[language];
+  const normalizedCountry = isCountryCode(country) ? country : "DE";
+  return COUNTRIES[normalizedCountry].name[language];
 }
 
 export async function determineSection(
