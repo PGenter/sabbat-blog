@@ -10,7 +10,7 @@ import {
   t,
 } from "../lib/i18n.ts";
 import "leaflet.markercluster";
-import { COUNTRIES, type CountryCode, getCountryName } from "./geo";
+import { COUNTRIES, determineSection, type CountryCode, getCountryName } from "./geo";
 import "./gallery.ts";
 import { getCountryIndex, snapTo } from "./slider.ts";
 import { currentGalleryDescription, currentGalleryEntryId, loadPhotosOfMarker, showPhotoGallery } from "./gallery.ts";
@@ -34,13 +34,14 @@ export let currentCountry: CountryCode | "DE" = "DE";
 export let map: L.Map;
 let isInitialized = false;
 let markerCluster: L.MarkerClusterGroup;
-let debounceTimer: number | null = null;
 let visitedMarkers: Set<string> = new Set();
 export let unvisitedEntries = 0;
 let routeLine: L.Polyline;
 let routeGlow: L.Polyline;
 let routeAnimationFrame: number | null = null;
 let lastRouteKey: string | null = null;
+let activeMarkersRequestId = 0;
+let countrySyncTimer: number | null = null;
 export let isEditMode = false;
 
 export async function initMap() {
@@ -84,12 +85,14 @@ export async function initMap() {
   await loadVisitedMarkers();
   await loadUnvisitedEntryCount();
 
+  map.on("moveend", handleMapViewportChanged);
+  map.on("zoomend", handleMapViewportChanged);
+
   if (latestEntry?.section && latestEntry?.section != null) {
     currentCountry = latestEntry.section;
     selectCountry(latestEntry.section);
     await setCardText(latestEntry.section);
   }
-  map.on("moveend", handleViewportChanged);
 }
 
 export function toggleEditMode(buttonName: string) {
@@ -120,18 +123,35 @@ export function toggleEditMode(buttonName: string) {
   }
 }
 
-export function selectCountry(country: CountryCode) {
+export function selectCountry(
+  country: CountryCode,
+  options: { flyTo?: boolean; syncSlider?: boolean } = {},
+) {
+  const { flyTo = true, syncSlider = true } = options;
+
+  if (currentCountry === country && markers.size > 0) {
+    return;
+  }
+
   currentCountry = country;
   clearMarkers();
   const config = COUNTRIES[country];
   if (!config) return;
-  map.flyTo(config.center, config.zoom, {
-    duration: 1,
-  });
-  // Slider-Stop aktualisieren ohne Rückkopplung
-  const countryIndex = getCountryIndex(country);
-  if (countryIndex !== -1) {
-    snapTo(countryIndex, false);
+
+  if (flyTo) {
+    map.flyTo(config.center, config.zoom, {
+      duration: 1,
+    });
+  }
+
+  void loadMarkersInView();
+  void setCardText(country);
+
+  if (syncSlider) {
+    const countryIndex = getCountryIndex(country);
+    if (countryIndex !== -1) {
+      snapTo(countryIndex, false);
+    }
   }
 }
 
@@ -260,8 +280,8 @@ function createMarker(
 
   const editHint = isEditMode
     ? `<div class="tooltip-edit-hint"><i class="bi bi-pencil"></i> ${t(
-        "editHint",
-      )}</div>`
+      "editHint",
+    )}</div>`
     : "";
 
   marker.bindTooltip(
@@ -271,10 +291,10 @@ function createMarker(
       </div>
       <div class="tooltip-date">
         ${t("uploadLabel")}: ${new Date(createdAt).toLocaleDateString("de-DE", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        })}
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    })}
       </div>
       <div class="bi bi-images tooltip-views">
         ${images}
@@ -323,18 +343,17 @@ async function showEditMenu(entryId: string, currentTitle: string) {
         </div>
         <div class="modal-container edit-container">
           <input type="text" id="edit-title" placeholder="${t(
-            "titlePlaceholder",
-          )}" required/>
+      "titlePlaceholder",
+    )}" required/>
           <button class="nav-button lg-button" id="save-edit-btn"><i class="bi bi-check"></i>${t(
-            "save",
-          )}</button>
-          ${
-            role === "administrator"
-              ? `<button class="nav-button lg-button delete-btn" id="delete-entry-btn"><i class="bi bi-trash"></i>${t(
-                  "delete",
-                )}</button>`
-              : ""
-          }
+      "save",
+    )}</button>
+          ${role === "administrator"
+        ? `<button class="nav-button lg-button delete-btn" id="delete-entry-btn"><i class="bi bi-trash"></i>${t(
+          "delete",
+        )}</button>`
+        : ""
+      }
         </div>
       </div>
     `;
@@ -418,21 +437,10 @@ async function showEditMenu(entryId: string, currentTitle: string) {
   }
 }
 
-function getViewportBoundsWithPadding(padding = 0.3) {
-  const bounds = map.getBounds();
-  const paddedBounds = bounds.pad(padding); // 0.3 = 30% größer als Viewport
-  return {
-    north: paddedBounds.getNorth(),
-    south: paddedBounds.getSouth(),
-    east: paddedBounds.getEast(),
-    west: paddedBounds.getWest(),
-  };
-}
-
 async function loadMarkersInView() {
   if (!currentCountry) return;
 
-  const bounds = getViewportBoundsWithPadding(0.3); // Padding 30%
+  const requestId = ++activeMarkersRequestId;
 
   const { data, error } = await supabase
     .from("entries")
@@ -440,17 +448,17 @@ async function loadMarkersInView() {
       "id, latitude, longitude, title, description, user_id, taken_at, created_at, visited_entries(count), photos!photos_entry_id_fkey(count)",
     )
     .eq("section", currentCountry)
-    .gte("latitude", bounds.south)
-    .lte("latitude", bounds.north)
-    .gte("longitude", bounds.west)
-    .lte("longitude", bounds.east)
     .order("created_at", { ascending: true });
 
   if (error) {
     console.error(error);
     return;
   }
-  removeMarkersOutsideViewport();
+
+  if (requestId !== activeMarkersRequestId) {
+    return;
+  }
+
   renderMarkers(data);
 
   const routeKey = getRouteKey(data);
@@ -472,6 +480,54 @@ export async function refreshLanguage() {
   await loadMarkersInView();
 }
 
+function handleMapViewportChanged() {
+  if (countrySyncTimer) {
+    window.clearTimeout(countrySyncTimer);
+  }
+
+  countrySyncTimer = window.setTimeout(() => {
+    void syncCountryFromMap();
+  }, 180);
+}
+
+async function syncCountryFromMap() {
+  if (!map || !isInitialized) return;
+
+  const bounds = map.getBounds();
+  const points = [
+    map.getCenter(),
+    bounds.getNorthEast(),
+    bounds.getNorthWest(),
+    bounds.getSouthEast(),
+    bounds.getSouthWest(),
+  ];
+
+  const detectedCountries = new Set<CountryCode>();
+
+  for (const point of points) {
+    const detectedCountry = await determineSection(point.lat, point.lng);
+    if (detectedCountry !== "Unknown") {
+      detectedCountries.add(detectedCountry);
+    }
+  }
+
+  const centerCountry = await determineSection(
+    map.getCenter().lat,
+    map.getCenter().lng,
+  );
+
+  const nextCountry =
+    centerCountry !== "Unknown"
+      ? centerCountry
+      : detectedCountries.values().next().value;
+
+  if (!nextCountry || nextCountry === currentCountry) {
+    return;
+  }
+
+  selectCountry(nextCountry, { flyTo: false, syncSlider: true });
+}
+
 async function getLatestEntry() {
   const { data: latestEntry, error } = await supabase
     .from("entries")
@@ -488,19 +544,11 @@ async function getLatestEntry() {
   return latestEntry;
 }
 
-function handleViewportChanged() {
-  if (debounceTimer) {
-    clearTimeout(debounceTimer);
-  }
+function renderMarkers(entries: any[], requestId = activeMarkersRequestId) {
+  const totalEntries = entries.length;
+  const staggerDelay = Math.min(40, Math.max(18, Math.round(800 / Math.max(1, totalEntries))));
 
-  debounceTimer = window.setTimeout(() => {
-    loadMarkersInView();
-  }, 200); // 200–300ms sweet spot
-}
-
-function renderMarkers(entries: any[]) {
-  let delay = 0;
-  entries.forEach((entry) => {
+  entries.forEach((entry, index) => {
     if (markers.has(entry.id)) return;
 
     const marker = createMarker(
@@ -513,14 +561,18 @@ function renderMarkers(entries: any[]) {
       entry.visited_entries?.[0]?.count ?? 0,
       entry.photos?.[0].count ?? 0,
     );
-    markerCluster.addLayer(marker);
-    markers.set(entry.id, marker);
 
-    setTimeout(() => {
-      marker.setOpacity(1);
-    }, delay);
+    window.setTimeout(() => {
+      if (requestId !== activeMarkersRequestId) return;
+      if (markers.has(entry.id)) return;
 
-    delay += 80;
+      markerCluster.addLayer(marker);
+      markers.set(entry.id, marker);
+
+      window.requestAnimationFrame(() => {
+        marker.setOpacity(1);
+      });
+    }, index * staggerDelay);
   });
 }
 
@@ -604,22 +656,15 @@ async function setMarkerVisited(entryId: string) {
 }
 
 export function clearMarkers() {
+  if (routeAnimationFrame) {
+    cancelAnimationFrame(routeAnimationFrame);
+    routeAnimationFrame = null;
+  }
+
   markerCluster.clearLayers();
   markers.clear();
   routeGlow.setLatLngs([]);
   routeLine.setLatLngs([]);
 }
 
-function removeMarkersOutsideViewport() {
-  const bounds = map.getBounds();
-
-  markers.forEach((marker, id) => {
-    const pos = marker.getLatLng();
-
-    if (!bounds.contains(pos)) {
-      markerCluster.removeLayer(marker);
-      markers.delete(id);
-    }
-  });
-}
 
