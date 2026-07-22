@@ -1,10 +1,77 @@
 import { supabase } from "../lib/supabase";
-import { determineSection } from "../lib/geo";
+import { determineSection, isCountryCode } from "../lib/geo";
 import { v4 as uuidv4 } from "uuid";
 import imageCompression from "browser-image-compression";
 import * as exifr from "exifr";
 import { handleError } from "../lib/errorHandler";
 import { t } from "../lib/i18n.ts";
+import {
+  currentCountry,
+  map,
+  pickLocationOnMap,
+  refreshMarkers,
+  selectCountry,
+} from "../lib/map.ts";
+
+// Blendet das Upload-Modal kurz aus, damit die Karte für die manuelle
+// Standortauswahl klickbar wird, und stellt es danach wieder her.
+function setUploadModalVisible(visible: boolean) {
+  const uploadSection = document.getElementById(
+    "upload-section",
+  ) as HTMLDivElement;
+  const modalBackdrop = document.getElementById(
+    "modal-backdrop",
+  ) as HTMLDivElement;
+  const mapWrapper = document.getElementById("map") as HTMLDivElement;
+  const navWrapper = document.getElementById("nav-wrapper") as HTMLDivElement;
+
+  uploadSection.style.visibility = visible ? "visible" : "hidden";
+  uploadSection.style.opacity = visible ? "1" : "0";
+  modalBackdrop.classList.toggle("active", visible);
+  mapWrapper.classList.toggle("inactive-background", visible);
+  navWrapper.classList.toggle("inactive-background", visible);
+
+  if (visible) {
+    map.scrollWheelZoom.disable();
+  } else {
+    map.scrollWheelZoom.enable();
+  }
+}
+
+// Ersetzt während des gesamten Upload-Vorgangs (Bildverarbeitung + Übertragung)
+// das Upload-Icon im Button durch einen kleinen Spinner.
+function setUploadButtonBusy(button: HTMLButtonElement, busy: boolean) {
+  button.disabled = busy;
+  const icon = busy
+    ? '<span class="btn-spinner"></span>'
+    : '<i class="bi bi-cloud-arrow-up"></i>';
+  button.innerHTML = `${icon} ${t(busy ? "uploadRunning" : "uploadStart")}`;
+}
+
+function isHeicFile(file: File): boolean {
+  const type = file.type.toLowerCase();
+  const name = file.name.toLowerCase();
+  return (
+    type === "image/heic" ||
+    type === "image/heif" ||
+    name.endsWith(".heic") ||
+    name.endsWith(".heif")
+  );
+}
+
+// Handyfotos im HEIC/HEIF-Format lassen sich im Browser nicht direkt per Canvas
+// komprimieren, deshalb zuerst nach JPEG konvertieren.
+async function convertHeicToJpeg(file: File): Promise<File> {
+  const { default: heic2any } = await import("heic2any");
+  const converted = await heic2any({
+    blob: file,
+    toType: "image/jpeg",
+    quality: 0.9,
+  });
+  const blob = Array.isArray(converted) ? converted[0] : converted;
+  const newName = file.name.replace(/\.hei[cf]$/i, ".jpg");
+  return new File([blob], newName, { type: "image/jpeg" });
+}
 
 export async function startUpload() {
   const { data: userData } = await supabase.auth.getUser();
@@ -32,8 +99,7 @@ export async function startUpload() {
   if (titleEl) titleEl.placeholder = t("titlePlaceholder");
   if (descriptionEl) descriptionEl.placeholder = t("descriptionPlaceholder");
   if (fileLabel) fileLabel.textContent = t("chooseImages");
-  if (button)
-    button.innerHTML = `<i class="bi bi-cloud-arrow-up"></i> ${t("uploadStart")}`;
+  if (button) setUploadButtonBusy(button, false);
 
   button.addEventListener("click", async () => {
     if (!userData.user) {
@@ -62,56 +128,81 @@ export async function startUpload() {
 
     const processedFiles: ProcessedFile[] = [];
 
-    button.disabled = true;
-    button.innerHTML = `<i class="bi bi-cloud-arrow-up"></i> ${t("uploadRunning")}`;
+    setUploadButtonBusy(button, true);
 
     for (const originalFile of Array.from(files)) {
-      // Bild komprimieren
-      // FULL VERSION
-      const fullImage = await imageCompression(originalFile, {
-        maxWidthOrHeight: 1920,
-        initialQuality: 0.8,
-        useWebWorker: true,
-      });
+      try {
+        // HEIC/HEIF (Handyfotos) können nicht direkt komprimiert werden
+        const compressibleFile = isHeicFile(originalFile)
+          ? await convertHeicToJpeg(originalFile)
+          : originalFile;
 
-      // THUMBNAIL
-      const thumbnail = await imageCompression(fullImage, {
-        maxWidthOrHeight: 400,
-        initialQuality: 0.7,
-        useWebWorker: true,
-      });
+        // Bild komprimieren
+        // FULL VERSION
+        const fullImage = await imageCompression(compressibleFile, {
+          maxWidthOrHeight: 1920,
+          initialQuality: 0.8,
+          useWebWorker: true,
+        });
 
-      console.log("Original:", originalFile.size / 1024 / 1024, "MB");
-      console.log("Compressed:", fullImage.size / 1024 / 1024, "MB");
-      console.log("Thumbnail:", thumbnail.size / 1024 / 1024, "MB");
+        // THUMBNAIL
+        const thumbnail = await imageCompression(fullImage, {
+          maxWidthOrHeight: 400,
+          initialQuality: 0.7,
+          useWebWorker: true,
+        });
 
-      // 2️⃣ EXIF vom Original lesen (nicht vom komprimierten!)
-      const exif = await exifr.parse(originalFile);
-      const lat = exif?.latitude;
-      const lng = exif?.longitude;
-      const takenAt = exif?.DateTimeOriginal || new Date();
+        console.log("Original:", originalFile.size / 1024 / 1024, "MB");
+        console.log("Compressed:", fullImage.size / 1024 / 1024, "MB");
+        console.log("Thumbnail:", thumbnail.size / 1024 / 1024, "MB");
 
-      processedFiles.push({
-        fullImage,
-        thumbnail,
-        latitude: lat ?? null,
-        longitude: lng ?? null,
-        takenAt,
-      });
+        // 2️⃣ EXIF vom Original lesen (nicht vom komprimierten!)
+        const exif = await exifr.parse(originalFile);
+        const lat = exif?.latitude;
+        const lng = exif?.longitude;
+        const takenAt = exif?.DateTimeOriginal || new Date();
+
+        processedFiles.push({
+          fullImage,
+          thumbnail,
+          latitude: lat ?? null,
+          longitude: lng ?? null,
+          takenAt,
+        });
+      } catch (error) {
+        console.error("Bildverarbeitung fehlgeschlagen:", error);
+        handleError(error);
+        setUploadButtonBusy(button, false);
+        return;
+      }
     }
 
     const gpsFiles = processedFiles.filter((f) => f.latitude && f.longitude);
 
+    let avgLat: number;
+    let avgLng: number;
+
     if (gpsFiles.length === 0) {
-      alert(t("noGpsData"));
-      return;
+      // Handy-Betriebssysteme entfernen GPS-EXIF-Daten aus Fotos, die über eine
+      // Website ausgewählt werden (Datenschutz) - deshalb Standort manuell auf
+      // der Karte festlegen lassen, statt den Upload abzubrechen.
+      setUploadModalVisible(false);
+      const picked = await pickLocationOnMap();
+      setUploadModalVisible(true);
+
+      if (!picked) {
+        setUploadButtonBusy(button, false);
+        return;
+      }
+
+      avgLat = picked.lat;
+      avgLng = picked.lng;
+    } else {
+      avgLat =
+        gpsFiles.reduce((sum, f) => sum + f.latitude!, 0) / gpsFiles.length;
+      avgLng =
+        gpsFiles.reduce((sum, f) => sum + f.longitude!, 0) / gpsFiles.length;
     }
-
-    const avgLat =
-      gpsFiles.reduce((sum, f) => sum + f.latitude!, 0) / gpsFiles.length;
-
-    const avgLng =
-      gpsFiles.reduce((sum, f) => sum + f.longitude!, 0) / gpsFiles.length;
 
     const section = await determineSection(avgLat, avgLng);
 
@@ -129,6 +220,7 @@ export async function startUpload() {
     // Transaktions-Tracking
     let entryId: string | null = null;
     const uploadedPaths: string[] = [];
+    let uploadSucceeded = false;
 
     try {
       let completed = 0;
@@ -179,6 +271,7 @@ export async function startUpload() {
       );
 
       uploadedPaths.push(...results.flat());
+      uploadSucceeded = true;
     } catch (error) {
       console.error("Upload fehlgeschlagen:", error);
 
@@ -195,8 +288,28 @@ export async function startUpload() {
 
       handleError(error);
     }
-    button.disabled = false;
-    button.innerHTML = `<i class="bi bi-cloud-arrow-up"></i> ${t("uploadStart")}`;
+
+    setUploadButtonBusy(button, false);
+
+    if (uploadSucceeded) {
+      // Formular zurücksetzen, Modal schließen und die neue Station sofort
+      // auf der Karte sichtbar machen.
+      titleEl.value = "";
+      descriptionEl.value = "";
+      input.value = "";
+      progressContainer.style.display = "none";
+
+      const fileInfo = document.getElementById("file-info") as HTMLElement | null;
+      if (fileInfo) fileInfo.textContent = t("noFileSelected");
+
+      setUploadModalVisible(false);
+
+      if (isCountryCode(section) && section !== currentCountry) {
+        selectCountry(section);
+      } else {
+        await refreshMarkers();
+      }
+    }
   });
 
   async function processAndUploadImage(

@@ -20,6 +20,7 @@ stops.forEach((_stop, index) => {
   const tooltip = document.createElement("div");
   const tooltipText = document.createElement("span");
   const tooltipImg = document.createElement("img");
+  const unvisitedMarker = document.createElement("span");
   tooltip.className = "slider-tooltip";
   tooltip.id = `tooltip-${_stop.country}`;
   tooltipText.textContent = getCountryName(_stop.country, getCurrentLanguage());
@@ -30,10 +31,25 @@ stops.forEach((_stop, index) => {
   tooltip.appendChild(tooltipImg);
   el.appendChild(tooltip);
 
+  unvisitedMarker.className = "slider-stop-marker";
+  unvisitedMarker.id = `unvisited-marker-${_stop.country}`;
+  tooltip.appendChild(unvisitedMarker);
+
   el.className = "slider-stop";
   el.style.left = `${(index / (stops.length - 1)) * 100}%`;
   track.appendChild(el);
 });
+
+// Zeigt an den Slider-Stops eine Markierung, solange für das jeweilige Land
+// noch unbesuchte Stationen existieren; verschwindet automatisch, sobald die
+// letzte unbesuchte Station des Landes besucht wurde.
+export function updateUnvisitedMarkers(counts: Map<CountryCode, number>) {
+  stops.forEach((stop) => {
+    const marker = document.getElementById(`unvisited-marker-${stop.country}`);
+    if (!marker) return;
+    marker.classList.toggle("visible", (counts.get(stop.country) ?? 0) > 0);
+  });
+}
 
 export function setOnCountryChange(callback: (country: CountryCode) => void) {
   onCountryChange = callback;

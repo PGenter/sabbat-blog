@@ -19,6 +19,7 @@ let thumbnailDom = document.querySelector(
 let gallerySplit: any = null;
 export let currentGalleryEntryId: string | null = null;
 export let currentGalleryDescription: string | null = null;
+let isImageFullscreen = false;
 
 let currentGalleryPhotoId: string | null = null;
 let activeCommentElements: CommentActionElements | null = null;
@@ -57,7 +58,7 @@ prevDom!.onclick = () => {
 
 document.body.addEventListener("keydown", (event) => {
   const key = event.key;
-  if (!isEditMode) {
+  if (!isEditMode && !isImageFullscreen) {
     switch (key) {
       case "ArrowLeft":
         showSlider("prev");
@@ -110,6 +111,7 @@ if (carouselDom) {
   carouselDom.addEventListener(
     "touchstart",
     (e) => {
+      if (isImageFullscreen) return;
       const touchEvent = e as TouchEvent;
       if (!touchEvent.touches || touchEvent.touches.length === 0) return;
       touchStartX = touchEvent.touches[0].clientX;
@@ -121,6 +123,7 @@ if (carouselDom) {
   carouselDom.addEventListener(
     "touchmove",
     (e) => {
+      if (isImageFullscreen) return;
       const touchEvent = e as TouchEvent;
       if (!touchEvent.touches || touchEvent.touches.length === 0) return;
       touchCurrentX = touchEvent.touches[0].clientX;
@@ -131,6 +134,7 @@ if (carouselDom) {
   carouselDom.addEventListener(
     "touchend",
     () => {
+      if (isImageFullscreen) return;
       const dx = touchCurrentX - touchStartX;
       if (Math.abs(dx) > touchThreshold) {
         if (dx < 0) {
@@ -149,9 +153,17 @@ if (carouselDom) {
     const target = event.target as HTMLElement;
     const itemImg = target.closest(".item-img") as HTMLElement | null;
     if (itemImg) {
-      carouselDom.classList.toggle("hide-controls");
+      toggleImageFullscreen();
     }
   });
+}
+
+function toggleImageFullscreen(force?: boolean) {
+  const gallery = document.getElementById("photo-gallery");
+  if (!gallery) return;
+
+  isImageFullscreen = force ?? !isImageFullscreen;
+  gallery.classList.toggle("image-fullscreen", isImageFullscreen);
 }
 
 function getCommentAuthorName(user: GalleryUser) {
@@ -598,7 +610,11 @@ async function renderPhotos(photos: any[], description: string) {
   };
   document.body.onkeydown = (event) => {
     if (!isEditMode && event.key === "Escape") {
-      closeGallery();
+      if (isImageFullscreen) {
+        toggleImageFullscreen(false);
+      } else {
+        closeGallery();
+      }
     }
   };
 
@@ -913,6 +929,7 @@ async function renderPhotos(photos: any[], description: string) {
   function closeGallery() {
     const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
 
+    toggleImageFullscreen(false);
     gallery.classList.remove("active");
     setCommentsPanelState(true);
   }

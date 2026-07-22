@@ -66,6 +66,10 @@ to take effect, as the specificity is the same */
   pointer-events: auto;
 }
 
+.photo-gallery.active #comments-panel {
+  pointer-events: auto;
+}
+
 .photo-header {
   position: sticky;
   width: 90%;
@@ -96,6 +100,9 @@ to take effect, as the specificity is the same */
   background-color: var(--gallery-background);
   display: flex;
   justify-content: space-between;
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
 }
 
 .gallery-header .close-button-container {
@@ -150,6 +157,9 @@ to take effect, as the specificity is the same */
   padding-top: 1rem;
   position: absolute;
   z-index: 1000;
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
 }
 
 #gallery-layout {
@@ -169,6 +179,7 @@ to take effect, as the specificity is the same */
   position: relative;
   flex: 1 1 auto;
   min-width: 0;
+  transition: background-color 0.5s ease;
 }
 
 .gallery-container .carousel-gallery .item {
@@ -179,6 +190,7 @@ to take effect, as the specificity is the same */
   align-items: stretch;
   overflow: hidden;
   flex-direction: row-reverse;
+  transition: background-color 0.5s ease;
 }
 
 .gallery-container .carousel-gallery .item .item-media {
@@ -199,6 +211,8 @@ to take effect, as the specificity is the same */
   align-items: center;
   padding: 0.8rem 1rem 1rem 1rem;
   box-sizing: border-box;
+  cursor: pointer;
+  transition: padding 0.5s ease;
 }
 
 .gallery-container .carousel-gallery .item img {
@@ -210,6 +224,9 @@ to take effect, as the specificity is the same */
   width: auto;
   height: auto;
   display: block;
+  transition:
+    border-radius 0.5s ease,
+    box-shadow 0.5s ease;
 }
 
 .gallery-container .carousel-gallery .item .item-content {
@@ -266,7 +283,9 @@ to take effect, as the specificity is the same */
   z-index: 2;
   /* flex: 0 0 12px; */
   box-sizing: border-box;
-  transition: background-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    opacity 0.5s ease;
 }
 
 .gutter:hover {
@@ -292,7 +311,7 @@ to take effect, as the specificity is the same */
   flex-direction: column;
   /* background: #1f1f1f; */
   border-left: 1px solid rgba(255, 255, 255, 0.07);
-  pointer-events: auto;
+  pointer-events: none;
   transition: all 0.5s ease;
   font-family:
     system-ui,
@@ -415,6 +434,7 @@ to take effect, as the specificity is the same */
   overflow-x: hidden;
   /* overflow-y: scroll; */
   margin-inline: auto;
+  transition: opacity 0.5s ease;
 }
 
 #comments-panel .comments-input-wrap {
@@ -669,12 +689,43 @@ to take effect, as the specificity is the same */
     transform 0.5s ease;
 }
 
-.gallery-container.hide-controls .carousel-gallery .item .item-content,
-.gallery-container.hide-controls .thumbnail-gallery,
-.gallery-container.hide-controls .gallery-buttons {
+.photo-gallery.image-fullscreen .gallery-container .carousel-gallery .item .item-content,
+.photo-gallery.image-fullscreen .thumbnail-gallery,
+.photo-gallery.image-fullscreen .gallery-buttons {
   opacity: 0;
   transform: translateY(20px);
   pointer-events: none;
+}
+
+.photo-gallery.image-fullscreen .gallery-header,
+.photo-gallery.image-fullscreen .comment-button,
+.photo-gallery.image-fullscreen .comments-shell,
+.photo-gallery.image-fullscreen .gutter {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.photo-gallery.image-fullscreen .gallery-container {
+  position: fixed;
+  inset: 0;
+  width: 100dvw;
+  height: 100dvh;
+  z-index: 2000;
+  background-color: #000;
+}
+
+.photo-gallery.image-fullscreen .gallery-container .carousel-gallery .item {
+  background-color: #000;
+}
+
+.photo-gallery.image-fullscreen .gallery-container .carousel-gallery .item .item-img {
+  padding: 0;
+  cursor: zoom-out;
+}
+
+.photo-gallery.image-fullscreen .gallery-container .carousel-gallery .item img {
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .arrows {

@@ -29,77 +29,67 @@
                         <div class="comments-inner">
                             <div class="comments-input-wrap">
                                 <textarea class="comment-input" id="comment-input" rows="1"></textarea>
-                                <button class="comments-submit" type="button" title="Kommentar senden"><i class="bi bi-send-fill"></i></button>
+                                <button class="comments-submit" type="button" title="Kommentar senden"><i
+                                        class="bi bi-send-fill"></i></button>
                             </div>
                             <ul class="comments-list"></ul>
                             <div class="comments-empty">Noch keine Kommentare</div>
                         </div>
                     </div>
                 </aside>
-                <!-- <div id="comment-button" class="comment-button">
-                    <button class="comments-toggle" type="button">
-                        <span class="comments-toggle-button"><i class="bi bi-chat-left-text-fill"></i></span>
-                        <span class="comments-toggle-number"></span>
-                    </button>
-                </div> -->
             </div>
-
-            <!-- <div id="gallery-container" class="gallery-container"> -->
-            <!-- <div id="photo-header" class="photo-header"> -->
-            <!-- <h2>Foto Galerie</h2> -->
-            <!-- </div> -->
-             <div id="gallery-shell" class="gallery-shell">
-<div id="comment-button" class="comment-button">
+            <div id="gallery-shell" class="gallery-shell">
+                <div id="comment-button" class="comment-button">
                     <button class="comments-toggle" type="button">
                         <span class="comments-toggle-button"><i class="bi bi-chat-left-text-fill"></i></span>
                         <span class="comments-toggle-number"></span>
                     </button>
                 </div>
-            <div id="gallery-layout">
-                <div id="gallery-header" class="gallery-header">
-                    <div id="gallery-title" class="photo-header">
-                        <h2>Foto Galerie</h2>
+                <div id="gallery-layout">
+                    <div id="gallery-header" class="gallery-header">
+                        <div id="gallery-title" class="photo-header">
+                            <h2>Foto Galerie</h2>
+                        </div>
+                        <div class="close-button-container">
+                            <button class="galleryheader-button" id="edit-gallery" title="Einträge bearbeiten"><i
+                                    class="bi bi-pencil-square"></i></button>
+                            <button class="galleryheader-button" id="close-button"><i class="bi bi-x-lg"></i></button>
+                        </div>
                     </div>
-                    <div class="close-button-container">
-                        <button class="galleryheader-button" id="edit-gallery" title="Einträge bearbeiten"><i
-                                class="bi bi-pencil-square"></i></button>
-                        <button class="galleryheader-button" id="close-button"><i class="bi bi-x-lg"></i></button>
-                    </div>
-                </div>
 
-                <div class="gallery-container">
-                    <template id="gallery-item-template">
-                        <div class="item">
-                            <div class="item-media">
-                                <div class="item-img">
-                                    <img src="" alt="" />
-                                </div>
-                                <div class="item-content">
-                                    <div class="item-no"></div>
-                                    <div class="item-date"></div>
-                                    <div class="item-description"></div>
+                    <div class="gallery-container">
+                        <template id="gallery-item-template">
+                            <div class="item">
+                                <div class="item-media">
+                                    <div class="item-img">
+                                        <img src="" alt="" />
+                                    </div>
+                                    <div class="item-content">
+                                        <div class="item-no"></div>
+                                        <div class="item-date"></div>
+                                        <div class="item-description"></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </template>
-                    <template id="thumbnail-template">
-                        <div class="item">
-                            <img src="" alt="" />
-                        </div>
-                    </template>
-                    <div id="carousel-gallery" class="carousel-gallery"></div>
-                    <div id="thumbnail-gallery" class="thumbnail-gallery"></div>
-                    <div class="gallery-buttons">
-                        <div class="arrows">
-                            <button id="prev" class="nav-button glassy"><i
-                                    class="bi bi-caret-left-fill"></i></i></button>
-                            <button id="next" class="nav-button glassy"><i
-                                    class="bi bi-caret-right-fill"></i></i></button>
+                        </template>
+                        <template id="thumbnail-template">
+                            <div class="item">
+                                <img src="" alt="" />
+                            </div>
+                        </template>
+                        <div id="carousel-gallery" class="carousel-gallery"></div>
+                        <div id="thumbnail-gallery" class="thumbnail-gallery"></div>
+                        <div class="gallery-buttons">
+                            <div class="arrows">
+                                <button id="prev" class="nav-button glassy"><i
+                                        class="bi bi-caret-left-fill"></i></i></button>
+                                <button id="next" class="nav-button glassy"><i
+                                        class="bi bi-caret-right-fill"></i></i></button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-            </div>
+                </div>
             </div>
         </div>
         <div class="map_wrapper">
@@ -124,6 +114,10 @@
                 </button>
             </div>
             <div class="card_container">
+                <div class="app_logo" id="app-logo">
+                    <img src="/KoalaKiwiCocoFavi.png" alt="Koala, Kiwi and Coconut Logo" />
+
+                </div>
                 <div class="card country-cd glassy" id="country-card">
                     <h2>Karte</h2>
                 </div>

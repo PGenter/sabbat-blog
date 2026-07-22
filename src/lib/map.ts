@@ -18,7 +18,7 @@ import {
   isCountryCode,
 } from "./geo";
 import "./gallery.ts";
-import { getCountryIndex, snapTo } from "./slider.ts";
+import { getCountryIndex, snapTo, updateUnvisitedMarkers } from "./slider.ts";
 import { currentGalleryDescription, currentGalleryEntryId, loadPhotosOfMarker, showPhotoGallery } from "./gallery.ts";
 
 const newMarkerIconUrl = new URL(
@@ -42,6 +42,7 @@ let isInitialized = false;
 let markerCluster: L.MarkerClusterGroup;
 let visitedMarkers: Set<string> = new Set();
 export let unvisitedEntries = 0;
+let unvisitedCountsByCountry = new Map<CountryCode, number>();
 let routeLine: L.Polyline;
 let routeGlow: L.Polyline;
 let routeAnimationFrame: number | null = null;
@@ -90,6 +91,7 @@ export async function initMap() {
 
   await loadVisitedMarkers();
   await loadUnvisitedEntryCount();
+  await loadUnvisitedCountsByCountry();
 
   map.on("moveend", handleMapViewportChanged);
   map.on("zoomend", handleMapViewportChanged);
@@ -276,7 +278,6 @@ function createMarker(
 
   var markerOptions: L.MarkerOptions = {
     icon: customIcon,
-    opacity: 0,
   };
 
   const marker = L.marker([lat, lng], markerOptions).on("click", () => {
@@ -320,11 +321,6 @@ function createMarker(
       offset: [2, -42],
     },
   );
-
-  requestAnimationFrame(() => {
-    const el = marker.getElement();
-    el?.classList.add("visible");
-  });
 
   return marker;
 }
@@ -484,6 +480,12 @@ export async function refreshLanguage() {
   if (currentCountry) {
     await setCardText(currentCountry);
   }
+  await refreshMarkers();
+}
+
+// Lädt die Marker des aktuellen Landes neu, z. B. nachdem ein neuer Eintrag
+// hochgeladen wurde und sofort auf der Karte sichtbar werden soll.
+export async function refreshMarkers() {
   clearMarkers();
   // Reset the cached route key so the route is re-animated after markers reload.
   lastRouteKey = null;
@@ -580,7 +582,14 @@ function renderMarkers(entries: any[], requestId = activeMarkersRequestId) {
       markers.set(entry.id, marker);
 
       window.requestAnimationFrame(() => {
-        marker.setOpacity(1);
+        const el = marker.getElement();
+        if (!el) return;
+        el.classList.add("marker-pop-in");
+        el.addEventListener(
+          "animationend",
+          () => el.classList.remove("marker-pop-in"),
+          { once: true },
+        );
       });
     }, index * staggerDelay);
   });
@@ -632,6 +641,26 @@ async function loadUnvisitedEntryCount() {
   unvisitedEntries = Math.max(0, (totalEntries ?? 0) - (visitedCount ?? 0));
 }
 
+// Ermittelt je Land, wie viele Stationen für den aktuellen Nutzer noch unbesucht sind,
+// damit die Slider-Bar an den entsprechenden Landesflaggen eine Markierung anzeigen kann.
+async function loadUnvisitedCountsByCountry() {
+  const { data, error } = await supabase.from("entries").select("id, section");
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const counts = new Map<CountryCode, number>();
+  for (const entry of data ?? []) {
+    if (!isCountryCode(entry.section) || visitedMarkers.has(entry.id)) continue;
+    counts.set(entry.section, (counts.get(entry.section) ?? 0) + 1);
+  }
+
+  unvisitedCountsByCountry = counts;
+  updateUnvisitedMarkers(unvisitedCountsByCountry);
+}
+
 async function setMarkerVisited(entryId: string) {
   const user = await getUser();
   await supabase.from("visited_entries").upsert({
@@ -642,6 +671,13 @@ async function setMarkerVisited(entryId: string) {
 
   visitedMarkers.add(entryId);
   await loadUnvisitedEntryCount();
+
+  const remainingUnvisited = Math.max(
+    0,
+    (unvisitedCountsByCountry.get(currentCountry) ?? 0) - 1,
+  );
+  unvisitedCountsByCountry.set(currentCountry, remainingUnvisited);
+  updateUnvisitedMarkers(unvisitedCountsByCountry);
 
   const marker = markers.get(entryId);
   if (!marker) return;
@@ -675,6 +711,123 @@ export function clearMarkers() {
   markers.clear();
   routeGlow.setLatLngs([]);
   routeLine.setLatLngs([]);
+}
+
+let locationPickerBanner: HTMLDivElement | null = null;
+
+function ensureLocationPickerBanner(): HTMLDivElement {
+  if (locationPickerBanner) return locationPickerBanner;
+
+  const banner = document.createElement("div");
+  banner.id = "location-picker-banner";
+  banner.className = "location-picker-banner";
+  banner.innerHTML = `
+    <span class="location-picker-text"></span>
+    <div class="location-picker-buttons">
+    <button type="button" class="nav-button" id="location-picker-confirm"></button>
+    <button type="button" class="nav-button" id="location-picker-cancel"></button>
+    </div>
+  `;
+  document.body.appendChild(banner);
+  locationPickerBanner = banner;
+  return banner;
+}
+
+// Lässt den Nutzer den Standort für Fotos ohne GPS-EXIF-Daten manuell auf der Karte festlegen.
+// Der vorläufige Marker (gleiches Icon wie im Edit Mode) kann per Drag oder erneutem Klick
+// verschoben werden, bleibt dabei auch über Zoom-Änderungen hinweg an Ort und Stelle und wird
+// erst über den OK-Button endgültig übernommen bzw. über Cancel/Escape verworfen.
+export function pickLocationOnMap(): Promise<{ lat: number; lng: number } | null> {
+  return new Promise((resolve) => {
+    if (!map) {
+      resolve(null);
+      return;
+    }
+
+    const banner = ensureLocationPickerBanner();
+    const text = banner.querySelector(".location-picker-text") as HTMLSpanElement;
+    const confirmBtn = banner.querySelector(
+      "#location-picker-confirm",
+    ) as HTMLButtonElement;
+    const cancelBtn = banner.querySelector(
+      "#location-picker-cancel",
+    ) as HTMLButtonElement;
+
+    let tempMarker: L.Marker | null = null;
+
+    function updateHint() {
+      text.textContent = tempMarker ? t("adjustLocationHint") : t("pickLocationHint");
+    }
+
+    confirmBtn.textContent = t("confirmLocation");
+    cancelBtn.textContent = t("cancel");
+    confirmBtn.style.display = "none";
+    updateHint();
+
+    const container = map.getContainer();
+    banner.classList.add("active");
+    container.classList.add("picking-location");
+
+    function removeTempMarker() {
+      if (tempMarker) {
+        map.removeLayer(tempMarker);
+        tempMarker = null;
+      }
+    }
+
+    function placeMarker(latlng: L.LatLng) {
+      if (tempMarker) {
+        tempMarker.setLatLng(latlng);
+        return;
+      }
+
+      const icon = L.icon({
+        iconUrl: editMarkerIconUrl,
+        iconSize: [42, 42],
+        iconAnchor: [20, 42],
+        className: "temp-location-marker",
+      });
+
+      tempMarker = L.marker(latlng, { icon, draggable: true }).addTo(map);
+      confirmBtn.style.display = "";
+      updateHint();
+    }
+
+    function finish(result: { lat: number; lng: number } | null) {
+      map.off("click", onMapClick);
+      confirmBtn.removeEventListener("click", onConfirm);
+      cancelBtn.removeEventListener("click", onCancel);
+      document.removeEventListener("keydown", onKeydown);
+      removeTempMarker();
+      banner.classList.remove("active");
+      container.classList.remove("picking-location");
+      resolve(result);
+    }
+
+    function onMapClick(e: L.LeafletMouseEvent) {
+      placeMarker(e.latlng);
+    }
+
+    function onConfirm() {
+      if (!tempMarker) return;
+      const { lat, lng } = tempMarker.getLatLng();
+      finish({ lat, lng });
+    }
+
+    function onCancel() {
+      finish(null);
+    }
+
+    function onKeydown(e: KeyboardEvent) {
+      if (e.key === "Escape") onCancel();
+      if (e.key === "Enter") onConfirm();
+    }
+
+    map.on("click", onMapClick);
+    confirmBtn.addEventListener("click", onConfirm);
+    cancelBtn.addEventListener("click", onCancel);
+    document.addEventListener("keydown", onKeydown);
+  });
 }
 
 
