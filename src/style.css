@@ -15,7 +15,7 @@
   --secondary-background-color: rgb(231, 228, 228);
   --tertiary-background-color: #bfe264;
   --inactive-background-color: #b5b5b5;
-  --new-stop-color: rgba(255,61,0,1);
+  --new-stop-color: rgba(255, 61, 0, 1);
 
   font-family: "Marhey", sans-serif;
 
@@ -138,6 +138,22 @@ button {
   width: calc(100% - 10vw);
   height: calc(100% - 15vw);
   z-index: 5;
+}
+
+.app_logo {
+  position: relative;
+  /* top: 1rem; */
+  left: 2rem;
+  padding-right: 2rem;
+  width: 5rem;
+  height: 5rem;
+  z-index: 10;
+}
+
+.app_logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .button_container {
@@ -303,8 +319,7 @@ button {
   height: 0.9rem;
   border-radius: 3px;
 
-  box-shadow:
-    0 0 0 3px oklch(from black calc(l + 0.2) c h / 0.5);
+  box-shadow: 0 0 0 3px oklch(from black calc(l + 0.2) c h / 0.5);
 
   cursor: grab;
   transition:
@@ -464,7 +479,7 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.70rem 1.25rem;
+  padding: 0.7rem 1.25rem;
   border-radius: 12px;
   background-color: var(--primary-color-light);
   backdrop-filter: blur(4px);
@@ -650,8 +665,7 @@ path.leaflet-interactive:nth-child(2) {
   border-radius: 16px;
   pointer-events: auto;
   overflow: hidden;
-  transition:
-    all 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .dialog-header {
@@ -664,7 +678,7 @@ path.leaflet-interactive:nth-child(2) {
   border-top-right-radius: 16px;
 }
 
-.login_wrapper .card-head{
+.login_wrapper .card-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -821,7 +835,7 @@ path.leaflet-interactive:nth-child(2) {
 }
 
 #file-info {
-  width: 250%
+  width: 250%;
 }
 
 .file-container .file-label {
@@ -864,7 +878,6 @@ path.leaflet-interactive:nth-child(2) {
 .card_container {
   display: none;
 }
-
 
 .page {
   max-width: 1280px;
@@ -1040,8 +1053,7 @@ path.leaflet-interactive:nth-child(2) {
   /* font-size: clamp(1.4rem, calc(2vw + 1rem), 2.4rem); */
   cursor: pointer;
   color: whitesmoke;
-  transition:
-    all ease 0.3s;
+  transition: all ease 0.3s;
 }
 
 .edit-button.active,
@@ -1055,7 +1067,7 @@ path.leaflet-interactive:nth-child(2) {
   color: whitesmoke;
 }
 
-.close-button{
+.close-button {
   color: currentColor;
   font-size: x-large;
   background: transparent;
@@ -1066,7 +1078,7 @@ path.leaflet-interactive:nth-child(2) {
 }
 
 .close-button:disabled {
-  background-color:  oklch(from red calc(l - 0.1) c h / 0.5);
+  background-color: oklch(from red calc(l - 0.1) c h / 0.5);
   color: var(--a);
   cursor: not-allowed;
 }
@@ -1076,7 +1088,6 @@ path.leaflet-interactive:nth-child(2) {
   /* color: whitesmoke; */
   /* background-color:  oklch(from red calc(l - 0.1) c h / 0.5); */
   background-color: var(--primary-color);
-  
 }
 
 .lg-button:hover {
@@ -1108,7 +1119,7 @@ path.leaflet-interactive:nth-child(2) {
 @supports (scrollbar-width: thin) and (not selector(::-webkit-scrollbar)) {
   html {
     scrollbar-width: thin;
-    scrollbar-color: rgba(0,0,0,.3) transparent;
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
   }
 }
 
@@ -1124,12 +1135,12 @@ path.leaflet-interactive:nth-child(2) {
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(0,0,0,.3);
+    background: rgba(0, 0, 0, 0.3);
     border-radius: 999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0,0,0,.6);
+    background: rgba(0, 0, 0, 0.6);
     border-radius: 999px;
   }
 
@@ -1153,22 +1164,6 @@ path.leaflet-interactive:nth-child(2) {
     z-index: 5;
   }
 
-  .app_logo {
-    position: relative;
-    /* top: 1rem; */
-    left: 2rem;
-    padding-right: 2rem;
-    width: 5rem;
-    height: 5rem;
-    z-index: 10;
-  }
-
-  .app_logo img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-
   .file-container .file-label {
     display: block;
   }
@@ -1183,8 +1178,6 @@ path.leaflet-interactive:nth-child(2) {
     padding-right: 2rem;
   }
 }
-
-
 
 /* @media (pointer: coarse) {
   .slider-handle {
