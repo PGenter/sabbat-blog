@@ -8,6 +8,8 @@ export default defineConfig(({ command }) => ({
       input: {
         main: resolve(__dirname, 'index.html'),
         map: resolve(__dirname, 'map.html'),
+        resetpassword: resolve(__dirname, 'reset-password.html'),
+        requestreset: resolve(__dirname, 'reset-request.html'),
       },
     },
   },
