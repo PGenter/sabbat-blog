@@ -610,12 +610,18 @@ to take effect, as the specificity is the same */
 
 .thumbnail-gallery {
   position: absolute;
+  /* display: block;
+  box-sizing: border-box; */
   bottom: min(50px, 8%);
   left: 70%;
   width: max-content;
   z-index: 1002;
   display: flex;
   gap: 20px;
+  /* background-color: var(--gallery-background);
+  border-radius: 20px;
+  backdrop-filter: blur(10px); */
+  /* margin: 0.5rem; */
 }
 
 .thumbnail-gallery .item {
@@ -623,6 +629,8 @@ to take effect, as the specificity is the same */
   height: 220px;
   flex-shrink: 0;
   position: relative;
+  padding: 0.5rem;
+  /* box-shadow: 0 0 7px 25px #0004; */
 }
 
 .thumbnail-gallery .item img {
@@ -630,6 +638,8 @@ to take effect, as the specificity is the same */
   height: 100%;
   object-fit: cover;
   border-radius: 20px;
+  box-shadow: 0 2px 5px 5px #0004;
+  /* filter: drop-shadow(0 0 7px #0004); */
 }
 
 .gallery-buttons {
@@ -860,10 +870,10 @@ to take effect, as the specificity is the same */
   animation: showThumbnail 0.5s linear 1 forwards;
 }
 
-.gallery-container.prev .carousel-gallery .item-no,
-.gallery-container.prev .carousel-gallery .item-date,
-.gallery-container.prev .carousel-gallery .item-description {
-  animation: contentOut 1.5s linear 1 forwards;
+.gallery-container.prev .carousel-gallery .item:nth-child(2) .item-no,
+.gallery-container.prev .carousel-gallery .item:nth-child(2) .item-date,
+.gallery-container.prev .carousel-gallery .item:nth-child(2) .item-description {
+  animation: contentOut 0.5s linear 1 forwards;
 }
 
 @keyframes contentOut {

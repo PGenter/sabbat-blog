@@ -336,18 +336,10 @@ export async function startUpload() {
 
     if (thumbError) throw thumbError;
 
-    const { data: fullUrl } = supabase.storage
-      .from("travel-images")
-      .getPublicUrl(fullPath);
-
-    const { data: thumbUrl } = supabase.storage
-      .from("travel-images")
-      .getPublicUrl(thumbPath);
-
     const { error: photoError } = await supabase.from("photos").insert({
       entry_id: entryId,
-      image_url: fullUrl.publicUrl,
-      thumbnail_url: thumbUrl.publicUrl,
+      image_url: fullPath,
+      thumbnail_url: thumbPath,
       latitude: fileData.latitude,
       longitude: fileData.longitude,
       taken_at: fileData.takenAt,

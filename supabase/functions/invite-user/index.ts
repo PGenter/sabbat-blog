@@ -1,5 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 
+// URL der Frontend-App: bestimmt sowohl den erlaubten CORS-Origin als auch
+// das Redirect-Ziel im Einladungs-Link. Für lokale Tests per Secret/.env
+// auf die lokale Dev-URL überschreiben.
+const APP_URL = Deno.env.get("APP_URL") ?? "https://koala-kiwi-coconut.de";
+
 Deno.serve(async (req) => {
   // --- CORS Preflight ---
   if (req.method === "OPTIONS") {
@@ -18,8 +23,8 @@ Deno.serve(async (req) => {
   const token = authHeader.replace("Bearer ", "");
 
   const supabaseUserClient = createClient(
-    Deno.env.get("SERVICE_URL")!,
-    Deno.env.get("SERVICE_ANON_KEY")!,
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
   );
 
   const {
@@ -49,8 +54,8 @@ Deno.serve(async (req) => {
 
   // --- Admin Client (Service Role) ---
   const supabaseAdmin = createClient(
-    Deno.env.get("SERVICE_URL")!,
-    Deno.env.get("SERVICE_ROLE_KEY")!,
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
   const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(
@@ -62,7 +67,7 @@ Deno.serve(async (req) => {
         last_name: lastName,
         language: selectedLanguage,        
       },
-      redirectTo: "https://localhost:5173/auth/confirm?type=invite&next=/reset-password.html"
+      redirectTo: `${APP_URL}/auth/confirm?type=invite&next=/reset-password.html`,
     },
   );
 
@@ -85,6 +90,6 @@ function jsonResponse(body: any, status = 200) {
 
 // --- CORS Headers ---
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": APP_URL,
   "Access-Control-Allow-Headers": "authorization, content-type",
 };

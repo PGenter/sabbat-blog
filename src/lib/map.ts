@@ -19,7 +19,12 @@ import {
 } from "./geo";
 import "./gallery.ts";
 import { getCountryIndex, snapTo, updateUnvisitedMarkers } from "./slider.ts";
-import { currentGalleryDescription, currentGalleryEntryId, loadPhotosOfMarker, showPhotoGallery } from "./gallery.ts";
+import {
+  currentGalleryDescription,
+  currentGalleryEntryId,
+  loadPhotosOfMarker,
+  showPhotoGallery,
+} from "./gallery.ts";
 
 const newMarkerIconUrl = new URL(
   "../../assets/marker/cameraMarker-new.png",
@@ -33,6 +38,11 @@ const editMarkerIconUrl = new URL(
   "../../assets/marker/cameraMarker-edit.png",
   import.meta.url,
 ).href;
+
+// Sicherheitsnetz gegen einen unerwartet großen Datensatz pro Land (verhindert
+// ein hängendes UI); bei normalem Betrieb bleibt die Zahl der Stationen pro
+// Land weit darunter.
+const MAX_ENTRIES_PER_COUNTRY = 500;
 
 const markers = new Map<string, L.Marker>();
 const latestEntry = await getLatestEntry();
@@ -170,7 +180,7 @@ export function selectCountry(
 export async function setCardText(country: CountryCode) {
   const card = document.getElementById("country-card") as HTMLDivElement;
   const user = await getUser();
-  const firstName = user?.user_metadata?.first_name ?? "";
+  const firstName = escapeHtml(user?.user_metadata?.first_name ?? "");
 
   card.innerHTML = `<h2>${t("hello")} ${firstName},</h2>
   <p>${t("welcomeLine1")}</p>
@@ -252,6 +262,15 @@ function animateRoute(entries: any[]) {
   draw();
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function createMarker(
   lat: number,
   lng: number,
@@ -291,21 +310,21 @@ function createMarker(
 
   const editHint = isEditMode
     ? `<div class="tooltip-edit-hint"><i class="bi bi-pencil"></i> ${t(
-      "editHint",
-    )}</div>`
+        "editHint",
+      )}</div>`
     : "";
 
   marker.bindTooltip(
     `<div class="tooltip-inner">
       <div class="tooltip-title">
-        ${title}
+        ${escapeHtml(title)}
       </div>
       <div class="tooltip-date">
         ${t("uploadLabel")}: ${new Date(createdAt).toLocaleDateString("de-DE", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    })}
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })}
       </div>
       <div class="bi bi-images tooltip-views">
         ${images}
@@ -349,17 +368,18 @@ async function showEditMenu(entryId: string, currentTitle: string) {
         </div>
         <div class="modal-container edit-container">
           <input type="text" id="edit-title" placeholder="${t(
-      "titlePlaceholder",
-    )}" required/>
+            "titlePlaceholder",
+          )}" required/>
           <button class="nav-button lg-button" id="save-edit-btn"><i class="bi bi-check"></i>${t(
-      "save",
-    )}</button>
-          ${role === "administrator"
-        ? `<button class="nav-button lg-button delete-btn" id="delete-entry-btn"><i class="bi bi-trash"></i>${t(
-          "delete",
-        )}</button>`
-        : ""
-      }
+            "save",
+          )}</button>
+          ${
+            role === "administrator"
+              ? `<button class="nav-button lg-button delete-btn" id="delete-entry-btn"><i class="bi bi-trash"></i>${t(
+                  "delete",
+                )}</button>`
+              : ""
+          }
         </div>
       </div>
     `;
@@ -454,7 +474,8 @@ async function loadMarkersInView() {
       "id, latitude, longitude, title, description, user_id, taken_at, created_at, visited_entries(count), photos!photos_entry_id_fkey(count)",
     )
     .eq("section", currentCountry)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .limit(MAX_ENTRIES_PER_COUNTRY);
 
   if (error) {
     console.error(error);
@@ -558,7 +579,10 @@ async function getLatestEntry() {
 
 function renderMarkers(entries: any[], requestId = activeMarkersRequestId) {
   const totalEntries = entries.length;
-  const staggerDelay = Math.min(40, Math.max(18, Math.round(800 / Math.max(1, totalEntries))));
+  const staggerDelay = Math.min(
+    40,
+    Math.max(18, Math.round(800 / Math.max(1, totalEntries))),
+  );
 
   entries.forEach((entry, index) => {
     if (markers.has(entry.id)) return;
@@ -737,7 +761,10 @@ function ensureLocationPickerBanner(): HTMLDivElement {
 // Der vorläufige Marker (gleiches Icon wie im Edit Mode) kann per Drag oder erneutem Klick
 // verschoben werden, bleibt dabei auch über Zoom-Änderungen hinweg an Ort und Stelle und wird
 // erst über den OK-Button endgültig übernommen bzw. über Cancel/Escape verworfen.
-export function pickLocationOnMap(): Promise<{ lat: number; lng: number } | null> {
+export function pickLocationOnMap(): Promise<{
+  lat: number;
+  lng: number;
+} | null> {
   return new Promise((resolve) => {
     if (!map) {
       resolve(null);
@@ -745,7 +772,9 @@ export function pickLocationOnMap(): Promise<{ lat: number; lng: number } | null
     }
 
     const banner = ensureLocationPickerBanner();
-    const text = banner.querySelector(".location-picker-text") as HTMLSpanElement;
+    const text = banner.querySelector(
+      ".location-picker-text",
+    ) as HTMLSpanElement;
     const confirmBtn = banner.querySelector(
       "#location-picker-confirm",
     ) as HTMLButtonElement;
@@ -756,7 +785,9 @@ export function pickLocationOnMap(): Promise<{ lat: number; lng: number } | null
     let tempMarker: L.Marker | null = null;
 
     function updateHint() {
-      text.textContent = tempMarker ? t("adjustLocationHint") : t("pickLocationHint");
+      text.textContent = tempMarker
+        ? t("adjustLocationHint")
+        : t("pickLocationHint");
     }
 
     confirmBtn.textContent = t("confirmLocation");
@@ -829,5 +860,3 @@ export function pickLocationOnMap(): Promise<{ lat: number; lng: number } | null
     document.addEventListener("keydown", onKeydown);
   });
 }
-
-

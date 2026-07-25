@@ -5,7 +5,10 @@ import Split from "split.js";
 import { getUser, supabase } from "./supabase";
 import type { User } from "@supabase/supabase-js";
 
-let timeRunning = 500;
+// leicht länger als die 0.5s CSS-Animationen, damit next/prev nicht
+// entfernt wird, bevor die "forwards"-Endzustände angewendet wurden
+// (sonst springen Bild/Text am Ende zurück in den Basiszustand)
+let timeRunning = 550;
 let runTimeOut: NodeJS.Timeout;
 let nextDom = document.getElementById("next");
 let prevDom = document.getElementById("prev");
@@ -563,6 +566,40 @@ export function showPhotoGallery(entryId: string, description: string) {
   loadPhotosOfMarker(entryId, description);
 }
 
+const SIGNED_URL_TTL_SECONDS = 60 * 60;
+
+// image_url/thumbnail_url speichern seit Umstellung auf einen privaten Bucket
+// nur noch die Storage-Pfade; hier werden daraus zeitlich befristete URLs.
+async function withSignedPhotoUrls(photos: any[]): Promise<any[]> {
+  const paths = Array.from(
+    new Set(
+      photos.flatMap((photo) => [photo.image_url, photo.thumbnail_url]),
+    ),
+  );
+
+  if (paths.length === 0) return photos;
+
+  const { data, error } = await supabase.storage
+    .from("travel-images")
+    .createSignedUrls(paths, SIGNED_URL_TTL_SECONDS);
+
+  if (error) {
+    console.error("Error creating signed URLs:", error);
+    return photos;
+  }
+
+  const signedUrlByPath = new Map(
+    data.map((entry) => [entry.path, entry.signedUrl]),
+  );
+
+  return photos.map((photo) => ({
+    ...photo,
+    image_url: signedUrlByPath.get(photo.image_url) ?? photo.image_url,
+    thumbnail_url:
+      signedUrlByPath.get(photo.thumbnail_url) ?? photo.thumbnail_url,
+  }));
+}
+
 export async function loadPhotosOfMarker(entryId: string, description: string) {
   if (!entryId) return;
 
@@ -577,7 +614,9 @@ export async function loadPhotosOfMarker(entryId: string, description: string) {
     return;
   }
 
-  await renderPhotos(data, description);
+  const photos = await withSignedPhotoUrls(data);
+
+  await renderPhotos(photos, description);
 }
 
 async function renderPhotos(photos: any[], description: string) {
