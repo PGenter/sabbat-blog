@@ -56,8 +56,12 @@ loginForm.addEventListener("submit", async (e: Event) => {
   }
 });
 
-redirectIfLoggedIn();
-onAuthRedirect();
+const isConfirmFlow = new URLSearchParams(window.location.search).has("token_hash");
+
+if (!isConfirmFlow) {
+  redirectIfLoggedIn();
+  onAuthRedirect();
+}
 
 const initialLanguage = getStoredLanguage() || getCurrentLanguage();
 setLanguage(initialLanguage);

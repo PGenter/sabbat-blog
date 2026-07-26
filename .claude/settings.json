@@ -2,7 +2,17 @@
   "permissions": {
     "allow": [
       "Bash(npx tsc *)",
-      "Bash(git log *)"
+      "Bash(git log *)",
+      "Bash(npx supabase *)",
+      "WebSearch",
+      "WebFetch(domain:community.brevo.com)",
+      "WebFetch(domain:resend.com)",
+      "Read(//c/Users/patri/.config/supabase/**)",
+      "Read(//c/Users/patri/.config/**)",
+      "Bash(find / -iname \"*access-token*\" 2>/dev/null | grep -i supabase; echo \"---\"; find \"$HOME\" -iname \"*.supabase*\" -maxdepth 3 2>/dev/null; echo \"---HOME---\"; echo $HOME)",
+      "Read(//c//**)",
+      "Read(//c/Users/patri/**)",
+      "Bash(env)"
     ]
   }
 }

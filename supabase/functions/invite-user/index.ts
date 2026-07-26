@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
         last_name: lastName,
         language: selectedLanguage,        
       },
-      redirectTo: `${APP_URL}/auth/confirm?type=invite&next=/reset-password.html`,
+      redirectTo: `${APP_URL}/?type=invite&next=/reset-password.html`,
     },
   );
 
