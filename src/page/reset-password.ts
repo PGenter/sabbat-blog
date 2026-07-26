@@ -45,7 +45,7 @@ function applyTranslations() {
   if (heading) heading.textContent = t("resetPasswordTitle");
   if (pwd) pwd.placeholder = t("newPasswordPlaceholder");
   if (confirm) confirm.placeholder = t("confirmPasswordPlaceholder");
-  if (submitBtn) submitBtn.textContent = t("resetRequestButton");
+  if (submitBtn) submitBtn.textContent = t("resetPasswordTitle");
   if (ruleLength) ruleLength.textContent = t("passwordRuleLength");
   if (ruleLetter) ruleLetter.textContent = t("passwordRuleLetter");
   if (ruleNumber) ruleNumber.textContent = t("passwordRuleNumber");
