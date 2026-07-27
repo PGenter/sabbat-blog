@@ -61,9 +61,14 @@ const isConfirmFlow = new URLSearchParams(window.location.search).has("token_has
 if (!isConfirmFlow) {
   redirectIfLoggedIn();
   onAuthRedirect();
-}
 
-const initialLanguage = getStoredLanguage() || getCurrentLanguage();
-setLanguage(initialLanguage);
-updateLanguageToggleIcon(initialLanguage);
-applyTranslations();
+  const initialLanguage = getStoredLanguage() || getCurrentLanguage();
+  setLanguage(initialLanguage);
+  updateLanguageToggleIcon(initialLanguage);
+  applyTranslations();
+} else {
+  // Sprache noch nicht persistieren: reset-password.ts entscheidet anhand
+  // von user_metadata.language, sobald die Session aus dem Invite-Token steht.
+  updateLanguageToggleIcon(getCurrentLanguage());
+  applyTranslations();
+}

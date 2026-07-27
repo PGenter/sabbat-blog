@@ -61,7 +61,7 @@ prevDom!.onclick = () => {
 
 document.body.addEventListener("keydown", (event) => {
   const key = event.key;
-  if (!isEditMode && !isImageFullscreen) {
+  if (!isEditMode) {
     switch (key) {
       case "ArrowLeft":
         showSlider("prev");
@@ -114,7 +114,6 @@ if (carouselDom) {
   carouselDom.addEventListener(
     "touchstart",
     (e) => {
-      if (isImageFullscreen) return;
       const touchEvent = e as TouchEvent;
       if (!touchEvent.touches || touchEvent.touches.length === 0) return;
       touchStartX = touchEvent.touches[0].clientX;
@@ -126,7 +125,6 @@ if (carouselDom) {
   carouselDom.addEventListener(
     "touchmove",
     (e) => {
-      if (isImageFullscreen) return;
       const touchEvent = e as TouchEvent;
       if (!touchEvent.touches || touchEvent.touches.length === 0) return;
       touchCurrentX = touchEvent.touches[0].clientX;
@@ -137,7 +135,6 @@ if (carouselDom) {
   carouselDom.addEventListener(
     "touchend",
     () => {
-      if (isImageFullscreen) return;
       const dx = touchCurrentX - touchStartX;
       if (Math.abs(dx) > touchThreshold) {
         if (dx < 0) {

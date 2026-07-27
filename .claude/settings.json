@@ -12,7 +12,8 @@
       "Bash(find / -iname \"*access-token*\" 2>/dev/null | grep -i supabase; echo \"---\"; find \"$HOME\" -iname \"*.supabase*\" -maxdepth 3 2>/dev/null; echo \"---HOME---\"; echo $HOME)",
       "Read(//c//**)",
       "Read(//c/Users/patri/**)",
-      "Bash(env)"
+      "Bash(env)",
+      "Bash(/c/Users/patri/AppData/Local/Programs/Python/Python313/python.exe -c ' *)"
     ]
   }
 }
