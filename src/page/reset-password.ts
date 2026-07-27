@@ -1,10 +1,11 @@
-import { supabase } from "../lib/supabase";
+import { supabase, getUserLanguage } from "../lib/supabase";
 import { t, setLanguage, getCurrentLanguage, getStoredLanguage, getLanguageFlag, getLanguageFlagSet } from "../lib/i18n.ts";
 
 const form = document.getElementById("new-password-form") as HTMLFormElement;
 const messageDiv = document.getElementById("message")!;
 const languageToggleButton = document.getElementById("language-toggle") as HTMLButtonElement | null;
 
+const usernameInput = document.getElementById("username") as HTMLInputElement;
 const passwordInput = document.getElementById("password") as HTMLInputElement;
 const confirmInput = document.getElementById(
   "confirm-password",
@@ -111,13 +112,33 @@ form.addEventListener("submit", async (e) => {
     messageDiv.textContent = t("passwordSetSuccess");
     messageDiv.style.color = "green";
 
+    if ("PasswordCredential" in window) {
+      try {
+        const credential = new (window as any).PasswordCredential({
+          id: usernameInput.value,
+          password,
+          name: usernameInput.value,
+        });
+        await navigator.credentials.store(credential);
+      } catch {
+        // Credential Management API nicht verfügbar oder abgelehnt – kein Blocker für den Reset-Flow
+      }
+    }
+
     setTimeout(() => {
       window.location.href = "/index.html";
     }, 1500);
   }
 });
 
-const initialLanguage = getStoredLanguage() || getCurrentLanguage();
-setLanguage(initialLanguage);
-updateLanguageToggleIcon(initialLanguage);
-applyTranslations();
+(async () => {
+  const { data } = await supabase.auth.getUser();
+  if (data.user?.email) {
+    usernameInput.value = data.user.email;
+  }
+
+  const initialLanguage = getStoredLanguage() || (await getUserLanguage());
+  setLanguage(initialLanguage);
+  updateLanguageToggleIcon(initialLanguage);
+  applyTranslations();
+})();
