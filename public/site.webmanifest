@@ -1,10 +1,10 @@
 {
-  "name": "Koala, Kiwi and Coconut",
-  "short_name": "Koala, Kiwi and Coconut",
+  "name": "Koala, Kiwi & Coconut",
+  "short_name": "Koala, Kiwi & Coconut",
   "description": "Folge uns auf unserer Reise durch Australien, Neuseeland und die Südsee.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "transparent",
   "theme_color": "#ffffff",
   "icons": [
     {
