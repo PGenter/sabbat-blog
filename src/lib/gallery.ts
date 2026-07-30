@@ -108,6 +108,10 @@ function showSlider(type: string) {
 // Touch / swipe support for small touch devices
 let touchStartX = 0;
 let touchCurrentX = 0;
+// wird gesetzt, sobald während der Geste mehr als ein Finger beteiligt war
+// (Pinch-to-Zoom) - verhindert, dass das Ende einer Zoomgeste als Swipe
+// interpretiert wird und das Bild wechselt
+let isPinchGesture = false;
 const touchThreshold = 50; // px
 
 if (carouselDom) {
@@ -116,6 +120,11 @@ if (carouselDom) {
     (e) => {
       const touchEvent = e as TouchEvent;
       if (!touchEvent.touches || touchEvent.touches.length === 0) return;
+      if (touchEvent.touches.length > 1) {
+        isPinchGesture = true;
+        return;
+      }
+      isPinchGesture = false;
       touchStartX = touchEvent.touches[0].clientX;
       touchCurrentX = touchStartX;
     },
@@ -126,6 +135,11 @@ if (carouselDom) {
     "touchmove",
     (e) => {
       const touchEvent = e as TouchEvent;
+      if (touchEvent.touches && touchEvent.touches.length > 1) {
+        isPinchGesture = true;
+        return;
+      }
+      if (isImageFullscreen || isPinchGesture) return;
       if (!touchEvent.touches || touchEvent.touches.length === 0) return;
       touchCurrentX = touchEvent.touches[0].clientX;
     },
@@ -134,15 +148,28 @@ if (carouselDom) {
 
   carouselDom.addEventListener(
     "touchend",
-    () => {
-      const dx = touchCurrentX - touchStartX;
-      if (Math.abs(dx) > touchThreshold) {
-        if (dx < 0) {
-          showSlider("next");
-        } else {
-          showSlider("prev");
+    (e) => {
+      const touchEvent = e as TouchEvent;
+      // solange noch mindestens ein Finger auf dem Bildschirm ist, läuft die
+      // Geste (z.B. Pinch) noch weiter - keine Navigation auslösen
+      const stillTouching =
+        !!touchEvent.touches && touchEvent.touches.length > 0;
+      const wasPinch = isPinchGesture;
+      if (!stillTouching) {
+        isPinchGesture = false;
+      }
+
+      if (!stillTouching && !wasPinch && !isImageFullscreen) {
+        const dx = touchCurrentX - touchStartX;
+        if (Math.abs(dx) > touchThreshold) {
+          if (dx < 0) {
+            showSlider("next");
+          } else {
+            showSlider("prev");
+          }
         }
       }
+
       touchStartX = 0;
       touchCurrentX = 0;
     },
@@ -164,6 +191,36 @@ function toggleImageFullscreen(force?: boolean) {
 
   isImageFullscreen = force ?? !isImageFullscreen;
   gallery.classList.toggle("image-fullscreen", isImageFullscreen);
+}
+
+// Setzt die Bildquelle und fängt Ladefehler (z.B. abgelaufene/fehlende
+// signierte URL) ab, damit statt des rohen alt-Texts eine dezente
+// Platzhalter-Markierung statt des Fotos erscheint.
+function bindPhotoImage(
+  img: HTMLImageElement,
+  brokenStateContainer: HTMLElement,
+  src: string | null,
+  photoId: string,
+) {
+  if (!src) {
+    console.warn(`No usable image URL for photo ${photoId}`);
+    brokenStateContainer.classList.add("item-img-broken");
+    return;
+  }
+
+  img.addEventListener(
+    "error",
+    () => {
+      console.warn(
+        `Gallery image failed to load for photo ${photoId}:`,
+        img.src,
+      );
+      brokenStateContainer.classList.add("item-img-broken");
+    },
+    { once: true },
+  );
+
+  img.src = src;
 }
 
 function getCommentAuthorName(user: GalleryUser) {
@@ -567,10 +624,20 @@ const SIGNED_URL_TTL_SECONDS = 60 * 60;
 
 // image_url/thumbnail_url speichern seit Umstellung auf einen privaten Bucket
 // nur noch die Storage-Pfade; hier werden daraus zeitlich befristete URLs.
+// Vor der Umstellung angelegte Zeilen enthalten noch vollständige (alte)
+// Public-URLs statt eines Storage-Pfads - die lassen sich nicht signieren
+// und werden deshalb unverändert weitergereicht statt an createSignedUrls
+// geschickt zu werden (was dort immer "object does not exist" ergäbe).
+function isStoragePath(value: unknown): value is string {
+  return typeof value === "string" && value !== "" && !/^https?:\/\//i.test(value);
+}
+
 async function withSignedPhotoUrls(photos: any[]): Promise<any[]> {
   const paths = Array.from(
     new Set(
-      photos.flatMap((photo) => [photo.image_url, photo.thumbnail_url]),
+      photos
+        .flatMap((photo) => [photo.image_url, photo.thumbnail_url])
+        .filter(isStoragePath),
     ),
   );
 
@@ -585,15 +652,31 @@ async function withSignedPhotoUrls(photos: any[]): Promise<any[]> {
     return photos;
   }
 
-  const signedUrlByPath = new Map(
-    data.map((entry) => [entry.path, entry.signedUrl]),
-  );
+  const signedUrlByPath = new Map<string, string>();
+  for (const entry of data) {
+    if (entry.error || !entry.signedUrl) {
+      console.warn(
+        `Could not create signed URL for storage path "${entry.path}":`,
+        entry.error,
+      );
+      continue;
+    }
+    signedUrlByPath.set(entry.path as string, entry.signedUrl);
+  }
+
+  const resolve = (value: unknown) => {
+    if (!isStoragePath(value)) return value ?? null; // bereits vollständige URL (Legacy) oder leer
+    // Ohne gültige signierte URL ist ein Storage-Pfad in einem privaten
+    // Bucket nicht ladbar - lieber explizit null statt eines <img src>,
+    // das garantiert fehlschlägt (siehe createPhoto/createThumbnail
+    // Fallback-UI).
+    return signedUrlByPath.get(value) ?? null;
+  };
 
   return photos.map((photo) => ({
     ...photo,
-    image_url: signedUrlByPath.get(photo.image_url) ?? photo.image_url,
-    thumbnail_url:
-      signedUrlByPath.get(photo.thumbnail_url) ?? photo.thumbnail_url,
+    image_url: resolve(photo.image_url),
+    thumbnail_url: resolve(photo.thumbnail_url),
   }));
 }
 
@@ -805,7 +888,7 @@ async function renderPhotos(photos: any[], description: string) {
       },
     );
 
-    img.src = photo.image_url;
+    bindPhotoImage(img, itemImg, photo.image_url, photo.id);
     img.alt = description;
     itemNo.textContent = `${t("photoNumber")} ${index + 1} ${t("of")} ${total}`;
     itemDate.textContent = takenAt;
@@ -915,7 +998,7 @@ async function renderPhotos(photos: any[], description: string) {
       true,
     ) as HTMLElement;
     const thumbImg = thumbItem.querySelector("img") as HTMLImageElement;
-    thumbImg.src = photo.thumbnail_url;
+    bindPhotoImage(thumbImg, thumbItem, photo.thumbnail_url, photo.id);
     thumbImg.alt = description;
     thumbItem.classList.add("item");
     thumbItem.dataset.photoId = photo.id;

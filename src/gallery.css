@@ -229,6 +229,32 @@ to take effect, as the specificity is the same */
     box-shadow 0.5s ease;
 }
 
+/* Platzhalter statt kaputtem Bild (z.B. abgelaufene signierte URL) -
+   verhindert, dass der Browser den alt-Text (Beschreibung) an Stelle
+   des Fotos anzeigt. */
+.gallery-container .carousel-gallery .item .item-img.item-img-broken img,
+.thumbnail-gallery .item.item-img-broken img {
+  visibility: hidden;
+}
+
+.gallery-container .carousel-gallery .item .item-img.item-img-broken::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px dashed rgba(255, 255, 255, 0.35);
+}
+
+.thumbnail-gallery .item.item-img-broken::after {
+  content: "";
+  position: absolute;
+  inset: 0.5rem;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px dashed rgba(255, 255, 255, 0.35);
+}
+
 .gallery-container .carousel-gallery .item .item-content {
   position: absolute;
   pointer-events: none;
