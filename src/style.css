@@ -842,6 +842,12 @@ path.leaflet-interactive:nth-child(2) {
   display: none;
 }
 
+.mobile-gps-hint {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  margin: -0.5rem 0 0.5rem;
+}
+
 .progress-container {
   background: #eee;
   height: 12px;
@@ -1166,6 +1172,10 @@ path.leaflet-interactive:nth-child(2) {
 
   .file-container .file-label {
     display: block;
+  }
+
+  .mobile-gps-hint {
+    display: none;
   }
 
   .country-cd {

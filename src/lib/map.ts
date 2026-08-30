@@ -26,6 +26,8 @@ import {
   showPhotoGallery,
 } from "./gallery.ts";
 
+const CARTO_API_KEY = import.meta.env.VITE_CARTO_API_KEY || "";
+
 const newMarkerIconUrl = new URL(
   "../../assets/marker/cameraMarker-new.png",
   import.meta.url,
@@ -71,7 +73,7 @@ export async function initMap() {
     inertia: true,
   }).setView([51.5, 7], 9);
   L.tileLayer(
-    "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`,
     {
       attribution: "&copy; OpenStreetMap & CartoDB",
     },

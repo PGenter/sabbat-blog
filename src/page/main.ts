@@ -160,10 +160,14 @@ function applyTranslations() {
   const uploadBtn = document.getElementById(
     "uploadBtn",
   ) as HTMLButtonElement | null;
+  const mobileGpsHint = document.getElementById(
+    "mobile-gps-hint",
+  ) as HTMLElement | null;
 
   if (titleEl) titleEl.placeholder = t("titlePlaceholder");
   if (descriptionEl) descriptionEl.placeholder = t("descriptionPlaceholder");
   if (fileLabel) fileLabel.textContent = t("chooseImages");
+  if (mobileGpsHint) mobileGpsHint.textContent = t("mobileGpsHint");
   if (
     fileInfo.textContent === "Kein Bild ausgewählt" ||
     fileInfo.textContent === "Keine Datei gewählt" ||
