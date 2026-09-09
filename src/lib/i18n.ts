@@ -20,6 +20,14 @@ const translations = {
     inviteSend: "Einladung versenden",
     titlePlaceholder: "Gib einen Titel für die Etappe an...",
     descriptionPlaceholder: "Beschreibe, was wir erlebt haben...",
+    titlePlaceholderDe: "Titel der Etappe (Deutsch)...",
+    descriptionPlaceholderDe: "Beschreibung der Etappe (Deutsch)...",
+    titlePlaceholderEs: "Título de la etapa (Español)...",
+    descriptionPlaceholderEs: "Descripción de la etapa (Español)...",
+    languageFieldGroupHint:
+      "Bitte fülle Titel und Beschreibung in beiden Sprachen aus.",
+    pleaseProvideTitleEs: "Bitte gib einen spanischen Titel an",
+    pleaseProvideDescriptionEs: "Bitte gib eine spanische Beschreibung ein",
     chooseImages: "Bilder auswählen",
     noFileSelected: "Kein Bild ausgewählt",
     fileSelectedSingle: "1 Datei ausgewählt",
@@ -108,6 +116,14 @@ const translations = {
     inviteSend: "Enviar invitación",
     titlePlaceholder: "Escribe un título para la etapa...",
     descriptionPlaceholder: "Describe lo que vivimos...",
+    titlePlaceholderDe: "Titel der Etappe (Deutsch)...",
+    descriptionPlaceholderDe: "Beschreibung der Etappe (Deutsch)...",
+    titlePlaceholderEs: "Título de la etapa (Español)...",
+    descriptionPlaceholderEs: "Descripción de la etapa (Español)...",
+    languageFieldGroupHint:
+      "Completa el título y la descripción en ambos idiomas.",
+    pleaseProvideTitleEs: "Por favor ingresa un título en español",
+    pleaseProvideDescriptionEs: "Por favor ingresa una descripción en español",
     chooseImages: "Seleccionar imágenes",
     noFileSelected: "Ninguna imagen seleccionada",
     fileSelectedSingle: "1 imagen seleccionada",
@@ -222,6 +238,37 @@ export function getCurrentLanguage(): Language {
 export function t<Key extends keyof typeof translations["german"]>(key: Key): string {
   const dictionary = translations[currentLanguage] as Record<string, string>;
   return dictionary[key] ?? translations.german[key];
+}
+
+type LocalizableEntry = {
+  title?: string | null;
+  description?: string | null;
+  title_es?: string | null;
+  description_es?: string | null;
+};
+
+// Wählt Titel bzw. Beschreibung eines Eintrags in der aktuell aktiven Sprache
+// aus. Fehlt der spanische Text (Altbestand), wird auf den deutschen Text
+// zurückgefallen.
+export function localizeEntryField(
+  entry: LocalizableEntry | null | undefined,
+  field: "title" | "description",
+): string {
+  if (!entry) return "";
+  if (currentLanguage === "spanish") {
+    return entry[`${field}_es`] || entry[field] || "";
+  }
+  return entry[field] || "";
+}
+
+// Liefert den Spaltennamen, in den ein bearbeiteter Text je nach aktiver Sprache
+// geschrieben werden muss.
+export function localizedEntryColumn(
+  field: "title" | "description",
+): "title" | "description" | "title_es" | "description_es" {
+  return currentLanguage === "spanish"
+    ? (`${field}_es` as "title_es" | "description_es")
+    : field;
 }
 
 export function getLanguageFlag(language: Language) {

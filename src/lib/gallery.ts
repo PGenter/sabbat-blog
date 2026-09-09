@@ -1,5 +1,11 @@
 import { getCountryName } from "./geo";
-import { t, getLanguageCode, getCurrentLanguage } from "./i18n";
+import {
+  t,
+  getLanguageCode,
+  getCurrentLanguage,
+  localizeEntryField,
+  localizedEntryColumn,
+} from "./i18n";
 import { currentCountry, isEditMode } from "./map";
 import Split from "split.js";
 import { getUser, supabase } from "./supabase";
@@ -614,10 +620,18 @@ function setCommentsPanelState(isCollapsed: boolean) {
 
 window.addEventListener("resize", updateGallerySplitForViewport);
 
-export function showPhotoGallery(entryId: string, description: string) {
+export function showPhotoGallery(entryId: string) {
   currentGalleryEntryId = entryId;
-  currentGalleryDescription = description;
-  loadPhotosOfMarker(entryId, description);
+  void loadPhotosOfMarker(entryId);
+}
+
+// Bei einem Sprachwechsel die bereits geöffnete Galerie mit den Texten der
+// neuen Sprache neu laden.
+export function refreshGalleryLanguage() {
+  const gallery = document.getElementById("photo-gallery");
+  if (gallery?.classList.contains("active") && currentGalleryEntryId) {
+    void loadPhotosOfMarker(currentGalleryEntryId);
+  }
 }
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60;
@@ -680,8 +694,23 @@ async function withSignedPhotoUrls(photos: any[]): Promise<any[]> {
   }));
 }
 
-export async function loadPhotosOfMarker(entryId: string, description: string) {
+export async function loadPhotosOfMarker(entryId: string) {
   if (!entryId) return;
+
+  // Titel/Beschreibung werden hier frisch geladen, damit die Galerie beim
+  // Sprachwechsel ohne Reload auf die passende Sprache umschalten kann.
+  const { data: entry, error: entryError } = await supabase
+    .from("entries")
+    .select("title, description, title_es, description_es")
+    .eq("id", entryId)
+    .single();
+
+  if (entryError) {
+    console.error(entryError);
+  }
+
+  const description = localizeEntryField(entry, "description");
+  currentGalleryDescription = description;
 
   const { data, error } = await supabase
     .from("photos")
@@ -928,7 +957,7 @@ async function renderPhotos(photos: any[], description: string) {
 
         const { error } = await supabase
           .from("entries")
-          .update({ description: newDescription })
+          .update({ [localizedEntryColumn("description")]: newDescription })
           .eq("id", currentGalleryEntryId);
 
         if (error) {

@@ -748,21 +748,120 @@ path.leaflet-interactive:nth-child(2) {
   gap: 1.5rem;
 }
 
+/* Vollflächiger, zentrierender Overlay-Container für das Upload-Modal.
+   dvh/dvw statt vh/vw, damit dynamische Browser-Overlays (Adressleiste etc.)
+   auf Mobilgeräten korrekt kompensiert werden. */
+.upload_wrapper {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3dvh 3dvw;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 1000;
+}
+
 .upload-cd {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  width: min(90vw, 400px);
+  justify-content: flex-start;
+  width: min(92dvw, 720px);
   /* gap: 1.5rem; */
   height: auto;
   /* Verhindert, dass das Modal in kurzen Viewports (z.B. Mobile Landscape)
      über den sichtbaren Bereich hinauswächst und Buttons unerreichbar macht. */
-  max-height: min(600px, 85dvh);
+  max-height: min(820px, 92dvh);
 }
 
 .upload-cd .modal-container {
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  width: 100%;
+  /* Nur vertikal scrollen – die horizontale Achse wird unterdrückt, damit auf
+     kleinen Geräten (v.a. Landscape) keine zweite Scrollrichtung entsteht. */
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
   min-height: 0;
+}
+
+/* Zwei Sprach-Spalten (DE/ES) für Titel und Beschreibung. */
+.lang-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.lang-field-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lang-field-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.lang-field-label img {
+  border-radius: 3px;
+  flex: none;
+}
+
+.lang-fields-hint {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  margin: 0 0 1rem;
+}
+
+/* Mobil: Modal bildschirmfüllend (dvh/dvw kompensiert Browser-Overlays). */
+@media screen and (max-width: 1023px) {
+  .upload_wrapper {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .upload-cd {
+    width: 100dvw;
+    max-width: 100dvw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+
+  .upload-cd .dialog-header {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+
+  /* Datei-Zeile umbrechen lassen statt horizontal überlaufen. */
+  .upload-cd .file-container {
+    flex-wrap: wrap;
+  }
+
+  .upload-cd #file-info {
+    width: auto;
+    flex: 1 1 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .lang-fields {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+
+  .lang-field-group {
+    flex: 1 1 0;
+  }
 }
 
 .language-selector {

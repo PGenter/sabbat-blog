@@ -179,9 +179,32 @@
                         </div>
                     </div>
                     <div class="modal-container">
-                        <input id="title" class="image-title" placeholder="Gib einen Titel für die Etappe an...">
-                        <textarea id="description" class="image-desc"
-                            placeholder="Beschreibe, was wir erlebt haben..."></textarea>
+                        <p id="lang-fields-hint" class="lang-fields-hint">Bitte fülle Titel und Beschreibung in
+                            beiden Sprachen aus.</p>
+                        <div class="lang-fields">
+                            <div class="lang-field-group">
+                                <span class="lang-field-label">
+                                    <img src="https://flagcdn.com/w20/de.png"
+                                        srcset="https://flagcdn.com/w40/de.png 2x" width="20" alt="Deutsch" />
+                                    Deutsch
+                                </span>
+                                <input id="title" class="image-title"
+                                    placeholder="Gib einen Titel für die Etappe an...">
+                                <textarea id="description" class="image-desc"
+                                    placeholder="Beschreibe, was wir erlebt haben..."></textarea>
+                            </div>
+                            <div class="lang-field-group">
+                                <span class="lang-field-label">
+                                    <img src="https://flagcdn.com/w20/es.png"
+                                        srcset="https://flagcdn.com/w40/es.png 2x" width="20" alt="Español" />
+                                    Español
+                                </span>
+                                <input id="title-es" class="image-title"
+                                    placeholder="Escribe un título para la etapa...">
+                                <textarea id="description-es" class="image-desc"
+                                    placeholder="Describe lo que vivimos..."></textarea>
+                            </div>
+                        </div>
                         <div class="file-container">
                             <label class="nav-button lg-button"><i class="bi bi-image"></i>
                                 <span class="file-label">

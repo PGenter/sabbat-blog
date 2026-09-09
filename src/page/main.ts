@@ -154,6 +154,15 @@ function applyTranslations() {
   const descriptionEl = document.getElementById(
     "description",
   ) as HTMLTextAreaElement | null;
+  const titleEsEl = document.getElementById(
+    "title-es",
+  ) as HTMLInputElement | null;
+  const descriptionEsEl = document.getElementById(
+    "description-es",
+  ) as HTMLTextAreaElement | null;
+  const langFieldsHint = document.getElementById(
+    "lang-fields-hint",
+  ) as HTMLElement | null;
   const fileLabel = uploadsection.querySelector(
     ".file-label",
   ) as HTMLElement | null;
@@ -164,8 +173,12 @@ function applyTranslations() {
     "mobile-gps-hint",
   ) as HTMLElement | null;
 
-  if (titleEl) titleEl.placeholder = t("titlePlaceholder");
-  if (descriptionEl) descriptionEl.placeholder = t("descriptionPlaceholder");
+  if (titleEl) titleEl.placeholder = t("titlePlaceholderDe");
+  if (descriptionEl) descriptionEl.placeholder = t("descriptionPlaceholderDe");
+  if (titleEsEl) titleEsEl.placeholder = t("titlePlaceholderEs");
+  if (descriptionEsEl)
+    descriptionEsEl.placeholder = t("descriptionPlaceholderEs");
+  if (langFieldsHint) langFieldsHint.textContent = t("languageFieldGroupHint");
   if (fileLabel) fileLabel.textContent = t("chooseImages");
   if (mobileGpsHint) mobileGpsHint.textContent = t("mobileGpsHint");
   if (

@@ -93,11 +93,22 @@ export async function startUpload() {
   const descriptionEl = document.getElementById(
     "description",
   ) as HTMLTextAreaElement;
+  const titleEsEl = document.getElementById("title-es") as HTMLInputElement;
+  const descriptionEsEl = document.getElementById(
+    "description-es",
+  ) as HTMLTextAreaElement;
+  const langFieldsHint = document.getElementById(
+    "lang-fields-hint",
+  ) as HTMLElement | null;
   const button = document.getElementById("uploadBtn") as HTMLButtonElement;
   const fileLabel = document.querySelector(".file-label") as HTMLElement | null;
 
-  if (titleEl) titleEl.placeholder = t("titlePlaceholder");
-  if (descriptionEl) descriptionEl.placeholder = t("descriptionPlaceholder");
+  if (titleEl) titleEl.placeholder = t("titlePlaceholderDe");
+  if (descriptionEl) descriptionEl.placeholder = t("descriptionPlaceholderDe");
+  if (titleEsEl) titleEsEl.placeholder = t("titlePlaceholderEs");
+  if (descriptionEsEl)
+    descriptionEsEl.placeholder = t("descriptionPlaceholderEs");
+  if (langFieldsHint) langFieldsHint.textContent = t("languageFieldGroupHint");
   if (fileLabel) fileLabel.textContent = t("chooseImages");
   if (button) setUploadButtonBusy(button, false);
 
@@ -108,8 +119,10 @@ export async function startUpload() {
       return;
     }
     const files = input.files;
-    const title = titleEl.value;
-    const description = descriptionEl.value;
+    const title = titleEl.value.trim();
+    const description = descriptionEl.value.trim();
+    const titleEs = titleEsEl.value.trim();
+    const descriptionEs = descriptionEsEl.value.trim();
 
     if (!files || files.length === 0) {
       alert(t("noImagesSelected"));
@@ -123,6 +136,16 @@ export async function startUpload() {
 
     if (!description) {
       alert(t("pleaseProvideDescription"));
+      return;
+    }
+
+    if (!titleEs) {
+      alert(t("pleaseProvideTitleEs"));
+      return;
+    }
+
+    if (!descriptionEs) {
+      alert(t("pleaseProvideDescriptionEs"));
       return;
     }
 
@@ -239,6 +262,8 @@ export async function startUpload() {
         .insert({
           title,
           description,
+          title_es: titleEs,
+          description_es: descriptionEs,
           section,
           latitude: avgLat,
           longitude: avgLng,
@@ -296,6 +321,8 @@ export async function startUpload() {
       // auf der Karte sichtbar machen.
       titleEl.value = "";
       descriptionEl.value = "";
+      titleEsEl.value = "";
+      descriptionEsEl.value = "";
       input.value = "";
       progressContainer.style.display = "none";
 
