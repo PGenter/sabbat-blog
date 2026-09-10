@@ -55,11 +55,6 @@ export let map: L.Map;
 let isInitialized = false;
 let markerCluster: L.MarkerClusterGroup;
 let visitedMarkers: Set<string> = new Set();
-// Anzahl unterschiedlicher Nutzer, die einen Eintrag geöffnet haben (je entry_id).
-// Wird per RPC geladen, weil die Row-Level-Security auf visited_entries nur die
-// eigenen Zeilen sichtbar macht und ein eingebettetes count() daher immer 0/1
-// liefern würde.
-let entryViewerCounts = new Map<string, number>();
 export let unvisitedEntries = 0;
 let unvisitedCountsByCountry = new Map<CountryCode, number>();
 let routeLine: L.Polyline;
@@ -280,53 +275,13 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-// Auf dem Marker abgelegte Daten, um den Tooltip nach einem Besuch neu
-// aufbauen zu können (z. B. mit erhöhtem Betrachter-Zähler).
-type MarkerMeta = {
-  title: string;
-  createdAt: string;
-  images: number;
-  viewers: number;
-};
-
-function renderTooltipContent(meta: MarkerMeta): string {
-  const editHint = isEditMode
-    ? `<div class="tooltip-edit-hint"><i class="bi bi-pencil"></i> ${t(
-        "editHint",
-      )}</div>`
-    : "";
-
-  return `<div class="tooltip-inner">
-      <div class="tooltip-title">
-        ${escapeHtml(meta.title)}
-      </div>
-      <div class="tooltip-date">
-        ${t("uploadLabel")}: ${new Date(meta.createdAt).toLocaleDateString(
-          "de-DE",
-          {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          },
-        )}
-      </div>
-      <div class="bi bi-images tooltip-views">
-        ${meta.images}
-      </div>
-      <div class="bi bi-eye-fill tooltip-views">
-        ${meta.viewers}
-      </div>
-      ${editHint}
-    </div>`;
-}
-
 function createMarker(
   lat: number,
   lng: number,
   title: string,
   id: string,
   createdAt: string,
-  viewers: number,
+  views: number,
   images: number,
 ) {
   const isVisited = visitedMarkers.has(id);
@@ -356,14 +311,38 @@ function createMarker(
     }
   });
 
-  const meta: MarkerMeta = { title, createdAt, images, viewers };
-  (marker as L.Marker & { _meta?: MarkerMeta })._meta = meta;
+  const editHint = isEditMode
+    ? `<div class="tooltip-edit-hint"><i class="bi bi-pencil"></i> ${t(
+        "editHint",
+      )}</div>`
+    : "";
 
-  marker.bindTooltip(renderTooltipContent(meta), {
-    className: isVisited ? "visited-marker" : "unvisited-marker",
-    direction: "top",
-    offset: [2, -42],
-  });
+  marker.bindTooltip(
+    `<div class="tooltip-inner">
+      <div class="tooltip-title">
+        ${escapeHtml(title)}
+      </div>
+      <div class="tooltip-date">
+        ${t("uploadLabel")}: ${new Date(createdAt).toLocaleDateString("de-DE", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })}
+      </div>
+      <div class="bi bi-images tooltip-views">
+        ${images}
+      </div>
+      <div class="bi bi-eye-fill tooltip-views">
+        ${views}
+      </div>
+      ${editHint}
+    </div>`,
+    {
+      className: isVisited ? "visited-marker" : "unvisited-marker",
+      direction: "top",
+      offset: [2, -42],
+    },
+  );
 
   return marker;
 }
@@ -487,41 +466,19 @@ async function showEditMenu(entryId: string, currentTitle: string) {
   }
 }
 
-// Lädt je Eintrag die Anzahl unterschiedlicher Besucher. Die RPC-Funktion
-// `entry_viewer_counts` läuft SECURITY DEFINER und umgeht damit die
-// Row-Level-Security auf visited_entries (siehe supabase/snippets).
-async function loadEntryViewerCounts() {
-  const { data, error } = await supabase.rpc("entry_viewer_counts");
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  entryViewerCounts = new Map(
-    ((data ?? []) as { entry_id: string; viewer_count: number }[]).map((row) => [
-      row.entry_id,
-      Number(row.viewer_count),
-    ]),
-  );
-}
-
 async function loadMarkersInView() {
   if (!currentCountry) return;
 
   const requestId = ++activeMarkersRequestId;
 
-  const [{ data, error }] = await Promise.all([
-    supabase
-      .from("entries")
-      .select(
-        "id, latitude, longitude, title, description, title_es, description_es, user_id, taken_at, created_at, photos!photos_entry_id_fkey(count)",
-      )
-      .eq("section", currentCountry)
-      .order("created_at", { ascending: true })
-      .limit(MAX_ENTRIES_PER_COUNTRY),
-    loadEntryViewerCounts(),
-  ]);
+  const { data, error } = await supabase
+    .from("entries")
+    .select(
+      "id, latitude, longitude, title, description, title_es, description_es, user_id, taken_at, created_at, visited_entries(count), photos!photos_entry_id_fkey(count)",
+    )
+    .eq("section", currentCountry)
+    .order("created_at", { ascending: true })
+    .limit(MAX_ENTRIES_PER_COUNTRY);
 
   if (error) {
     console.error(error);
@@ -640,7 +597,7 @@ function renderMarkers(entries: any[], requestId = activeMarkersRequestId) {
       localizeEntryField(entry, "title"),
       entry.id,
       entry.created_at,
-      entryViewerCounts.get(entry.id) ?? 0,
+      entry.visited_entries?.[0]?.count ?? 0,
       entry.photos?.[0].count ?? 0,
     );
 
@@ -732,7 +689,6 @@ async function loadUnvisitedCountsByCountry() {
 }
 
 async function setMarkerVisited(entryId: string) {
-  const isNewVisit = !visitedMarkers.has(entryId);
   const user = await getUser();
   await supabase.from("visited_entries").upsert(
     {
@@ -746,19 +702,12 @@ async function setMarkerVisited(entryId: string) {
   visitedMarkers.add(entryId);
   await loadUnvisitedEntryCount();
 
-  // Nur beim ersten Besuch dieses Nutzers zählt der Eintrag als neu gesehen -
-  // sowohl für den landesweiten Restzähler als auch für den Besucher-Zähler
-  // im Tooltip.
-  if (isNewVisit) {
-    const remainingUnvisited = Math.max(
-      0,
-      (unvisitedCountsByCountry.get(currentCountry) ?? 0) - 1,
-    );
-    unvisitedCountsByCountry.set(currentCountry, remainingUnvisited);
-    updateUnvisitedMarkers(unvisitedCountsByCountry);
-
-    entryViewerCounts.set(entryId, (entryViewerCounts.get(entryId) ?? 0) + 1);
-  }
+  const remainingUnvisited = Math.max(
+    0,
+    (unvisitedCountsByCountry.get(currentCountry) ?? 0) - 1,
+  );
+  unvisitedCountsByCountry.set(currentCountry, remainingUnvisited);
+  updateUnvisitedMarkers(unvisitedCountsByCountry);
 
   const marker = markers.get(entryId);
   if (!marker) return;
@@ -771,14 +720,8 @@ async function setMarkerVisited(entryId: string) {
 
   marker.setIcon(icon);
 
-  const meta = (marker as L.Marker & { _meta?: MarkerMeta })._meta;
-  if (meta && isNewVisit) {
-    meta.viewers = entryViewerCounts.get(entryId) ?? meta.viewers;
-  }
-
-  const content = meta
-    ? renderTooltipContent(meta)
-    : (marker.getTooltip()?.getContent() ?? "");
+  const currentTooltip = marker.getTooltip();
+  const content = currentTooltip?.getContent() ?? "";
 
   marker.unbindTooltip();
   marker.bindTooltip(content, {
