@@ -181,8 +181,24 @@ export async function startUpload() {
 
         // 2️⃣ EXIF vom Original lesen (nicht vom komprimierten!)
         const exif = await exifr.parse(originalFile);
-        const lat = exif?.latitude;
-        const lng = exif?.longitude;
+        let lat = exif?.latitude;
+        let lng = exif?.longitude;
+
+        // Fallback: exifr.parse liefert bei manchen Dateien (v.a. HEIC) keine
+        // Koordinaten, obwohl welche vorhanden sind - der dedizierte GPS-Parser
+        // kommt damit oft besser klar.
+        if (lat == null || lng == null) {
+          try {
+            const gps = await exifr.gps(originalFile);
+            if (gps) {
+              lat = gps.latitude;
+              lng = gps.longitude;
+            }
+          } catch (gpsError) {
+            console.warn("GPS-Fallback fehlgeschlagen:", gpsError);
+          }
+        }
+
         const takenAt = exif?.DateTimeOriginal || new Date();
 
         processedFiles.push({

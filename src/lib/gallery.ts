@@ -716,7 +716,7 @@ export async function loadPhotosOfMarker(entryId: string) {
     .from("photos")
     .select("id, user_id, taken_at, created_at, image_url, thumbnail_url")
     .eq("entry_id", entryId)
-    .order("taken_at", { ascending: false });
+    .order("taken_at", { ascending: true });
 
   if (error) {
     console.error(error);
@@ -1080,6 +1080,15 @@ async function renderPhotos(photos: any[], description: string) {
     toggleImageFullscreen(false);
     gallery.classList.remove("active");
     setCommentsPanelState(true);
+
+    // Foto-/Thumbnail-Elemente entfernen. Sonst bleibt u.a. ein (leeres)
+    // .item-content/.item-description mit pointer-events:auto über der Karte
+    // liegen und blockiert dort die Interaktion, obwohl die Galerie
+    // geschlossen (und unsichtbar) ist.
+    const carousel = document.getElementById("carousel-gallery");
+    const thumbnails = document.getElementById("thumbnail-gallery");
+    if (carousel) carousel.innerHTML = "";
+    if (thumbnails) thumbnails.innerHTML = "";
   }
 }
 
