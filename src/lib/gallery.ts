@@ -102,6 +102,8 @@ function showSlider(type: string) {
     carouselDom?.classList.add("prev");
   }
 
+  loadCarouselWindow();
+
   clearTimeout(runTimeOut);
   runTimeOut = setTimeout(() => {
     carouselDom?.classList.remove("next");
@@ -207,6 +209,7 @@ function bindPhotoImage(
   brokenStateContainer: HTMLElement,
   src: string | null,
   photoId: string,
+  options: { lazy?: boolean } = {},
 ) {
   if (!src) {
     console.warn(`No usable image URL for photo ${photoId}`);
@@ -214,6 +217,7 @@ function bindPhotoImage(
     return;
   }
 
+  img.decoding = "async";
   img.addEventListener(
     "error",
     () => {
@@ -226,7 +230,42 @@ function bindPhotoImage(
     { once: true },
   );
 
-  img.src = src;
+  if (options.lazy) {
+    // Quelle wird erst gesetzt, wenn das Bild ins Sichtfenster des Karussells
+    // rotiert (siehe loadCarouselWindow) - verhindert, dass bei Einträgen mit
+    // vielen Fotos sofort alle Vollbilder geladen werden. Das leere src aus dem
+    // Template entfernen, damit kein unnötiger Request/Fehler entsteht.
+    img.removeAttribute("src");
+    img.dataset.src = src;
+  } else {
+    img.src = src;
+  }
+}
+
+// Nur das aktuell sichtbare Karussell-Bild und einige Nachbarn (per
+// DOM-Reihenfolge vorne bzw. hinten) tatsächlich laden.
+const CAROUSEL_PRELOAD_AHEAD = 3;
+const CAROUSEL_PRELOAD_BEHIND = 2;
+
+function loadCarouselWindow() {
+  const items = document.querySelectorAll<HTMLElement>(
+    ".gallery-container .carousel-gallery .item",
+  );
+  if (items.length === 0) return;
+
+  const load = (item: HTMLElement | undefined) => {
+    const img = item?.querySelector("img") as HTMLImageElement | null;
+    if (img?.dataset.src) {
+      img.src = img.dataset.src;
+      delete img.dataset.src;
+    }
+  };
+
+  const ahead = Math.min(CAROUSEL_PRELOAD_AHEAD, items.length);
+  for (let i = 0; i < ahead; i++) load(items[i]);
+
+  const behind = Math.min(CAROUSEL_PRELOAD_BEHIND, items.length - ahead);
+  for (let i = 0; i < behind; i++) load(items[items.length - 1 - i]);
 }
 
 function getCommentAuthorName(user: GalleryUser) {
@@ -888,6 +927,10 @@ async function renderPhotos(photos: any[], description: string) {
 
   createThumbnail(firstPhoto);
 
+  // Erst jetzt (alle .item im DOM) die Bildquellen für das sichtbare Fenster
+  // setzen; der Rest folgt beim Durchblättern.
+  loadCarouselWindow();
+
   function createPhoto(photo: any, index: number) {
     const itemTemplate = document.getElementById(
       "gallery-item-template",
@@ -917,7 +960,7 @@ async function renderPhotos(photos: any[], description: string) {
       },
     );
 
-    bindPhotoImage(img, itemImg, photo.image_url, photo.id);
+    bindPhotoImage(img, itemImg, photo.image_url, photo.id, { lazy: true });
     img.alt = description;
     itemNo.textContent = `${t("photoNumber")} ${index + 1} ${t("of")} ${total}`;
     itemDate.textContent = takenAt;
@@ -1027,6 +1070,7 @@ async function renderPhotos(photos: any[], description: string) {
       true,
     ) as HTMLElement;
     const thumbImg = thumbItem.querySelector("img") as HTMLImageElement;
+    thumbImg.loading = "lazy";
     bindPhotoImage(thumbImg, thumbItem, photo.thumbnail_url, photo.id);
     thumbImg.alt = description;
     thumbItem.classList.add("item");
