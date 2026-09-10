@@ -365,17 +365,22 @@ export async function startUpload() {
     const fullPath = `${entryId}/full/${fileName}`;
     const thumbPath = `${entryId}/thumb/${fileName}`;
 
+    // Die Bilder ändern sich nach dem Upload nie - daher lange Cache-Dauer,
+    // damit Browser und Supabase Smart-CDN sie speichern und nicht bei jedem
+    // Öffnen der Galerie erneut ausgeliefert werden (Egress sparen).
+    const uploadOptions = { cacheControl: "2592000" }; // 30 Tage
+
     // Upload Full
     const { error: fullError } = await supabase.storage
       .from("travel-images")
-      .upload(fullPath, fileData.fullImage);
+      .upload(fullPath, fileData.fullImage, uploadOptions);
 
     if (fullError) throw fullError;
 
     // Upload Thumb
     const { error: thumbError } = await supabase.storage
       .from("travel-images")
-      .upload(thumbPath, fileData.thumbnail);
+      .upload(thumbPath, fileData.thumbnail, uploadOptions);
 
     if (thumbError) throw thumbError;
 

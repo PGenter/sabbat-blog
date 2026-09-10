@@ -673,7 +673,36 @@ export function refreshGalleryLanguage() {
   }
 }
 
-const SIGNED_URL_TTL_SECONDS = 60 * 60;
+// Lange Gültigkeit, damit dieselbe signierte URL über mehrere Sitzungen hinweg
+// wiederverwendet werden kann. Nur bei stabiler URL (gleicher Token) greifen
+// Browser-Cache und Supabase Smart-CDN - sonst ist jeder Aufruf ein neuer
+// Download (kein "cached egress").
+const SIGNED_URL_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 Tage
+const SIGNED_URL_CACHE_KEY = "travel-images-signed-urls-v1";
+// So lange vor Ablauf wird bereits neu signiert, damit keine URL "kurz vor
+// Toresschluss" an ein <img> gehängt wird.
+const SIGNED_URL_RENEW_MARGIN_MS = 24 * 60 * 60 * 1000; // 1 Tag
+
+type SignedUrlCacheEntry = { url: string; expiresAt: number };
+type SignedUrlCache = Record<string, SignedUrlCacheEntry>;
+
+function readSignedUrlCache(): SignedUrlCache {
+  try {
+    const raw = localStorage.getItem(SIGNED_URL_CACHE_KEY);
+    const parsed = raw ? (JSON.parse(raw) as SignedUrlCache) : {};
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeSignedUrlCache(cache: SignedUrlCache) {
+  try {
+    localStorage.setItem(SIGNED_URL_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // z.B. Speicher-Quota voll - der Cache ist nur eine Optimierung.
+  }
+}
 
 // image_url/thumbnail_url speichern seit Umstellung auf einen privaten Bucket
 // nur noch die Storage-Pfade; hier werden daraus zeitlich befristete URLs.
@@ -696,25 +725,48 @@ async function withSignedPhotoUrls(photos: any[]): Promise<any[]> {
 
   if (paths.length === 0) return photos;
 
-  const { data, error } = await supabase.storage
-    .from("travel-images")
-    .createSignedUrls(paths, SIGNED_URL_TTL_SECONDS);
+  const now = Date.now();
+  const cache = readSignedUrlCache();
+  const signedUrlByPath = new Map<string, string>();
+  const missingPaths: string[] = [];
 
-  if (error) {
-    console.error("Error creating signed URLs:", error);
-    return photos;
+  // Bereits vorhandene, noch ausreichend lange gültige URLs wiederverwenden.
+  for (const path of paths) {
+    const cached = cache[path];
+    if (cached && cached.expiresAt - SIGNED_URL_RENEW_MARGIN_MS > now) {
+      signedUrlByPath.set(path, cached.url);
+    } else {
+      missingPaths.push(path);
+    }
   }
 
-  const signedUrlByPath = new Map<string, string>();
-  for (const entry of data) {
-    if (entry.error || !entry.signedUrl) {
-      console.warn(
-        `Could not create signed URL for storage path "${entry.path}":`,
-        entry.error,
-      );
-      continue;
+  if (missingPaths.length > 0) {
+    const { data, error } = await supabase.storage
+      .from("travel-images")
+      .createSignedUrls(missingPaths, SIGNED_URL_TTL_SECONDS);
+
+    if (error) {
+      console.error("Error creating signed URLs:", error);
+    } else {
+      const expiresAt = now + SIGNED_URL_TTL_SECONDS * 1000;
+      for (const entry of data) {
+        if (entry.error || !entry.signedUrl || !entry.path) {
+          console.warn(
+            `Could not create signed URL for storage path "${entry.path}":`,
+            entry.error,
+          );
+          continue;
+        }
+        signedUrlByPath.set(entry.path, entry.signedUrl);
+        cache[entry.path] = { url: entry.signedUrl, expiresAt };
+      }
+
+      // Abgelaufene Einträge aufräumen, damit der Cache nicht unbegrenzt wächst.
+      for (const key of Object.keys(cache)) {
+        if (cache[key].expiresAt <= now) delete cache[key];
+      }
+      writeSignedUrlCache(cache);
     }
-    signedUrlByPath.set(entry.path as string, entry.signedUrl);
   }
 
   const resolve = (value: unknown) => {
