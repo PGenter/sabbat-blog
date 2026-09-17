@@ -279,7 +279,7 @@ to take effect, as the specificity is the same */
 
 .gallery-container .carousel-gallery .item .item-content .item-description {
   font-weight: bold;
-  font-size: clamp(0.5rem, max(1.5vh, 1.5vw), 1rem);
+  font-size: clamp(0.5rem, max(2vh, 2vw), 1rem);
   padding-top: 0.5em;
   min-height: 2rem;
   height: fit-content;
