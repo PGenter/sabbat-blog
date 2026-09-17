@@ -278,16 +278,16 @@ to take effect, as the specificity is the same */
 }
 
 .gallery-container .carousel-gallery .item .item-content .item-description {
-  /* font-weight: bold; */
+  font-weight: bold;
   font-size: clamp(0.5rem, max(1.5vh, 1.5vw), 1rem);
-  /* padding-top: 0.5em; */
+  padding-top: 0.5em;
   min-height: 2rem;
   height: fit-content;
   max-height: 4rem;
   overflow-y: auto;
   pointer-events: auto;
   white-space: pre-line;
-  font-family:
+  /* font-family:
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
@@ -298,7 +298,7 @@ to take effect, as the specificity is the same */
     Cantarell,
     "Open Sans",
     "Helvetica Neue",
-    sans-serif;
+    sans-serif; */
 }
 
 .gallery-container .carousel-gallery .item .item-content .item-date {
