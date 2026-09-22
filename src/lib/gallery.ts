@@ -244,15 +244,10 @@ function bindPhotoImage(
 
 // Nur das aktuell sichtbare Karussell-Bild und einige Nachbarn (per
 // DOM-Reihenfolge vorne bzw. hinten) tatsächlich laden.
-const CAROUSEL_PRELOAD_AHEAD = 3;
+const CAROUSEL_PRELOAD_AHEAD = 4;
 const CAROUSEL_PRELOAD_BEHIND = 2;
 
 function loadCarouselWindow() {
-  const items = document.querySelectorAll<HTMLElement>(
-    ".gallery-container .carousel-gallery .item",
-  );
-  if (items.length === 0) return;
-
   const load = (item: HTMLElement | undefined) => {
     const img = item?.querySelector("img") as HTMLImageElement | null;
     if (img?.dataset.src) {
@@ -261,11 +256,26 @@ function loadCarouselWindow() {
     }
   };
 
-  const ahead = Math.min(CAROUSEL_PRELOAD_AHEAD, items.length);
-  for (let i = 0; i < ahead; i++) load(items[i]);
+  const loadWindow = (items: NodeListOf<HTMLElement>) => {
+    if (items.length === 0) return;
 
-  const behind = Math.min(CAROUSEL_PRELOAD_BEHIND, items.length - ahead);
-  for (let i = 0; i < behind; i++) load(items[items.length - 1 - i]);
+    const ahead = Math.min(CAROUSEL_PRELOAD_AHEAD, items.length);
+    for (let i = 0; i < ahead; i++) load(items[i]);
+
+    const behind = Math.min(CAROUSEL_PRELOAD_BEHIND, items.length - ahead);
+    for (let i = 0; i < behind; i++) load(items[items.length - 1 - i]);
+  };
+
+  loadWindow(
+    document.querySelectorAll<HTMLElement>(
+      ".gallery-container .carousel-gallery .item",
+    ),
+  );
+  loadWindow(
+    document.querySelectorAll<HTMLElement>(
+      ".gallery-container .thumbnail-gallery .item",
+    ),
+  );
 }
 
 function getCommentAuthorName(user: GalleryUser) {
@@ -1123,7 +1133,7 @@ async function renderPhotos(photos: any[], description: string) {
     ) as HTMLElement;
     const thumbImg = thumbItem.querySelector("img") as HTMLImageElement;
     thumbImg.loading = "lazy";
-    bindPhotoImage(thumbImg, thumbItem, photo.thumbnail_url, photo.id);
+    bindPhotoImage(thumbImg, thumbItem, photo.thumbnail_url, photo.id, { lazy: true });
     thumbImg.alt = description;
     thumbItem.classList.add("item");
     thumbItem.dataset.photoId = photo.id;
