@@ -271,11 +271,13 @@ function loadCarouselWindow() {
       ".gallery-container .carousel-gallery .item",
     ),
   );
-  loadWindow(
-    document.querySelectorAll<HTMLElement>(
-      ".gallery-container .thumbnail-gallery .item",
-    ),
-  );
+  if (!getIsMobile()) {
+    loadWindow(
+      document.querySelectorAll<HTMLElement>(
+        ".gallery-container .thumbnail-gallery .item",
+      ),
+    );
+  }
 }
 
 function getCommentAuthorName(user: GalleryUser) {
@@ -448,7 +450,8 @@ function renderEditComment(
     text.hidden = false;
     cancelButton.hidden = true;
     deleteButton.hidden = false;
-    editButton.innerHTML = '<i class="bi bi-pencil-square"></i> ' + t("editHint");
+    editButton.innerHTML =
+      '<i class="bi bi-pencil-square"></i> ' + t("editHint");
   };
 
   commentMenu.addEventListener("toggle", () => {
@@ -534,7 +537,7 @@ function renderEditComment(
 
   actionGroup.appendChild(commentMenu);
   commentMenu.appendChild(commentMenuShell);
-  commentMenuShell.appendChild(editButton)
+  commentMenuShell.appendChild(editButton);
   commentMenuShell.appendChild(deleteButton);
   commentMenuShell.appendChild(cancelButton);
   meta.appendChild(actionGroup);
@@ -721,7 +724,9 @@ function writeSignedUrlCache(cache: SignedUrlCache) {
 // und werden deshalb unverändert weitergereicht statt an createSignedUrls
 // geschickt zu werden (was dort immer "object does not exist" ergäbe).
 function isStoragePath(value: unknown): value is string {
-  return typeof value === "string" && value !== "" && !/^https?:\/\//i.test(value);
+  return (
+    typeof value === "string" && value !== "" && !/^https?:\/\//i.test(value)
+  );
 }
 
 async function withSignedPhotoUrls(photos: any[]): Promise<any[]> {
@@ -977,17 +982,13 @@ async function renderPhotos(photos: any[], description: string) {
     isEditMode && (role === "administrator" || role === "superuser");
   const canDeletePhotos = isEditMode && role === "administrator";
 
+  const skipThumbnails = getIsMobile();
+
   photos.forEach((photo, index) => {
-    if (index === 0) {
-      createPhoto(photo, index);
-      return;
-    }
-
     createPhoto(photo, index);
-    createThumbnail(photo);
+    if (!skipThumbnails && index !== 0) createThumbnail(photo);
   });
-
-  createThumbnail(firstPhoto);
+  if (!skipThumbnails) createThumbnail(firstPhoto);
 
   // Erst jetzt (alle .item im DOM) die Bildquellen für das sichtbare Fenster
   // setzen; der Rest folgt beim Durchblättern.
@@ -1133,7 +1134,9 @@ async function renderPhotos(photos: any[], description: string) {
     ) as HTMLElement;
     const thumbImg = thumbItem.querySelector("img") as HTMLImageElement;
     thumbImg.loading = "lazy";
-    bindPhotoImage(thumbImg, thumbItem, photo.thumbnail_url, photo.id, { lazy: true });
+    bindPhotoImage(thumbImg, thumbItem, photo.thumbnail_url, photo.id, {
+      lazy: true,
+    });
     thumbImg.alt = description;
     thumbItem.classList.add("item");
     thumbItem.dataset.photoId = photo.id;
