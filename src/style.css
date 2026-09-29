@@ -449,6 +449,15 @@ button {
   pointer-events: none;
 }
 
+.marker-cluster.cluster-unvisited {
+  background-color: rgba(255, 115, 0, 0.4);
+}
+.marker-cluster.cluster-unvisited div {
+  background-color: rgba(255, 115, 0, 0.95);
+  color: #222;
+  box-shadow: 0 0 0 3px rgba(255, 115, 0, 0.2);
+}
+
 /* --- Reset für Leaflet marker icons --- */
 .leaflet-marker-icon {
   transition: opacity 0.25s ease;

@@ -83,7 +83,35 @@ export async function initMap() {
 
   markerCluster = L.markerClusterGroup({
     showCoverageOnHover: false,
-    maxClusterRadius: 50, // wie aggressiv gruppiert wird
+    maxClusterRadius: 50,
+    iconCreateFunction: (cluster) => {
+      const children = cluster.getAllChildMarkers();
+      console.log(
+        "visitedMarkers:",
+        visitedMarkers.size,
+        "child ids:",
+        children.map((m) => (m.options as any).entryId),
+      );
+      const unvisitedCount = children.filter(
+        (m) => !visitedMarkers.has((m.options as any).entryId),
+      ).length;
+
+      const hasUnvisited = unvisitedCount > 0;
+      const size =
+        children.length < 10
+          ? "small"
+          : children.length < 100
+            ? "medium"
+            : "large";
+
+      return L.divIcon({
+        html: `<div><span>${children.length}</span></div>`,
+        className: `marker-cluster marker-cluster-${size} ${
+          hasUnvisited ? "cluster-unvisited" : "cluster-visited"
+        }`,
+        iconSize: L.point(40, 40),
+      });
+    },
   });
 
   map.addLayer(markerCluster);
@@ -222,7 +250,7 @@ function animateRoute(entries: any[]) {
   let segmentIndex = 0;
   let progress = 0;
 
-  const speed = 0.02; // kleiner = langsamer, größer = schneller
+  const speed = 0.05; // kleiner = langsamer, größer = schneller
 
   let currentLatLngs: L.LatLngExpression[] = [points[0]];
 
@@ -298,8 +326,9 @@ function createMarker(
     className: isEditMode ? "editable-marker" : "normal-marker",
   });
 
-  var markerOptions: L.MarkerOptions = {
+  var markerOptions: L.MarkerOptions & { entryId?: string } = {
     icon: customIcon,
+    entryId: id,
   };
 
   const marker = L.marker([lat, lng], markerOptions).on("click", () => {
