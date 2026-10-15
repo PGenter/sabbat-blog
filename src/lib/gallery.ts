@@ -15,7 +15,6 @@ import {
   Navigation,
   Pagination,
   Thumbs,
-  EffectCoverflow,
 } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -53,7 +52,7 @@ type GalleryUser = Awaited<ReturnType<typeof getUser>>;
 type CommentActionElements = {
   commentsList: HTMLUListElement;
   emptyState: HTMLDivElement;
-  countBadge: HTMLSpanElement;
+  // countBadge: HTMLSpanElement;
   commentInput: HTMLTextAreaElement;
   submitCommentButton: HTMLButtonElement;
   commentsToggle: HTMLButtonElement;
@@ -214,7 +213,7 @@ async function refreshCommentsForActivePhoto() {
     photoId,
     activeCommentElements.commentsList,
     activeCommentElements.emptyState,
-    activeCommentElements.countBadge,
+    // activeCommentElements.countBadge,
     activeCommentUser,
   );
 }
@@ -223,7 +222,7 @@ async function loadCommentsForPhoto(
   photoId: string,
   commentsList: HTMLUListElement,
   emptyState: HTMLElement,
-  countBadge: HTMLElement,
+  // countBadge: HTMLElement,
   currentUser: GalleryUser,
 ) {
   const { data, error } = await supabase
@@ -740,9 +739,9 @@ async function renderPhotos(photos: any[], description: string) {
   if (!swiper) return;
 
   const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
-  const galleryHeader = document.getElementById(
-    "gallery-title",
-  ) as HTMLDivElement;
+  // const galleryHeader = document.getElementById(
+  //   "gallery-title",
+  // ) as HTMLDivElement;
   const editButton = document.getElementById("edit-gallery") as HTMLDivElement;
   const user = await getUser();
   const role = user?.app_metadata?.role || "user";
@@ -799,9 +798,9 @@ async function renderPhotos(photos: any[], description: string) {
   const commentsToggle = document.querySelector(
     ".comment-button .comments-toggle",
   ) as HTMLButtonElement;
-  const commentsCount = document.querySelector(
-    ".comment-button .comments-toggle-number",
-  ) as HTMLSpanElement;
+  // const commentsCount = document.querySelector(
+  //   ".comment-button .comments-toggle-number",
+  // ) as HTMLSpanElement;
   const commentsList = commentsPanel.querySelector(
     ".comments-list",
   ) as HTMLUListElement;
@@ -838,7 +837,7 @@ async function renderPhotos(photos: any[], description: string) {
   activeCommentElements = {
     commentsList,
     emptyState,
-    countBadge: commentsCount,
+    // countBadge: commentsCount,
     commentInput,
     submitCommentButton,
     commentsToggle,
