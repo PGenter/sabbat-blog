@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/KoalaKiwiCocoFavi.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Koala, Kiwi and Coconut" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="stylesheet" href="src/style.css">
+    <link rel="stylesheet" href="src/gallery.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow">
+    <title>Koala, Kiwi and Coconut</title>
+</head>
+
+<body>
+    <div class="main_wrapper">
+        <div id="modal-backdrop" class="modal-backdrop"></div>
+        <div id="photo-gallery" class="photo-gallery">
+            <div id="comments-shell" class="comments-shell">
+                <aside id="comments-panel" class="comments-panel">
+                    <div class="comments-header">
+                        <span id="comments-toggle-label" class="comments-toggle-label">Kommentare</span>
+                    </div>
+                    <div class="comments-body">
+                        <div class="comments-inner">
+                            <div class="comments-input-wrap">
+                                <textarea class="comment-input" id="comment-input" rows="1"></textarea>
+                                <button class="comments-submit" type="button" title="Kommentar senden"><i
+                                        class="bi bi-send-fill"></i></button>
+                            </div>
+                            <ul class="comments-list"></ul>
+                            <div class="comments-empty">Noch keine Kommentare</div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+            <div id="gallery-shell" class="gallery-shell">
+                <div id="comment-button" class="comment-button">
+                    <button class="comments-toggle" type="button">
+                        <span class="comments-toggle-button"><i class="bi bi-chat-left-text-fill"></i></span>
+                        <span class="comments-toggle-number"></span>
+                    </button>
+                </div>
+                <div id="gallery-layout">
+                    <div id="gallery-header" class="gallery-header">
+                        <div id="gallery-title" class="photo-header">
+                            <h2>Foto Galerie</h2>
+                        </div>
+                        <div class="close-button-container">
+                            <button class="galleryheader-button" id="edit-gallery" title="Einträge bearbeiten"><i
+                                    class="bi bi-pencil-square"></i></button>
+                            <button class="galleryheader-button" id="close-button"><i class="bi bi-x-lg"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="gallery-container">
+                        <template id="gallery-item-template">
+                            <div class="item">
+                                <div class="item-media">
+                                    <div class="item-img">
+                                        <img src="" alt="" />
+                                    </div>
+                                    <div class="item-content">
+                                        <div class="item-no"></div>
+                                        <div class="item-date"></div>
+                                        <div class="item-description"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <template id="thumbnail-template">
+                            <div class="item">
+                                <img src="" alt="" />
+                            </div>
+                        </template>
+                        <div id="carousel-gallery" class="carousel-gallery"></div>
+                        <div id="thumbnail-gallery" class="thumbnail-gallery"></div>
+                        <div class="gallery-buttons">
+                            <div class="arrows">
+                                <button id="prev" class="nav-button glassy"><i
+                                        class="bi bi-caret-left-fill"></i></i></button>
+                                <button id="next" class="nav-button glassy"><i
+                                        class="bi bi-caret-right-fill"></i></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="map_wrapper">
+            <div id="map" class="map-container"></div>
+        </div>
+        <div class="interface_wrapper" id="map-section">
+            <div class="button_container">
+                <div class="button_wrapper" id="button_wrapper">
+                    <button class="nav-button rnd-button glassy" id="logout" title="Logout"><i
+                            class="bi bi-box-arrow-right"></i></button>
+
+                    <button class="nav-button rnd-button glassy" id="upload" title="Upload"><i
+                            class="bi bi-cloud-arrow-up"></i></button>
+                    <button class="nav-button rnd-button glassy" id="edit-map" title="Einträge bearbeiten"><i
+                            class="bi bi-pencil-square"></i></button>
+                    <button class="nav-button rnd-button glassy" id="invite" title="Freunde einladen"><i
+                            class="bi bi-person-add"></i></button>
+                </div>
+                <button class="nav-button rnd-button glassy" id="language-toggle" title="Sprache wechseln">
+                    <img src="https://flagcdn.com/w20/de.png" srcset="https://flagcdn.com/w40/de.png 2x" width="20"
+                        alt="Deutsch" />
+                </button>
+            </div>
+            <div class="card_container">
+                <!-- <div class="app_logo" id="app-logo">
+                    <img src="/KoalaKiwiCocoFavi.png" alt="Koala, Kiwi and Coconut Logo" />
+
+                </div> -->
+                <div class="card country-cd glassy" id="country-card">
+                    <h2>Karte</h2>
+                </div>
+            </div>
+            <div class="nav_wrapper" id="nav-wrapper">
+                <div class="navbar_wrapper " id="navbar">
+                    <div class="slider-track" id="slider-track">
+                        <div class="slider-progress" id="slider-progress"></div>
+                        <div class="slider-handle" id="slider-handle"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal_dialog">
+            <div class="invitation_wrapper">
+                <div class="card upload-cd glassy modal" id="invitation-section"
+                    style="visibility: hidden; opacity: 0;">
+                    <div id="dialog-header" class="dialog-header">
+                        <div class="close-button-container">
+                            <button class="header-button close-button" id="invite-close-button"><i
+                                    class="bi bi-x"></i></button>
+                        </div>
+                    </div>
+                    <div class="card-head">
+                        <div>
+                            <h2>Freunde einladen</h2>
+                        </div>
+                    </div>
+                    <div class="modal-container invitation-container">
+                        <input type="text" id="firstName" placeholder="Vorname" required />
+                        <input type="text" id="lastName" placeholder="Nachname" required />
+                        <input type="email" id="email" placeholder="Email" required />
+                        <div class="language-selector">
+                            <button type="button" class="lang-btn active" data-language="german" title="Deutsch">
+                                <img src="https://flagcdn.com/w20/de.png" srcset="https://flagcdn.com/w40/de.png 2x"
+                                    width="20" alt="Deutsch" />
+                            </button>
+                            <button type="button" class="lang-btn" data-language="spanish" title="Español">
+                                <img src="https://flagcdn.com/w20/es.png" srcset="https://flagcdn.com/w40/es.png 2x"
+                                    width="20" alt="Español" />
+                            </button>
+                        </div>
+                        <button class="nav-button lg-button" id="inviteBtn"><i class="bi bi-person-add"></i>Einladung
+                            versenden</button>
+                    </div>
+                </div>
+            </div>
+            <div class="upload_wrapper">
+                <div class="card upload-cd glassy modal" id="upload-section" style="visibility: hidden; opacity: 0;">
+                    <div id="dialog-header" class="dialog-header">
+                        <div class="close-button-container">
+                            <button class="header-button close-button" id="upload-close-button"><i
+                                    class="bi bi-x"></i></button>
+                        </div>
+                    </div>
+                    <div class="card-head">
+                        <div>
+                            <h2>Foto Upload</h2>
+                        </div>
+                    </div>
+                    <div class="modal-container">
+                        <p id="lang-fields-hint" class="lang-fields-hint">Bitte fülle Titel und Beschreibung in
+                            beiden Sprachen aus.</p>
+                        <div class="lang-fields">
+                            <div class="lang-field-group">
+                                <span class="lang-field-label">
+                                    <img src="https://flagcdn.com/w20/de.png"
+                                        srcset="https://flagcdn.com/w40/de.png 2x" width="20" alt="Deutsch" />
+                                    Deutsch
+                                </span>
+                                <input id="title" class="image-title"
+                                    placeholder="Gib einen Titel für die Etappe an...">
+                                <textarea id="description" class="image-desc"
+                                    placeholder="Beschreibe, was wir erlebt haben..."></textarea>
+                            </div>
+                            <div class="lang-field-group">
+                                <span class="lang-field-label">
+                                    <img src="https://flagcdn.com/w20/es.png"
+                                        srcset="https://flagcdn.com/w40/es.png 2x" width="20" alt="Español" />
+                                    Español
+                                </span>
+                                <input id="title-es" class="image-title"
+                                    placeholder="Escribe un título para la etapa...">
+                                <textarea id="description-es" class="image-desc"
+                                    placeholder="Describe lo que vivimos..."></textarea>
+                            </div>
+                        </div>
+                        <div class="file-container">
+                            <label class="nav-button lg-button"><i class="bi bi-image"></i>
+                                <span class="file-label">
+                                    Bilder auswählen
+                                </span>
+                                <input type="file" id="images" class="file-input" multiple accept="image/*" />
+                            </label>
+                            <span id="file-info">Kein Bild ausgewählt</span>
+                        </div>
+                        <p id="mobile-gps-hint" class="mobile-gps-hint">Hinweis: Auf Mobilgeräten werden GPS-Standortdaten aus Datenschutzgründen oft automatisch aus Fotos entfernt. Falls keine Standortdaten gefunden werden, kannst du den Ort anschließend manuell auf der Karte markieren.</p>
+
+                        <button class="nav-button lg-button" id="uploadBtn"><i
+                                class="bi bi-cloud-arrow-up"></i>Upload</button>
+                        <div id="progressContainer" style="display:none; margin-top:16px;">
+                            <div class="progress-container">
+                                <div id="progressBar" class="progress-bar"></div>
+                            </div>
+                            <p id="progressText" style="margin-top:8px; font-size:14px;"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- <a href="https://www.flaticon.com/free-icons/photography" title="photography icons">Photography icons created by
+            Fahrul Oktaviana - Flaticon</a> -->
+    </div>
+
+    <script type="module" src="/src/page/main.ts"></script>
+</body>
+
+</html>

@@ -10,23 +10,23 @@ import { currentCountry, isEditMode } from "./map";
 import Split from "split.js";
 import { getUser, supabase } from "./supabase";
 import type { User } from "@supabase/supabase-js";
+import Swiper from "swiper";
+import {
+  Navigation,
+  Pagination,
+  Thumbs,
+  EffectCoverflow,
+} from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import "swiper/css/effect-coverflow";
 
-// leicht länger als die 0.5s CSS-Animationen, damit next/prev nicht
-// entfernt wird, bevor die "forwards"-Endzustände angewendet wurden
-// (sonst springen Bild/Text am Ende zurück in den Basiszustand)
-let timeRunning = 550;
-let runTimeOut: NodeJS.Timeout;
-let nextDom = document.getElementById("next");
-let prevDom = document.getElementById("prev");
-let carouselDom = document.querySelector(".gallery-container");
-let listItemDom = document.querySelector(
-  ".gallery-container .carousel-gallery",
-);
-let thumbnailDom = document.querySelector(
-  ".gallery-container .thumbnail-gallery",
-);
+// let nextDom = document.getElementById("next");
+// let prevDom = document.getElementById("prev");
 let gallerySplit: any = null;
 export let currentGalleryEntryId: string | null = null;
+export let currentGalleryTitle: string | null = null;
 export let currentGalleryDescription: string | null = null;
 let isImageFullscreen = false;
 
@@ -36,6 +36,8 @@ let activeCommentUser: Awaited<ReturnType<typeof getUser>> = null;
 let activeCommentIsAdmin = false;
 // preserved comments panel size (percentage) across resizes
 let lastCommentsSize: number | null = null;
+let swiper: Swiper | null = null;
+let thumbsSwiper: Swiper | null = null;
 
 type GalleryComment = {
   id: string;
@@ -58,140 +60,28 @@ type CommentActionElements = {
 };
 // type LayoutState = { comments: number };
 
-nextDom!.onclick = () => {
-  showSlider("next");
-};
-prevDom!.onclick = () => {
-  showSlider("prev");
-};
+// nextDom!.onclick = () => swiper?.slideNext();
+// prevDom!.onclick = () => swiper?.slidePrev();
 
 document.body.addEventListener("keydown", (event) => {
   const key = event.key;
-  if (!isEditMode) {
+  if (!isEditMode && swiper) {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest("input, textarea, select, [contenteditable='true']"))
+      return;
+
     switch (key) {
       case "ArrowLeft":
-        showSlider("prev");
+        swiper.slidePrev();
+        // showSlider("prev");
         break;
       case "ArrowRight":
-        showSlider("next");
+        swiper.slideNext();
+        // showSlider("next");
         break;
     }
   }
 });
-
-function showSlider(type: string) {
-  let itemSlider = document.querySelectorAll(
-    ".gallery-container .carousel-gallery .item",
-  );
-  let itemThumbnail = document.querySelectorAll(
-    ".gallery-container .thumbnail-gallery .item",
-  );
-
-  if (type === "next") {
-    if (itemSlider.length > 0) {
-      listItemDom?.appendChild(itemSlider[0]);
-    }
-    if (itemThumbnail.length > 0) {
-      thumbnailDom?.appendChild(itemThumbnail[0]);
-    }
-    carouselDom?.classList.add("next");
-  } else {
-    let positionLastItem = itemSlider.length - 1;
-    listItemDom?.prepend(itemSlider[positionLastItem]);
-    thumbnailDom?.prepend(itemThumbnail[positionLastItem]);
-    carouselDom?.classList.add("prev");
-  }
-
-  loadCarouselWindow();
-
-  clearTimeout(runTimeOut);
-  runTimeOut = setTimeout(() => {
-    carouselDom?.classList.remove("next");
-    carouselDom?.classList.remove("prev");
-  }, timeRunning);
-
-  void refreshCommentsForActivePhoto();
-}
-
-// Touch / swipe support for small touch devices
-let touchStartX = 0;
-let touchCurrentX = 0;
-// wird gesetzt, sobald während der Geste mehr als ein Finger beteiligt war
-// (Pinch-to-Zoom) - verhindert, dass das Ende einer Zoomgeste als Swipe
-// interpretiert wird und das Bild wechselt
-let isPinchGesture = false;
-const touchThreshold = 50; // px
-
-if (carouselDom) {
-  carouselDom.addEventListener(
-    "touchstart",
-    (e) => {
-      const touchEvent = e as TouchEvent;
-      if (!touchEvent.touches || touchEvent.touches.length === 0) return;
-      if (touchEvent.touches.length > 1) {
-        isPinchGesture = true;
-        return;
-      }
-      isPinchGesture = false;
-      touchStartX = touchEvent.touches[0].clientX;
-      touchCurrentX = touchStartX;
-    },
-    { passive: true },
-  );
-
-  carouselDom.addEventListener(
-    "touchmove",
-    (e) => {
-      const touchEvent = e as TouchEvent;
-      if (touchEvent.touches && touchEvent.touches.length > 1) {
-        isPinchGesture = true;
-        return;
-      }
-      if (isImageFullscreen || isPinchGesture) return;
-      if (!touchEvent.touches || touchEvent.touches.length === 0) return;
-      touchCurrentX = touchEvent.touches[0].clientX;
-    },
-    { passive: true },
-  );
-
-  carouselDom.addEventListener(
-    "touchend",
-    (e) => {
-      const touchEvent = e as TouchEvent;
-      // solange noch mindestens ein Finger auf dem Bildschirm ist, läuft die
-      // Geste (z.B. Pinch) noch weiter - keine Navigation auslösen
-      const stillTouching =
-        !!touchEvent.touches && touchEvent.touches.length > 0;
-      const wasPinch = isPinchGesture;
-      if (!stillTouching) {
-        isPinchGesture = false;
-      }
-
-      if (!stillTouching && !wasPinch && !isImageFullscreen) {
-        const dx = touchCurrentX - touchStartX;
-        if (Math.abs(dx) > touchThreshold) {
-          if (dx < 0) {
-            showSlider("next");
-          } else {
-            showSlider("prev");
-          }
-        }
-      }
-
-      touchStartX = 0;
-      touchCurrentX = 0;
-    },
-    { passive: true },
-  );
-
-  carouselDom.addEventListener("click", (event) => {
-    const target = event.target as HTMLElement;
-    const itemImg = target.closest(".item-img") as HTMLElement | null;
-    if (itemImg) {
-      toggleImageFullscreen();
-    }
-  });
-}
 
 function toggleImageFullscreen(force?: boolean) {
   const gallery = document.getElementById("photo-gallery");
@@ -209,7 +99,6 @@ function bindPhotoImage(
   brokenStateContainer: HTMLElement,
   src: string | null,
   photoId: string,
-  options: { lazy?: boolean } = {},
 ) {
   if (!src) {
     console.warn(`No usable image URL for photo ${photoId}`);
@@ -230,55 +119,46 @@ function bindPhotoImage(
     { once: true },
   );
 
-  if (options.lazy) {
-    // Quelle wird erst gesetzt, wenn das Bild ins Sichtfenster des Karussells
-    // rotiert (siehe loadCarouselWindow) - verhindert, dass bei Einträgen mit
-    // vielen Fotos sofort alle Vollbilder geladen werden. Das leere src aus dem
-    // Template entfernen, damit kein unnötiger Request/Fehler entsteht.
-    img.removeAttribute("src");
-    img.dataset.src = src;
-  } else {
-    img.src = src;
-  }
+  img.src = src;
 }
 
 // Nur das aktuell sichtbare Karussell-Bild und einige Nachbarn (per
 // DOM-Reihenfolge vorne bzw. hinten) tatsächlich laden.
-const CAROUSEL_PRELOAD_AHEAD = 4;
-const CAROUSEL_PRELOAD_BEHIND = 2;
+// const CAROUSEL_PRELOAD_AHEAD = 4;
+// const CAROUSEL_PRELOAD_BEHIND = 2;
 
-function loadCarouselWindow() {
-  const load = (item: HTMLElement | undefined) => {
-    const img = item?.querySelector("img") as HTMLImageElement | null;
-    if (img?.dataset.src) {
-      img.src = img.dataset.src;
-      delete img.dataset.src;
-    }
-  };
+// function loadCarouselWindow() {
+//   const load = (item: HTMLElement | undefined) => {
+//     const img = item?.querySelector("img") as HTMLImageElement | null;
+//     if (img?.dataset.src) {
+//       img.src = img.dataset.src;
+//       delete img.dataset.src;
+//     }
+//   };
 
-  const loadWindow = (items: NodeListOf<HTMLElement>) => {
-    if (items.length === 0) return;
+//   const loadWindow = (items: NodeListOf<HTMLElement>) => {
+//     if (items.length === 0) return;
 
-    const ahead = Math.min(CAROUSEL_PRELOAD_AHEAD, items.length);
-    for (let i = 0; i < ahead; i++) load(items[i]);
+//     const ahead = Math.min(CAROUSEL_PRELOAD_AHEAD, items.length);
+//     for (let i = 0; i < ahead; i++) load(items[i]);
 
-    const behind = Math.min(CAROUSEL_PRELOAD_BEHIND, items.length - ahead);
-    for (let i = 0; i < behind; i++) load(items[items.length - 1 - i]);
-  };
+//     const behind = Math.min(CAROUSEL_PRELOAD_BEHIND, items.length - ahead);
+//     for (let i = 0; i < behind; i++) load(items[items.length - 1 - i]);
+//   };
 
-  loadWindow(
-    document.querySelectorAll<HTMLElement>(
-      ".gallery-container .carousel-gallery .item",
-    ),
-  );
-  if (!getIsMobile()) {
-    loadWindow(
-      document.querySelectorAll<HTMLElement>(
-        ".gallery-container .thumbnail-gallery .item",
-      ),
-    );
-  }
-}
+//   loadWindow(
+//     document.querySelectorAll<HTMLElement>(
+//       ".gallery-container .carousel-gallery .item",
+//     ),
+//   );
+//   if (!getIsMobile()) {
+//     loadWindow(
+//       document.querySelectorAll<HTMLElement>(
+//         ".gallery-container .thumbnail-gallery .item",
+//       ),
+//     );
+//   }
+// }
 
 function getCommentAuthorName(user: GalleryUser) {
   const firstName = user?.user_metadata?.first_name?.trim() ?? "";
@@ -314,11 +194,15 @@ function canEditComment(comment: GalleryComment, currentUser: GalleryUser) {
 }
 
 function getActivePhotoIdFromGallery() {
-  const activeItem = document.querySelector(
-    ".gallery-container .carousel-gallery .item[data-photo-id]",
-  ) as HTMLElement | null;
+  const activeSlide = swiper?.slides[swiper.activeIndex] as
+    | HTMLElement
+    | undefined;
+  return activeSlide?.dataset.photoId ?? currentGalleryPhotoId ?? null;
+  // const activeItem = document.querySelector(
+  //   ".gallery-container .carousel-gallery .item[data-photo-id]",
+  // ) as HTMLElement | null;
 
-  return activeItem?.dataset.photoId ?? currentGalleryPhotoId ?? null;
+  // return activeItem?.dataset.photoId ?? currentGalleryPhotoId ?? null;
 }
 
 async function refreshCommentsForActivePhoto() {
@@ -354,14 +238,14 @@ async function loadCommentsForPhoto(
   }
 
   commentsList.innerHTML = "";
-  countBadge.replaceChildren();
+  // countBadge.replaceChildren();
 
   const commentNo = data?.length ?? 0;
   if (commentNo > 0) {
     const icon = document.createElement("i");
     icon.className =
       commentNo > 9 ? "bi bi-airplane-fill" : `bi bi-${commentNo}-circle-fill`;
-    countBadge.appendChild(icon);
+    // countBadge.appendChild(icon);
   }
 
   if (!data?.length) {
@@ -807,7 +691,7 @@ export async function loadPhotosOfMarker(entryId: string) {
   // Sprachwechsel ohne Reload auf die passende Sprache umschalten kann.
   const { data: entry, error: entryError } = await supabase
     .from("entries")
-    .select("title, description, title_es, description_es")
+    .select("title, description, title_es, description_es, created_at")
     .eq("id", entryId)
     .single();
 
@@ -815,8 +699,25 @@ export async function loadPhotosOfMarker(entryId: string) {
     console.error(entryError);
   }
 
+  const title = localizeEntryField(entry, "title");
   const description = localizeEntryField(entry, "description");
+  const date = new Date(entry!.created_at).toLocaleDateString(
+    getLanguageCode(getCurrentLanguage()),
+    {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    },
+  );
+  currentGalleryTitle = title;
   currentGalleryDescription = description;
+
+  setGalleryFields(
+    getCountryName(currentCountry!, getCurrentLanguage()),
+    title,
+    description,
+    date,
+  );
 
   const { data, error } = await supabase
     .from("photos")
@@ -835,6 +736,9 @@ export async function loadPhotosOfMarker(entryId: string) {
 }
 
 async function renderPhotos(photos: any[], description: string) {
+  const swiper = ensureSwiper();
+  if (!swiper) return;
+
   const gallery = document.getElementById("photo-gallery") as HTMLDivElement;
   const galleryHeader = document.getElementById(
     "gallery-title",
@@ -845,10 +749,10 @@ async function renderPhotos(photos: any[], description: string) {
   const showEditButton = role === "administrator" || role === "superuser";
   const currentUser = user;
 
-  galleryHeader.innerHTML = `<h2>${getCountryName(
-    currentCountry!,
-    getCurrentLanguage(),
-  )}</h2>`;
+  // galleryHeader.innerHTML = `<h2>${getCountryName(
+  //   currentCountry!,
+  //   getCurrentLanguage(),
+  // )}</h2>`;
 
   if (!showEditButton) {
     editButton.style.display = "none";
@@ -864,6 +768,14 @@ async function renderPhotos(photos: any[], description: string) {
   };
   document.body.onkeydown = (event) => {
     if (!isEditMode && event.key === "Escape") {
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.closest("input, textarea, select, [contenteditable='true']")
+      ) {
+        target.blur(); // erster Esc verlässt nur das Feld
+        return;
+      }
+
       if (isImageFullscreen) {
         toggleImageFullscreen(false);
       } else {
@@ -872,9 +784,9 @@ async function renderPhotos(photos: any[], description: string) {
     }
   };
 
-  const carouselGallery = document.getElementById(
-    "carousel-gallery",
-  ) as HTMLDivElement;
+  // const carouselGallery = document.getElementById(
+  //   "carousel-gallery",
+  // ) as HTMLDivElement;
   const thumbnailGallery = document.getElementById(
     "thumbnail-gallery",
   ) as HTMLDivElement;
@@ -902,10 +814,17 @@ async function renderPhotos(photos: any[], description: string) {
   const submitCommentButton = commentsPanel.querySelector(
     ".comments-submit",
   ) as HTMLButtonElement;
-  const firstPhoto = photos[0];
-  const total = photos.length;
-  carouselGallery.innerHTML = ""; // Clear previous photos
+
+  // const itemDate = document.getElementById("item-date") as HTMLDivElement;
+  // let itemDescription = document.getElementById("item-description") as HTMLTextAreaElement;
+
   thumbnailGallery.innerHTML = ""; // Clear previous thumbnails
+  // carouselGallery.innerHTML = ""; // Clear previous photos
+  const swiperWrapper = document.getElementById("swiper-wrapper");
+  if (swiperWrapper) swiperWrapper.innerHTML = "";
+
+  const firstPhoto = photos[0];
+  // const total = photos.length;
   gallery.classList.add("active");
   requestAnimationFrame(() => {
     initGallerySplit(0);
@@ -929,18 +848,16 @@ async function renderPhotos(photos: any[], description: string) {
     !!user && (role === "administrator" || role === "superuser");
   currentGalleryPhotoId = firstPhoto.id;
 
-  void refreshCommentsForActivePhoto();
+  // commentsToggle.title = t("commentsToggle");
 
-  commentsToggle.title = t("commentsToggle");
+  // commentsToggle.onclick = () => {
+  //   let isCommentOpen = gallerySplit.getSizes()[0] >= 2;
+  //   setCommentsPanelState(!isCommentOpen);
 
-  commentsToggle.onclick = () => {
-    let isCommentOpen = gallerySplit.getSizes()[0] >= 2;
-    setCommentsPanelState(!isCommentOpen);
-
-    if (isCommentOpen) {
-      void refreshCommentsForActivePhoto();
-    }
-  };
+  //   if (isCommentOpen) {
+  //     void refreshCommentsForActivePhoto();
+  //   }
+  // };
 
   submitCommentButton.onclick = async () => {
     const commentText = commentInput.value.trim();
@@ -982,204 +899,77 @@ async function renderPhotos(photos: any[], description: string) {
     isEditMode && (role === "administrator" || role === "superuser");
   const canDeletePhotos = isEditMode && role === "administrator";
 
-  const skipThumbnails = getIsMobile();
+  setupDescriptionEditing(description, canEditDescription);
 
-  photos.forEach((photo, index) => {
-    createPhoto(photo, index);
-    if (!skipThumbnails && index !== 0) createThumbnail(photo);
+  // const skipThumbnails = getIsMobile();
+
+  // photos.forEach((photo) => {
+  //   createPhoto(photo);
+  //   if (!skipThumbnails) createThumbnail(photo);
+  // });
+
+  photos.forEach((photo) => {
+    createPhoto(photo);
+    createThumbnail(photo);
   });
-  if (!skipThumbnails) createThumbnail(firstPhoto);
+
+  swiper.update();
+  thumbsSwiper?.update();
+  swiper.slideTo(0, 0);
+  void refreshCommentsForActivePhoto();
+  updateItemNo();
 
   // Erst jetzt (alle .item im DOM) die Bildquellen für das sichtbare Fenster
   // setzen; der Rest folgt beim Durchblättern.
-  loadCarouselWindow();
+  // loadCarouselWindow();
 
-  function createPhoto(photo: any, index: number) {
-    const itemTemplate = document.getElementById(
-      "gallery-item-template",
-    ) as HTMLTemplateElement;
-    const imgContainer = itemTemplate.content.firstElementChild!.cloneNode(
-      true,
-    ) as HTMLElement;
-    const img = imgContainer.querySelector("img") as HTMLImageElement;
-    const itemNo = imgContainer.querySelector(".item-no") as HTMLDivElement;
-    const itemDate = imgContainer.querySelector(".item-date") as HTMLDivElement;
-    let itemDescription = imgContainer.querySelector(
-      ".item-description",
-    ) as HTMLElement;
-    const itemMedia = imgContainer.querySelector(
-      ".item-media",
-    ) as HTMLDivElement;
-    const itemImg = imgContainer.querySelector(".item-img") as HTMLDivElement;
-    const itemContent = imgContainer.querySelector(
-      ".item-content",
-    ) as HTMLDivElement;
-    const takenAt = new Date(photo.taken_at).toLocaleDateString(
-      getLanguageCode(getCurrentLanguage()),
-      {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      },
-    );
+  function createPhoto(photo: any) {
+    const swiperWrapper = document.getElementById("swiper-wrapper");
+    const swiperSlide = document.createElement("div");
+    swiperSlide.className = "swiper-slide";
+    swiperSlide.dataset.photoId = photo.id;
 
-    bindPhotoImage(img, itemImg, photo.image_url, photo.id, { lazy: true });
-    img.alt = description;
-    itemNo.textContent = `${t("photoNumber")} ${index + 1} ${t("of")} ${total}`;
-    itemDate.textContent = takenAt;
+    const swiperSlideImg = document.createElement("img");
+    swiperSlideImg.loading = "lazy";
+    bindPhotoImage(swiperSlideImg, swiperSlide, photo.image_url, photo.id);
 
-    if (canEditDescription) {
-      const textarea = document.createElement("textarea");
-      textarea.value = description || "";
-      textarea.placeholder = t("editDescriptionPlaceholder");
-      textarea.rows = 4;
-      textarea.className = "item-description item-description-input";
-      itemContent.replaceChild(textarea, itemDescription);
-      itemDescription = textarea;
-    } else {
-      itemDescription.textContent = description || "";
-    }
-
-    imgContainer.classList.add("item");
-    imgContainer.dataset.photoId = photo.id;
-    itemMedia.classList.add("item-media");
-    itemImg.classList.add("item-img");
-    itemContent.classList.add("item-content");
-    itemNo.classList.add("item-no");
-    itemDate.classList.add("item-date");
-    itemDescription.classList.add("item-description");
-
-    carouselGallery.appendChild(imgContainer);
-
-    if (canEditDescription) {
-      const saveButton = document.createElement("button");
-      saveButton.className = "nav-button lg-button item-save-button";
-      saveButton.innerHTML = `<i class="bi bi-check"></i> ${t("save")}`;
-      saveButton.addEventListener("click", async () => {
-        const newDescription = (
-          itemDescription as HTMLTextAreaElement
-        ).value.trim();
-        if (!currentGalleryEntryId) return;
-
-        const { error } = await supabase
-          .from("entries")
-          .update({ [localizedEntryColumn("description")]: newDescription })
-          .eq("id", currentGalleryEntryId);
-
-        if (error) {
-          console.error("Error updating description:", error);
-          alert(t("errorSavingDescription"));
-          return;
-        }
-
-        currentGalleryDescription = newDescription;
-        const descriptionElements =
-          document.querySelectorAll(".item-description");
-        descriptionElements.forEach((element) => {
-          if (element instanceof HTMLTextAreaElement) {
-            element.value = newDescription;
-          } else {
-            element.textContent = newDescription;
-          }
-        });
-
-        alert(t("descriptionSaved"));
-      });
-      itemContent.appendChild(saveButton);
-    }
+    swiperSlide.appendChild(swiperSlideImg);
+    swiperWrapper?.appendChild(swiperSlide);
 
     if (canDeletePhotos) {
       const deleteButton = document.createElement("button");
       deleteButton.className = "image-delete-button";
       deleteButton.innerHTML = '<i class="bi bi-trash"></i>';
-      deleteButton.addEventListener("click", async (event) => {
+      deleteButton.addEventListener("click", (event) => {
         event.stopPropagation();
-        if (!confirm(t("confirmDeletePhoto"))) return;
-
-        const { error } = await supabase
-          .from("photos")
-          .delete()
-          .eq("id", photo.id);
-
-        if (error) {
-          console.error("Error deleting photo:", error);
-          alert(t("errorDeletingPhoto"));
-          return;
-        }
-
-        const removedPhoto = carouselGallery.querySelector(
-          `.item[data-photo-id="${photo.id}"]`,
-        );
-        const removedThumbnail = thumbnailGallery.querySelector(
-          `.item[data-photo-id="${photo.id}"]`,
-        );
-        removedPhoto?.remove();
-        removedThumbnail?.remove();
-
-        if (!carouselGallery.querySelector(".item")) {
-          closeGallery();
-        }
+        void deletePhotoAndRefresh(photo.id);
       });
-
-      itemImg.appendChild(deleteButton);
+      swiperSlide.appendChild(deleteButton);
     }
   }
 
   function createThumbnail(photo: any) {
-    const thumbTemplate = document.getElementById(
-      "thumbnail-template",
-    ) as HTMLTemplateElement;
-    const thumbItem = thumbTemplate.content.firstElementChild!.cloneNode(
-      true,
-    ) as HTMLElement;
-    const thumbImg = thumbItem.querySelector("img") as HTMLImageElement;
-    thumbImg.loading = "lazy";
-    bindPhotoImage(thumbImg, thumbItem, photo.thumbnail_url, photo.id, {
-      lazy: true,
-    });
-    thumbImg.alt = description;
-    thumbItem.classList.add("item");
+    const thumbItem = document.createElement("div");
+    thumbItem.className = "swiper-slide item";
     thumbItem.dataset.photoId = photo.id;
+
+    const thumbImg = document.createElement("img");
+    thumbImg.loading = "lazy";
+    thumbImg.alt = "";
+    bindPhotoImage(thumbImg, thumbItem, photo.thumbnail_url, photo.id);
+    thumbItem.appendChild(thumbImg);
 
     if (canDeletePhotos) {
       const deleteButton = document.createElement("button");
       deleteButton.className = "thumbnail-delete-button";
       deleteButton.innerHTML = '<i class="bi bi-trash"></i>';
-      deleteButton.addEventListener("click", async (event) => {
+      deleteButton.addEventListener("click", (event) => {
         event.stopPropagation();
-        if (!confirm(t("confirmDeletePhoto"))) return;
-
-        const { error } = await supabase
-          .from("photos")
-          .delete()
-          .eq("id", photo.id);
-
-        if (error) {
-          console.error("Error deleting photo:", error);
-          alert(t("errorDeletingPhoto"));
-          return;
-        }
-
-        const removedPhoto = carouselGallery.querySelector(
-          `.item[data-photo-id="${photo.id}"]`,
-        );
-        const removedThumbnail = thumbnailGallery.querySelector(
-          `.item[data-photo-id="${photo.id}"]`,
-        );
-        removedPhoto?.remove();
-        removedThumbnail?.remove();
-
-        if (!carouselGallery.querySelector(".item")) {
-          closeGallery();
-        }
+        void deletePhotoAndRefresh(photo.id);
       });
-
       thumbItem.appendChild(deleteButton);
     }
 
-    const thumbnailGallery = document.getElementById(
-      "thumbnail-gallery",
-    ) as HTMLDivElement;
     thumbnailGallery.appendChild(thumbItem);
   }
 
@@ -1194,14 +984,196 @@ async function renderPhotos(photos: any[], description: string) {
     // .item-content/.item-description mit pointer-events:auto über der Karte
     // liegen und blockiert dort die Interaktion, obwohl die Galerie
     // geschlossen (und unsichtbar) ist.
-    const carousel = document.getElementById("carousel-gallery");
+    // const carousel = document.getElementById("carousel-gallery");
     const thumbnails = document.getElementById("thumbnail-gallery");
-    if (carousel) carousel.innerHTML = "";
+    // if (carousel) carousel.innerHTML = "";
     if (thumbnails) thumbnails.innerHTML = "";
+
+    const swiperWrapper = document.getElementById("swiper-wrapper");
+    if (swiperWrapper) swiperWrapper.innerHTML = "";
+  }
+
+  async function deletePhotoAndRefresh(photoId: string) {
+    if (!confirm(t("confirmDeletePhoto"))) return;
+
+    const { error } = await supabase.from("photos").delete().eq("id", photoId);
+    if (error) {
+      console.error("Error deleting photo:", error);
+      alert(t("errorDeletingPhoto"));
+      return;
+    }
+
+    document
+      .getElementById("swiper-wrapper")
+      ?.querySelector(`.swiper-slide[data-photo-id="${photoId}"]`)
+      ?.remove();
+    thumbnailGallery
+      .querySelector(`.item[data-photo-id="${photoId}"]`)
+      ?.remove();
+
+    swiper?.update();
+    thumbsSwiper?.update();
+
+    if (
+      !document.getElementById("swiper-wrapper")?.querySelector(".swiper-slide")
+    ) {
+      closeGallery();
+    }
   }
 }
 
 function autoResizeCommentInput(el: HTMLTextAreaElement) {
   el.style.height = "auto";
   el.style.height = el.scrollHeight + "px";
+}
+function setGalleryFields(
+  country: string,
+  title: string,
+  description: string,
+  date: string,
+) {
+  const galleryCountry = document.getElementById(
+    "gallery-country",
+  ) as HTMLDivElement;
+  const galleryTitle = document.getElementById(
+    "gallery-title",
+  ) as HTMLDivElement;
+  const itemDescription = document.getElementById(
+    "item-description",
+  ) as HTMLDivElement;
+  const itemDate = document.getElementById("item-date") as HTMLDivElement;
+
+  galleryCountry.textContent = country;
+  galleryTitle.textContent = title;
+  itemDescription.textContent = description;
+  itemDate.textContent = date;
+}
+
+function ensureSwiper() {
+  if (swiper) return swiper;
+
+  const container = document.querySelector(".my-swiper");
+  if (!container) {
+    console.error("Swiper-Container .my-swiper nicht im DOM gefunden");
+    return null;
+  }
+
+  const thumbsContainer = document.querySelector(".thumbs-swiper");
+  if (thumbsContainer) {
+    // thumbsSwiper = new Swiper(".thumbs-swiper", {
+    //   slidesPerView: "auto",
+    //   spaceBetween: 10,
+    //   freeMode: true,
+    //   watchSlidesProgress: true,
+    // });
+    thumbsSwiper = new Swiper(".thumbs-swiper", {
+      slidesPerView: 4,
+      spaceBetween: 8,
+      watchSlidesProgress: true,
+      breakpoints: {
+        480: { slidesPerView: 5 },
+        640: { slidesPerView: 6 },
+        768: { slidesPerView: 7 },
+        // ab hier Desktop-Layout: die Bildspalte ist schmaler
+        1024: { slidesPerView: 5, spaceBetween: 10 },
+        1280: { slidesPerView: 7 },
+        1440: { slidesPerView: 8 },
+        1920: { slidesPerView: 10 },
+      },
+    });
+  }
+
+  swiper = new Swiper(".my-swiper", {
+    modules: [Navigation, Pagination, Thumbs],
+    slidesPerView: 1,
+    spaceBetween: 12,
+    grabCursor: true,
+    navigation: {
+      nextEl: ".my-swiper .swiper-button-next",
+      prevEl: ".my-swiper .swiper-button-prev",
+    },
+    pagination: {
+      el: ".my-swiper .swiper-pagination",
+      type: "bullets",
+      clickable: true,
+    },
+    thumbs: thumbsSwiper ? { swiper: thumbsSwiper } : undefined,
+  });
+
+  swiper.on("click", (_swiperInstance, event) => {
+    const target = event.target as HTMLElement;
+    if (target.closest(".image-delete-button")) return;
+    toggleImageFullscreen();
+  });
+
+  swiper.on("slideChange", () => {
+    void refreshCommentsForActivePhoto();
+    updateItemNo();
+  });
+
+  return swiper;
+}
+
+function updateItemNo() {
+  const itemNo = document.getElementById("item-no") as HTMLDivElement | null;
+  if (!itemNo || !swiper) return;
+  itemNo.textContent = `${t("photoNumber")} ${swiper.activeIndex + 1} ${t("of")} ${swiper.slides.length}`;
+}
+
+function setupDescriptionEditing(
+  description: string,
+  canEditDescription: boolean,
+) {
+  document.getElementById("item-description-save")?.remove();
+
+  let field = document.querySelector(
+    "#gallery-description .item-description",
+  ) as HTMLElement | null;
+  if (!field) return;
+
+  if (canEditDescription) {
+    if (field.tagName !== "TEXTAREA") {
+      const textarea = document.createElement("textarea");
+      textarea.id = "item-description";
+      textarea.className = "item-description item-description-input";
+      textarea.rows = 4;
+      textarea.placeholder = t("editDescriptionPlaceholder");
+      field.replaceWith(textarea);
+      field = textarea;
+    }
+    (field as HTMLTextAreaElement).value = description || "";
+
+    const saveButton = document.createElement("button");
+    saveButton.id = "item-description-save";
+    saveButton.className = "nav-button lg-button item-save-button";
+    saveButton.innerHTML = `<i class="bi bi-check"></i> ${t("save")}`;
+    saveButton.addEventListener("click", async () => {
+      const newDescription = (field as HTMLTextAreaElement).value.trim();
+      if (!currentGalleryEntryId) return;
+
+      const { error } = await supabase
+        .from("entries")
+        .update({ [localizedEntryColumn("description")]: newDescription })
+        .eq("id", currentGalleryEntryId);
+
+      if (error) {
+        console.error("Error updating description:", error);
+        alert(t("errorSavingDescription"));
+        return;
+      }
+
+      currentGalleryDescription = newDescription;
+      alert(t("descriptionSaved"));
+    });
+    field.insertAdjacentElement("afterend", saveButton);
+  } else {
+    if (field.tagName === "TEXTAREA") {
+      const div = document.createElement("div");
+      div.id = "item-description";
+      div.className = "item-description";
+      field.replaceWith(div);
+      field = div;
+    }
+    field.textContent = description || "";
+  }
 }

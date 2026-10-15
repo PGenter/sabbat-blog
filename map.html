@@ -10,7 +10,8 @@
     <meta name="apple-mobile-web-app-title" content="Koala, Kiwi and Coconut" />
     <meta name="theme-color" content="#ffffff" />
     <link rel="stylesheet" href="src/style.css">
-    <link rel="stylesheet" href="src/gallery.css">
+    <link rel="stylesheet" href="src/swiper-gallery.css">
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@14.0.1/swiper-bundle.min.css" /> -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow">
     <title>Koala, Kiwi and Coconut</title>
@@ -19,9 +20,39 @@
 <body>
     <div class="main_wrapper">
         <div id="modal-backdrop" class="modal-backdrop"></div>
+        <!--Beginn Gallery-->
         <div id="photo-gallery" class="photo-gallery">
-            <div id="comments-shell" class="comments-shell">
-                <aside id="comments-panel" class="comments-panel">
+            <div id="gallery-header" class="gallery-header">
+                <div class="photo-header">
+                    <div id="gallery-country" class="gallery-country"></div>
+                </div>
+                <div class="close-button-container">
+                    <button class="galleryheader-button" id="edit-gallery" title="Einträge bearbeiten"><i
+                            class="bi bi-pencil-square"></i></button>
+                    <button class="galleryheader-button" id="close-button"><i class="bi bi-x-lg"></i></button>
+                </div>
+            </div>
+            <div id="gallery-description" class="gallery-description">
+                <div id="gallery-title" class="gallery-title"></div>
+                <div id="item-date" class="item-date"></div>
+                <div class="item-content">
+                    <div id="item-description" class="item-description"></div>
+                </div>
+            </div>
+            <div id="gallery-container" class="gallery-container">
+                <div class="swiper my-swiper">
+                    <div class="swiper-wrapper" id="swiper-wrapper"></div>
+                    <div id="item-no" class="item-no"></div>
+                    <div class="swiper-button-prev"></div>
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-pagination"></div>
+                </div>
+                <div class="swiper thumbs-swiper">
+                    <div class="swiper-wrapper" id="thumbnail-gallery"></div>
+                </div>
+            </div>
+            <div id="gallery-comments" class="gallery-comments">
+                <div id="comments-panel" class="comments-panel">
                     <div class="comments-header">
                         <span id="comments-toggle-label" class="comments-toggle-label">Kommentare</span>
                     </div>
@@ -36,27 +67,11 @@
                             <div class="comments-empty">Noch keine Kommentare</div>
                         </div>
                     </div>
-                </aside>
-            </div>
-            <div id="gallery-shell" class="gallery-shell">
-                <div id="comment-button" class="comment-button">
-                    <button class="comments-toggle" type="button">
-                        <span class="comments-toggle-button"><i class="bi bi-chat-left-text-fill"></i></span>
-                        <span class="comments-toggle-number"></span>
-                    </button>
                 </div>
+            </div>
+            <!-- <div id="comments-shell" class="comments-shell"></div> -->
+            <!-- <div id="gallery-shell" class="gallery-shell" style="display: none;">
                 <div id="gallery-layout">
-                    <div id="gallery-header" class="gallery-header">
-                        <div id="gallery-title" class="photo-header">
-                            <h2>Foto Galerie</h2>
-                        </div>
-                        <div class="close-button-container">
-                            <button class="galleryheader-button" id="edit-gallery" title="Einträge bearbeiten"><i
-                                    class="bi bi-pencil-square"></i></button>
-                            <button class="galleryheader-button" id="close-button"><i class="bi bi-x-lg"></i></button>
-                        </div>
-                    </div>
-
                     <div class="gallery-container">
                         <template id="gallery-item-template">
                             <div class="item">
@@ -64,11 +79,7 @@
                                     <div class="item-img">
                                         <img src="" alt="" />
                                     </div>
-                                    <div class="item-content">
-                                        <div class="item-no"></div>
-                                        <div class="item-date"></div>
-                                        <div class="item-description"></div>
-                                    </div>
+
                                 </div>
                             </div>
                         </template>
@@ -90,8 +101,10 @@
                     </div>
 
                 </div>
-            </div>
+            </div> -->
         </div>
+        <!--Ende Gallery-->
+
         <div class="map_wrapper">
             <div id="map" class="map-container"></div>
         </div>
@@ -184,8 +197,8 @@
                         <div class="lang-fields">
                             <div class="lang-field-group">
                                 <span class="lang-field-label">
-                                    <img src="https://flagcdn.com/w20/de.png"
-                                        srcset="https://flagcdn.com/w40/de.png 2x" width="20" alt="Deutsch" />
+                                    <img src="https://flagcdn.com/w20/de.png" srcset="https://flagcdn.com/w40/de.png 2x"
+                                        width="20" alt="Deutsch" />
                                     Deutsch
                                 </span>
                                 <input id="title" class="image-title"
@@ -195,8 +208,8 @@
                             </div>
                             <div class="lang-field-group">
                                 <span class="lang-field-label">
-                                    <img src="https://flagcdn.com/w20/es.png"
-                                        srcset="https://flagcdn.com/w40/es.png 2x" width="20" alt="Español" />
+                                    <img src="https://flagcdn.com/w20/es.png" srcset="https://flagcdn.com/w40/es.png 2x"
+                                        width="20" alt="Español" />
                                     Español
                                 </span>
                                 <input id="title-es" class="image-title"
@@ -214,7 +227,10 @@
                             </label>
                             <span id="file-info">Kein Bild ausgewählt</span>
                         </div>
-                        <p id="mobile-gps-hint" class="mobile-gps-hint">Hinweis: Auf Mobilgeräten werden GPS-Standortdaten aus Datenschutzgründen oft automatisch aus Fotos entfernt. Falls keine Standortdaten gefunden werden, kannst du den Ort anschließend manuell auf der Karte markieren.</p>
+                        <p id="mobile-gps-hint" class="mobile-gps-hint">Hinweis: Auf Mobilgeräten werden
+                            GPS-Standortdaten aus Datenschutzgründen oft automatisch aus Fotos entfernt. Falls keine
+                            Standortdaten gefunden werden, kannst du den Ort anschließend manuell auf der Karte
+                            markieren.</p>
 
                         <button class="nav-button lg-button" id="uploadBtn"><i
                                 class="bi bi-cloud-arrow-up"></i>Upload</button>

@@ -83,15 +83,15 @@ export async function initMap() {
 
   markerCluster = L.markerClusterGroup({
     showCoverageOnHover: false,
-    maxClusterRadius: 50,
+    maxClusterRadius: 30,
     iconCreateFunction: (cluster) => {
       const children = cluster.getAllChildMarkers();
-      console.log(
-        "visitedMarkers:",
-        visitedMarkers.size,
-        "child ids:",
-        children.map((m) => (m.options as any).entryId),
-      );
+      // console.log(
+      //   "visitedMarkers:",
+      //   visitedMarkers.size,
+      //   "child ids:",
+      //   children.map((m) => (m.options as any).entryId),
+      // );
       const unvisitedCount = children.filter(
         (m) => !visitedMarkers.has((m.options as any).entryId),
       ).length;
@@ -117,14 +117,14 @@ export async function initMap() {
   map.addLayer(markerCluster);
 
   routeGlow = L.polyline([], {
-    color: "#bfe264",
+    color: "linear-gradient(90deg,rgba(235, 240, 233, 1) 0%, rgba(191, 226, 100, 1) 100%)",
     opacity: 0.2,
     weight: 10,
     lineCap: "round",
     lineJoin: "round",
   }).addTo(map);
   routeLine = L.polyline([], {
-    color: "#bfe264",
+    color: "linear-gradient(90deg,rgba(235, 240, 233, 1) 0%, rgba(191, 226, 100, 1) 100%)",
     opacity: 1,
     weight: 3,
     lineCap: "round",
@@ -250,7 +250,7 @@ function animateRoute(entries: any[]) {
   let segmentIndex = 0;
   let progress = 0;
 
-  const speed = 0.05; // kleiner = langsamer, größer = schneller
+  const speed = 0.08; // kleiner = langsamer, größer = schneller
 
   let currentLatLngs: L.LatLngExpression[] = [points[0]];
 
