@@ -449,6 +449,15 @@ button {
   pointer-events: none;
 }
 
+.marker-cluster.cluster-visited {
+  background-color: rgba(110, 204, 57, 0.4);
+}
+.marker-cluster.cluster-visited div {
+  background-color: rgba(110, 204, 57, 0.6);
+  color: #222;
+  box-shadow: 0 0 0 3px rgba(110, 204, 57, 0.2);
+}
+
 .marker-cluster.cluster-unvisited {
   background-color: rgba(255, 115, 0, 0.4);
 }

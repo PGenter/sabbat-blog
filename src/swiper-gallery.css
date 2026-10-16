@@ -241,9 +241,9 @@ to take effect, as the specificity is the same */
 
 .item-description {
   margin: 0;
-  max-height: 5.5em;
+  max-height: 5em;
   overflow-y: auto;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.45;
   color: #2b2b28;
   white-space: pre-line;
@@ -307,7 +307,7 @@ to take effect, as the specificity is the same */
 
 .my-swiper .swiper-slide {
   height: auto;
-  max-height: 40dvh;
+  max-height: 36dvh;
   aspect-ratio: 1.06 / 1;
   overflow: hidden;
   background: var(--gallery-track);
@@ -994,6 +994,7 @@ to take effect, as the specificity is the same */
  
   .item-description {
     max-height: 10em;
+    font-size: 14px;
   }
  
   /* ---------- Bildbereich ---------- */

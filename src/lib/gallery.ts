@@ -11,18 +11,13 @@ import Split from "split.js";
 import { getUser, supabase } from "./supabase";
 import type { User } from "@supabase/supabase-js";
 import Swiper from "swiper";
-import {
-  Navigation,
-  Pagination,
-  Thumbs,
-} from "swiper/modules";
+import { Navigation, Pagination, Thumbs, Zoom } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import "swiper/css/effect-coverflow";
+import "swiper/css/zoom";
+// import "swiper/css/effect-coverflow";
 
-// let nextDom = document.getElementById("next");
-// let prevDom = document.getElementById("prev");
 let gallerySplit: any = null;
 export let currentGalleryEntryId: string | null = null;
 export let currentGalleryTitle: string | null = null;
@@ -86,6 +81,7 @@ function toggleImageFullscreen(force?: boolean) {
   const gallery = document.getElementById("photo-gallery");
   if (!gallery) return;
 
+  swiper?.zoom?.out();
   isImageFullscreen = force ?? !isImageFullscreen;
   gallery.classList.toggle("image-fullscreen", isImageFullscreen);
 }
@@ -932,7 +928,13 @@ async function renderPhotos(photos: any[], description: string) {
     swiperSlideImg.loading = "lazy";
     bindPhotoImage(swiperSlideImg, swiperSlide, photo.image_url, photo.id);
 
-    swiperSlide.appendChild(swiperSlideImg);
+    // swiperSlide.appendChild(swiperSlideImg);
+    // swiperWrapper?.appendChild(swiperSlide);
+
+    const zoomContainer = document.createElement("div");
+    zoomContainer.className = "swiper-zoom-container";
+    zoomContainer.appendChild(swiperSlideImg);
+    swiperSlide.appendChild(zoomContainer);
     swiperWrapper?.appendChild(swiperSlide);
 
     if (canDeletePhotos) {
@@ -1083,7 +1085,8 @@ function ensureSwiper() {
   }
 
   swiper = new Swiper(".my-swiper", {
-    modules: [Navigation, Pagination, Thumbs],
+    modules: [Navigation, Pagination, Thumbs, Zoom],
+    zoom: { maxRatio: 3, toggle: false },
     slidesPerView: 1,
     spaceBetween: 12,
     grabCursor: true,
@@ -1102,6 +1105,7 @@ function ensureSwiper() {
   swiper.on("click", (_swiperInstance, event) => {
     const target = event.target as HTMLElement;
     if (target.closest(".image-delete-button")) return;
+    if (swiper && swiper.zoom.scale > 1) return;
     toggleImageFullscreen();
   });
 
