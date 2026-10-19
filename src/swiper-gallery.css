@@ -455,14 +455,11 @@ to take effect, as the specificity is the same */
   margin-top: 4px;
 }
 
-.thumbs-swiper:has(.swiper-wrapper:empty) {
-  display: none; /* Mobile: es werden keine Thumbs erzeugt */
-}
-
 .thumbs-swiper .swiper-slide {
   /* width: 76px; */
-  height: auto;
-  aspect-ratio: 16 / 10;
+  /* height: auto;
+  aspect-ratio: 16 / 10; */
+  height:52px;
   overflow: hidden;
   cursor: pointer;
   background: var(--gallery-track);

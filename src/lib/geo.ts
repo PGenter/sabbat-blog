@@ -30,14 +30,14 @@ export const COUNTRIES = {
     name: { german: "Australien", spanish: "Australia" },
     center: [-31, 148],
     zoom: 5,
-    geo: () => import("../geo/AU.json"),
+    geo: () => import("../geo/AU_small.json"),
     img: "../../assets/AU-32.jpg",
   },
   TAS: {
     name: { german: "Tasmanien", spanish: "Tasmania" },
     center: [-43, 147.5],
     zoom: 9,
-    geo: () => import("../geo/TAS.json"),
+    geo: () => import("../geo/TAS_small.json"),
     img: "../../assets/TAS-32.jpg",
   },
   NZ: {
