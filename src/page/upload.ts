@@ -163,7 +163,7 @@ export async function startUpload() {
         // Bild komprimieren
         // FULL VERSION
         const fullImage = await imageCompression(compressibleFile, {
-          maxWidthOrHeight: 1024,
+          maxWidthOrHeight: 1920,
           initialQuality: 0.8,
           useWebWorker: true,
         });
