@@ -293,6 +293,10 @@ const initialLanguage = getStoredLanguage() || userLanguage;
 setLanguage(initialLanguage);
 updateLanguageToggleIcon(initialLanguage);
 applyTranslations();
+// Loader-Text aus i18n.ts (die Sprache aus dem Nutzerprofil kann von der
+// gespeicherten abweichen, die das Inline-Skript in map.html verwendet)
+const loaderText = document.getElementById("app-loader-text");
+if (loaderText) loaderText.textContent = t("appLoading");
 await startUpload();
 
 await initMap();

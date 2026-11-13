@@ -22,8 +22,23 @@
 <body>
     <div id="app-loader" class="app-loader" role="status" aria-live="polite">
         <div class="app-loader__spinner" aria-hidden="true"></div>
-        <span>Karte wird geladen …</span>
+        <span id="app-loader-text">Karte wird geladen …</span>
     </div>
+    <script>
+        // Sprache des Loaders sofort setzen, noch bevor das App-Skript geladen
+        // ist (sonst steht kurz der deutsche Text da). Gleiche Logik wie in
+        // i18n.ts: gespeicherte Sprache, sonst Browsersprache. Die App setzt
+        // den Text danach noch einmal aus i18n.ts (Schlüssel appLoading).
+        (function () {
+            var lang = null;
+            try { lang = localStorage.getItem("sabbat-blog-language"); } catch (e) { }
+            if (!lang && (navigator.language || "").slice(0, 2).toLowerCase() === "es") lang = "spanish";
+            if (lang === "spanish") {
+                document.getElementById("app-loader-text").textContent = "Cargando el mapa …";
+                document.documentElement.lang = "es";
+            }
+        })();
+    </script>
     <div class="main_wrapper">
         <div id="modal-backdrop" class="modal-backdrop"></div>
         <!--Beginn Gallery-->

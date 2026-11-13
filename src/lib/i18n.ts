@@ -115,6 +115,8 @@ const translations = {
     entryListEmpty: "Keine Stationen in dieser Ansicht",
     entryListToggle: "Stationsliste ein- oder ausklappen",
     entryListSelectCountry: "Land auswählen",
+    // Start-Loader (erste Anzeige setzt das Inline-Skript in map.html)
+    appLoading: "Karte wird geladen …",
   },
   spanish: {
     cancel: "Cancelar",
@@ -229,6 +231,8 @@ const translations = {
     entryListEmpty: "No hay estaciones en esta vista",
     entryListToggle: "Mostrar u ocultar la lista de estaciones",
     entryListSelectCountry: "Elegir país",
+    // Start-Loader (erste Anzeige setzt das Inline-Skript in map.html)
+    appLoading: "Cargando el mapa …",
   },
 } as const;
 

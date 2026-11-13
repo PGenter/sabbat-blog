@@ -83,6 +83,9 @@ export let isEditMode = false;
 let activeEntryId: string | null = null;
 let baselineEntryId: string | null = null;
 let pendingFocusId: string | null = null;
+// Nach dem Laden die neueste Station des Landes fokussieren (Länderwechsel)
+let pendingFocusNewest = false;
+let keepVisibleTimer: number | undefined;
 let focusedEntryId: string | null = null;
 // verwirft veraltete Flüge, wenn schnell hintereinander navigiert wird
 let focusToken = 0;
@@ -298,9 +301,10 @@ export function selectCountry(
   const config = COUNTRIES[normalizedCountry];
   if (!config) return;
 
-  if (flyTo) {
-    centerOn(config.center, { zoom: config.zoom });
-  }
+  // Nicht sofort zum Landesmittelpunkt fliegen: Der Versatz für die Liste
+  // hängt von deren Höhe ab, und die steht erst fest, wenn die Stationen des
+  // neuen Landes geladen sind. Danach wird die neueste Station angeflogen.
+  pendingFocusNewest = flyTo;
 
   markersLoading = loadMarkersInView();
   void setCardText(normalizedCountry);
@@ -379,7 +383,17 @@ function getVisibleMapRect() {
 // Liegt der Marker außerhalb der Karte (vom Nutzer weggeschoben), bleibt alles,
 // wie es ist.
 function keepFocusedEntryVisible() {
-  if (!map || Date.now() < suppressSyncUntil) return;
+  if (!map) return;
+
+  // Während eines programmatischen Flugs nicht eingreifen, aber danach erneut
+  // prüfen – sonst bleibt der Marker verdeckt, wenn sich die Liste während
+  // des Flugs in der Höhe ändert.
+  window.clearTimeout(keepVisibleTimer);
+  const wait = suppressSyncUntil - Date.now();
+  if (wait > 0) {
+    keepVisibleTimer = window.setTimeout(keepFocusedEntryVisible, wait + 50);
+    return;
+  }
 
   const id = focusedEntryId ?? activeEntryId ?? baselineEntryId;
   const item = id ? entryItems.get(id) : undefined;
@@ -856,10 +870,25 @@ async function loadMarkersInView() {
 
   syncEntryList();
 
-  // Beim Start: neueste Station hervorheben und fokussieren.
+  // Beim Start bzw. nach einem Länderwechsel: neueste Station hervorheben und
+  // fokussieren. Beim Start ohne Animation, beim Wechsel mit Flug.
+  const newestId =
+    [...entryItems.values()].sort((a, b) => b.number - a.number)[0]?.id ?? null;
+  const animateFocus = pendingFocusNewest;
   const initialFocusId =
-    pendingFocusId && entryItems.has(pendingFocusId) ? pendingFocusId : null;
+    pendingFocusId && entryItems.has(pendingFocusId)
+      ? pendingFocusId
+      : pendingFocusNewest
+        ? newestId
+        : null;
   pendingFocusId = null;
+  pendingFocusNewest = false;
+
+  // Land ohne Stationen: wenigstens den Landesmittelpunkt zeigen
+  if (animateFocus && !initialFocusId) {
+    const config = COUNTRIES[currentCountry as CountryCode];
+    if (config) centerOn(config.center, { zoom: config.zoom });
+  }
   if (initialFocusId) {
     baselineEntryId = initialFocusId;
     activeEntryId = initialFocusId;
@@ -872,7 +901,7 @@ async function loadMarkersInView() {
     // erst nach dem Layout der Liste zentrieren, weil deren Höhe den
     // sichtbaren Kartenbereich bestimmt
     requestAnimationFrame(() =>
-      focusEntry(initialFocusId, { zoom: FOCUS_ZOOM, animate: false }),
+      focusEntry(initialFocusId, { zoom: FOCUS_ZOOM, animate: animateFocus }),
     );
   }
 

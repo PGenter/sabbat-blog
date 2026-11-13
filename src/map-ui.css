@@ -317,6 +317,16 @@
     bottom: calc(100% + 6px);
     max-height: min(50dvh, 420px);
   }
+
+  /* Die Liste klappt hier nach unten zu und nach oben auf: offen zeigt der
+     Chevron nach unten (minimieren), eingeklappt nach oben (maximieren). */
+  .entry-panel.is-open .entry-panel__collapse i {
+    transform: rotate(180deg);
+  }
+
+  .entry-panel:not(.is-open) .entry-panel__collapse i {
+    transform: none;
+  }
 }
 
 /* Einklappen: Zeilenhöhe von 1fr auf 0fr animieren */
