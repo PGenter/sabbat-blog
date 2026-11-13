@@ -1,0 +1,897 @@
+/* ==========================================================================
+   map-ui.css
+   Wird in map.html NACH theme.css, style.css und swiper-gallery.css eingebunden.
+   Enthält: Theme-Angleichung an die Galerie, Stationsliste, Marker,
+   Tooltips, Rundbuttons und Modaldialoge.
+   ========================================================================== */
+
+/* ---------- Theme und Schrift (Tokens kommen aus theme.css) ---------- */
+
+:root {
+  --app-font: var(
+    --gallery-font,
+    "Roboto",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif
+  );
+
+  color-scheme: light;
+  color: var(--gallery-text);
+  background-color: var(--gallery-background);
+  font-family: var(--app-font);
+
+  /* Die alten Variablen aus style.css zeigen auf die Galerie-Palette,
+     damit bestehende Regeln (Buttons, Slider, Banner) automatisch passen. */
+  --primary-color: var(--gallery-accent);
+  --primary-color-light: var(--gallery-surface);
+  --secondary-background-color: var(--gallery-background);
+  --inactive-background-color: var(--gallery-track);
+
+  /* Neue (unbesuchte) Stationen: Pink als Gegenpol zu Lime.
+     Gilt für Marker, Cluster, Tooltips, Badges in Liste und Länderauswahl.
+     Alternativen: #ff6b8b (Korallenpink), #f03ea0 (Fuchsia), #ff9ccb (Bubblegum)
+     – beim Wechsel auch --entry-new-halo mit denselben RGB-Werten anpassen. */
+  --entry-new-color: #ff9ccb;
+  --entry-new-text: var(--gallery-text);
+  --entry-new-halo: rgba(255, 156, 203, 0.35);
+  --entry-new-bg: #ffeff6;
+  --entry-new-bg: color-mix(in srgb, var(--entry-new-color) 10%, #fff);
+
+  /* Bereits besuchte Stationen: helles Lime */
+  --entry-visited-color: #f3f9d6;
+  --entry-visited-border: #d3e88a;
+
+  /* gewähltes Land in der Auswahl */
+  --entry-selected-bg: #f3f9d6;
+  --entry-active-bg: #eaf7a6;
+  --entry-active-bg: color-mix(in srgb, var(--gallery-accent) 50%, #fff);
+}
+
+.leaflet-container,
+.leaflet-tooltip,
+.leaflet-popup-content {
+  font-family: inherit;
+}
+
+/* ==========================================================================
+   Stationsliste
+   Portrait: Bottom-Sheet über der Karte, Querformat/Desktop: Seitenleiste
+   ========================================================================== */
+
+.entry-panel {
+  --entry-panel-gap: 12px;
+  position: absolute;
+  left: var(--entry-panel-gap);
+  right: var(--entry-panel-gap);
+  /* früher + 2.5rem Platz für die Slider-Leiste */
+  bottom: var(--entry-panel-gap);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  max-height: min(42dvh, 400px);
+  color: var(--gallery-text);
+  background: var(--gallery-surface);
+  border: 1px solid var(--gallery-border);
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(17, 17, 17, 0.14);
+  pointer-events: auto;
+}
+
+.entry-panel,
+.entry-panel *,
+.entry-panel *::before,
+.entry-panel *::after {
+  box-sizing: border-box;
+}
+
+.entry-panel__inner {
+  border-radius: 0 0 23px 23px;
+  /* … bestehende Eigenschaften bleiben */
+}
+
+@media (orientation: landscape) {
+  .entry-panel {
+    right: auto;
+    bottom: auto;
+    top: var(--entry-panel-gap);
+    width: clamp(300px, 36vw, 380px);
+    max-height: calc(100dvh - 2 * var(--entry-panel-gap));
+  }
+}
+
+@media (min-width: 1024px) {
+  .entry-panel {
+    --entry-panel-gap: 2rem;
+    top: 2rem;
+    left: 2rem;
+    width: clamp(340px, 26vw, 440px);
+    max-height: calc(100dvh - 2rem - 2rem);
+  }
+}
+
+/* Kopfzeile: Länderauswahl + Einklapp-Button */
+.entry-panel__head {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  margin: 10px 10px 8px;
+}
+
+.entry-panel__header {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 8px 12px;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: var(--gallery-background);
+  border: 1px solid var(--gallery-border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.entry-panel__header:hover,
+.entry-panel__collapse:hover {
+  background: color-mix(in srgb, var(--gallery-accent) 18%, #fff);
+}
+
+.entry-panel__header:focus-visible,
+.entry-panel__collapse:focus-visible,
+.entry-country:focus-visible,
+.entry-tab:focus-visible,
+.entry-item:focus-visible {
+  outline: 2px solid var(--gallery-text);
+  outline-offset: 2px;
+}
+
+.entry-panel [hidden] {
+  display: none !important;
+}
+
+.entry-panel__flag {
+  display: grid;
+  flex: none;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  font-size: 1.1rem;
+}
+
+.entry-panel__flag img {
+  display: block;
+  width: 32px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: 5px;
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.12);
+}
+
+.entry-panel__heading {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.entry-panel__eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gallery-text-muted);
+}
+
+.entry-panel__country {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Chevron zeigt, ob die Länderauswahl offen ist */
+.entry-panel__chevron {
+  flex: none;
+  transition: transform 0.3s ease;
+}
+
+.entry-panel.is-menu-open .entry-panel__chevron {
+  transform: rotate(180deg);
+}
+
+/* Einklapp-Button für die Liste */
+.entry-panel__collapse {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  padding: 0;
+  font-size: 1rem;
+  color: inherit;
+  background: var(--gallery-background);
+  border: 1px solid var(--gallery-border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.entry-panel__collapse i {
+  transition: transform 0.3s ease;
+}
+
+.entry-panel:not(.is-open) .entry-panel__collapse i {
+  transform: rotate(180deg);
+}
+
+/* Länderauswahl */
+.entry-country-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: min(60dvh, 420px);
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--gallery-surface);
+  border: 1px solid var(--gallery-border);
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(17, 17, 17, 0.18);
+}
+
+.entry-country {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  font: 500 14px/1.2 var(--app-font);
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.entry-country:hover {
+  background: var(--gallery-background);
+}
+
+.entry-country[aria-selected="true"] {
+  font-weight: 700;
+  background: var(--entry-selected-bg);
+}
+
+.entry-country__flag {
+  flex: none;
+  width: 28px;
+  height: 21px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.12);
+}
+
+.entry-country__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entry-country__total {
+  flex: none;
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--gallery-text-muted);
+}
+
+.entry-country__new {
+  flex: none;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--entry-new-text);
+  background: var(--entry-new-color);
+  border-radius: 999px;
+}
+
+/* Hochformat: Liste liegt unten, die Auswahl öffnet deshalb nach oben */
+@media (orientation: portrait) and (max-width: 1023px) {
+  .entry-country-menu {
+    top: auto;
+    bottom: calc(100% + 6px);
+    max-height: min(50dvh, 420px);
+  }
+}
+
+/* Einklappen: Zeilenhöhe von 1fr auf 0fr animieren */
+.entry-panel__body {
+  display: grid;
+  flex: 0 1 auto;
+  grid-template-rows: 1fr;
+  min-height: 0;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.entry-panel:not(.is-open) .entry-panel__body {
+  grid-template-rows: 0fr;
+}
+
+.entry-panel__inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Filter-Tabs */
+.entry-panel__tabs {
+  display: flex;
+  gap: 6px;
+  margin: 0 10px 8px;
+}
+
+.entry-tab {
+  flex: 1 1 0;
+  padding: 7px 8px;
+  font: 600 12px/1.2 var(--app-font);
+  color: var(--gallery-text);
+  white-space: nowrap;
+  background: var(--gallery-surface);
+  border: 1px solid var(--gallery-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.entry-tab:hover {
+  background: var(--gallery-background);
+}
+
+.entry-tab[aria-selected="true"] {
+  background: var(--gallery-accent);
+  border-color: var(--gallery-accent);
+}
+
+.entry-panel__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 11px;
+  color: var(--gallery-text-muted);
+  background: var(--gallery-background);
+  border-top: 1px solid var(--gallery-border);
+  border-bottom: 1px solid var(--gallery-border);
+}
+
+/* Liste */
+.entry-list {
+  position: relative; /* offsetParent für das Scrollen zum aktiven Eintrag */
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  touch-action: pan-y;
+}
+
+.entry-list li + li {
+  border-top: 1px solid var(--gallery-border);
+}
+
+.entry-list__empty {
+  padding: 20px 14px;
+  font-size: 13px;
+  color: var(--gallery-text-muted);
+  text-align: center;
+}
+
+.entry-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 14px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: var(--gallery-surface);
+  border: 0;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.entry-item.is-new {
+  background: var(--entry-new-bg);
+}
+
+.entry-item:hover,
+.entry-item.is-active {
+  background: var(--entry-active-bg);
+}
+
+.entry-item:focus-visible {
+  outline-offset: -2px;
+}
+
+.entry-item__badge {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--gallery-text-muted);
+  background: var(--gallery-surface);
+  border: 1px solid var(--gallery-border);
+  border-radius: 10px;
+}
+
+.entry-item.is-new .entry-item__badge {
+  color: var(--entry-new-text);
+  background: var(--entry-new-color);
+  border-color: var(--entry-new-color);
+}
+
+.entry-item.is-visited .entry-item__badge {
+  color: var(--gallery-text);
+  background: var(--entry-visited-color);
+  border-color: var(--entry-visited-border);
+}
+
+.entry-item__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.entry-item__title {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entry-item__date {
+  font-size: 12px;
+  color: var(--gallery-text-muted);
+}
+
+.entry-item__side {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+/* Feste Höhe, damit Bilder/Besucher darunter immer an derselben Stelle
+   stehen – egal ob die „Neu“-Pille angezeigt wird oder die Zeile leer ist. */
+.entry-item__status {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gallery-text);
+}
+
+/* „Neu“-Badge wie in der Länderauswahl */
+.entry-item__status--new {
+  padding: 0 8px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--entry-new-text);
+  background: var(--entry-new-color);
+  border-radius: 999px;
+}
+
+.entry-item.is-visited .entry-item__status {
+  font-weight: 500;
+  color: var(--gallery-text-muted);
+}
+
+.entry-item__stats {
+  display: inline-flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--gallery-text-muted);
+}
+
+.entry-item__stat {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Marker und Cluster
+   ========================================================================== */
+
+.entry-marker {
+  background: none;
+  border: 0;
+}
+
+.entry-marker__badge {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 24px;
+  font: 700 12px/1 var(--app-font);
+  font-variant-numeric: tabular-nums;
+  color: var(--gallery-text-muted);
+  background: var(--gallery-surface);
+  border: 2px solid var(--gallery-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(17, 17, 17, 0.22);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+/* neue Station: Orange mit Halo */
+.entry-marker.is-new .entry-marker__badge {
+  color: var(--entry-new-text);
+  background: var(--entry-new-color);
+  border-color: #fff;
+  box-shadow:
+    0 0 0 4px var(--entry-new-halo),
+    0 2px 8px rgba(17, 17, 17, 0.25);
+}
+
+/* besuchte Station: helles Lime */
+.entry-marker.is-visited .entry-marker__badge {
+  color: var(--gallery-text);
+  background: var(--entry-visited-color);
+  border-color: var(--entry-visited-border);
+}
+
+/* Edit-Modus: dunkles Badge mit Lime-Rand */
+.entry-marker.is-edit .entry-marker__badge {
+  color: #fff;
+  background: var(--gallery-text);
+  border-color: var(--gallery-accent);
+}
+
+/* fokussiert (Hover/Fokus in der Liste, neueste Station beim Start) */
+.entry-marker.is-active .entry-marker__badge {
+  transform: scale(1.3);
+  box-shadow:
+    0 0 0 3px var(--gallery-text),
+    0 6px 16px rgba(17, 17, 17, 0.35);
+}
+
+.entry-cluster {
+  background: none;
+  border: 0;
+}
+
+.entry-cluster div {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  font: 700 14px/1 var(--app-font);
+  color: var(--gallery-text-muted);
+  background: var(--gallery-surface);
+  border: 2px solid var(--gallery-border);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(17, 17, 17, 0.22);
+}
+
+.entry-cluster.is-new div {
+  color: var(--entry-new-text);
+  background: var(--entry-new-color);
+  border-color: #fff;
+  box-shadow:
+    0 0 0 4px var(--entry-new-halo),
+    0 2px 8px rgba(17, 17, 17, 0.25);
+}
+
+.entry-cluster.is-visited div {
+  color: var(--gallery-text);
+  background: var(--entry-visited-color);
+  border-color: var(--entry-visited-border);
+}
+
+/* ==========================================================================
+   Tooltips
+   ========================================================================== */
+
+.tooltip-inner {
+  font-family: var(--app-font);
+  color: var(--gallery-text);
+  background: var(--gallery-surface);
+  border: 1px solid var(--gallery-border);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(17, 17, 17, 0.18);
+}
+
+.unvisited-marker .tooltip-inner {
+  color: var(--entry-new-text);
+  background: var(--entry-new-color);
+  border-color: var(--entry-new-color);
+}
+
+.visited-marker .tooltip-inner {
+  background: var(--gallery-surface);
+}
+
+.unvisited-marker.leaflet-tooltip-top::before {
+  border-top-color: var(--entry-new-color);
+}
+
+.visited-marker.leaflet-tooltip-top::before {
+  border-top-color: var(--gallery-surface);
+}
+
+@keyframes tooltipFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==========================================================================
+   Rundbuttons auf der Karte und Standort-Banner
+   ========================================================================== */
+
+.rnd-button {
+  color: var(--gallery-text);
+  border: 1px solid var(--gallery-border);
+  box-shadow: 0 4px 12px rgba(17, 17, 17, 0.12);
+}
+
+/* Buttons auf der Karte: hell wie die Liste, aber mit kräftigerem Rand und
+   zweistufigem Schatten, damit sie sich von der hellen Karte abheben.
+   Hover/Fokus und aktiver Zustand in Lime. */
+.button_container .rnd-button {
+  color: var(--gallery-text);
+  background-color: var(--gallery-surface);
+  border: 1px solid #cfcec5;
+  box-shadow:
+    0 1px 2px rgba(17, 17, 17, 0.18),
+    0 6px 18px rgba(17, 17, 17, 0.18);
+}
+
+.button_container .rnd-button:hover,
+.button_container .rnd-button:focus-visible,
+.button_container .rnd-button.active {
+  color: var(--gallery-accent-text);
+  background-color: var(--gallery-accent) !important;
+  border-color: color-mix(in srgb, var(--gallery-accent) 70%, #000);
+}
+
+.button_container .rnd-button:focus-visible {
+  outline: 2px solid var(--gallery-text);
+  outline-offset: 2px;
+}
+
+.button_container .rnd-button img {
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.12);
+}
+
+/* ==========================================================================
+   Route zwischen den Stationen
+   Farben per CSS (überschreibt Leaflets stroke-Attribut): heller Lime-Saum,
+   darauf eine abgedunkelte Lime-Linie, die auf der hellen Karte lesbar bleibt.
+   ========================================================================== */
+
+.route-glow {
+  stroke: var(--gallery-accent);
+  stroke-opacity: 0.5;
+}
+
+.route-line {
+  stroke: #a2ba2c;
+  stroke: color-mix(in srgb, var(--gallery-accent) 60%, #4a5a00);
+  stroke-opacity: 1;
+}
+
+.location-picker-banner {
+  border: 1px solid var(--gallery-border);
+  border-radius: 20px;
+}
+
+/* ==========================================================================
+   Modaldialoge (Upload, Einladung, Station bearbeiten, Login)
+   ========================================================================== */
+
+.card {
+  color: var(--gallery-text);
+  background: var(--gallery-surface);
+  border: 1px solid var(--gallery-border);
+  border-radius: 28px;
+  box-shadow: 0 16px 40px rgba(17, 17, 17, 0.18);
+}
+
+.glassy {
+  background-color: var(--gallery-surface);
+  backdrop-filter: none;
+}
+
+.dialog-header {
+  height: auto;
+  padding-top: 4px;
+  background: transparent;
+  border-radius: 0;
+}
+
+.close-button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: 12px 12px 4px;
+  padding: 0;
+  font-size: 1.2rem;
+  color: var(--gallery-text);
+  background: var(--gallery-surface);
+  border: 1px solid var(--gallery-border);
+  border-radius: 50%;
+}
+
+.close-button:enabled:hover {
+  background-color: var(--gallery-accent);
+}
+
+.card-head h2 {
+  font-size: clamp(1.35rem, 3.2vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.card input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+.card textarea {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  /* mindestens 16px, sonst zoomt iOS beim Fokussieren in die Seite */
+  font-size: max(16px, 1rem);
+  color: var(--gallery-text);
+  background: var(--gallery-background);
+  border: 1px solid var(--gallery-border);
+  border-radius: 14px;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.card input:focus,
+.card textarea:focus {
+  background: var(--gallery-surface);
+  border-color: var(--gallery-text);
+}
+
+.card input::placeholder,
+.card textarea::placeholder {
+  color: var(--gallery-text-muted);
+}
+
+/* Hauptaktion: Lime-Pille */
+.lg-button {
+  padding: 0.7em 1.5em;
+  font-weight: 700;
+  color: var(--gallery-accent-text);
+  background: var(--gallery-accent);
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+.lg-button:hover {
+  background: color-mix(in srgb, var(--gallery-accent) 85%, #000);
+  transform: none;
+}
+
+/* Nebenaktion (Bilder auswählen): weiß mit Rand */
+.file-container .lg-button {
+  background: var(--gallery-surface);
+  border: 1px solid var(--gallery-border);
+}
+
+.file-container .lg-button:hover {
+  background: var(--gallery-background);
+}
+
+.delete-btn {
+  color: #fff !important;
+  background-color: var(--gallery-danger) !important;
+}
+
+.delete-btn:hover {
+  background-color: color-mix(in srgb, var(--gallery-danger) 85%, #000) !important;
+}
+
+.lang-btn.active {
+  background: var(--gallery-background);
+  border-color: var(--gallery-text);
+}
+
+.progress-container {
+  background: var(--gallery-track);
+}
+
+.progress-bar {
+  background: var(--gallery-accent);
+}
+
+/* ==========================================================================
+   Loader beim Start (bis Karte und Stationsliste bereit sind)
+   ========================================================================== */
+
+.app-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  font: 500 14px/1.2 var(--app-font);
+  color: var(--gallery-text-muted);
+  background: var(--gallery-background);
+  transition:
+    opacity 0.35s ease,
+    visibility 0.35s ease;
+}
+
+.app-loader.is-done {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app-loader__spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid var(--gallery-border);
+  border-top-color: var(--gallery-accent);
+  border-radius: 50%;
+  animation: app-loader-spin 0.8s linear infinite;
+}
+
+@keyframes app-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Bewegung reduzieren ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loader,
+  .app-loader__spinner,
+  .entry-panel__body,
+  .entry-panel__chevron,
+  .entry-marker__badge,
+  .entry-item {
+    transition: none;
+  }
+}

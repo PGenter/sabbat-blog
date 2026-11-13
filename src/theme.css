@@ -1,0 +1,21 @@
+/* ==========================================================================
+   theme.css
+   Zentrale Schrift und Farbpalette (Figma-Entwurf) für alle Seiten:
+   Karte (map.html) sowie Login, Passwort vergessen und Passwort setzen.
+   Muss VOR allen anderen App-Stylesheets eingebunden werden.
+   ========================================================================== */
+
+:root {
+  --gallery-font: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --gallery-background: #f5f4ee;
+  --gallery-surface: #ffffff;
+  --gallery-text: #111111;
+  --gallery-text-muted: #8b8a82;
+  --gallery-border: #e3e2da;
+  --gallery-track: #d9d8cf;
+  --gallery-accent: #dcfa49;
+  --gallery-accent-text: #111111;
+  --gallery-danger: #d6342c;
+  --gallery-success: #4f7a00;
+}

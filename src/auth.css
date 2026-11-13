@@ -1,0 +1,307 @@
+/* ==========================================================================
+   auth.css
+   Login (index.html), Passwort vergessen (reset-request.html) und
+   Passwort setzen (reset-password.html). Eigenständig, nur theme.css wird
+   vorausgesetzt – style.css (Karte) wird hier nicht geladen.
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  color-scheme: light;
+  font-family: var(--gallery-font);
+  line-height: 1.5;
+  color: var(--gallery-text);
+  background-color: var(--gallery-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100dvh;
+  margin: 0;
+}
+
+/* ---------- Hintergrund: Foto mit hellem Schleier in der App-Farbe ---------- */
+
+.auth-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.auth-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(4px);
+  transform: scale(1.04); /* versteckt den unscharfen Rand */
+}
+
+.auth-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--gallery-background) 45%, transparent);
+}
+
+/* ---------- Sprachbutton oben rechts (wie auf der Karte) ---------- */
+
+.auth-lang {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  background: var(--gallery-surface);
+  border: 1px solid #cfcec5;
+  border-radius: 16px;
+  box-shadow:
+    0 1px 2px rgba(17, 17, 17, 0.18),
+    0 6px 18px rgba(17, 17, 17, 0.18);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.auth-lang:hover,
+.auth-lang:focus-visible {
+  background: var(--gallery-accent);
+  border-color: color-mix(in srgb, var(--gallery-accent) 70%, #000);
+}
+
+.auth-lang img {
+  display: block;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.12);
+}
+
+/* ---------- Karte ---------- */
+
+.auth-shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 80px 16px 32px;
+}
+
+.auth-card {
+  position: relative;
+  width: min(100%, 420px);
+  padding: 28px;
+  background: var(--gallery-surface);
+  border: 1px solid var(--gallery-border);
+  border-radius: 28px;
+  box-shadow: 0 16px 40px rgba(17, 17, 17, 0.18);
+}
+
+.auth-card__head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-right: 44px; /* Platz für den Schließen-Button */
+}
+
+.auth-card__logo {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.auth-card__head h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 4vw, 1.6rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.auth-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  font-size: 1.3rem;
+  color: var(--gallery-text);
+  background: var(--gallery-surface);
+  border: 1px solid var(--gallery-border);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.auth-close:hover,
+.auth-close:focus-visible {
+  background: var(--gallery-accent);
+}
+
+/* ---------- Formular ---------- */
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-form input:not([aria-hidden="true"]) {
+  width: 100%;
+  padding: 12px 14px;
+  /* mindestens 16px, sonst zoomt iOS beim Fokussieren in die Seite */
+  font: inherit;
+  font-size: max(16px, 1rem);
+  color: var(--gallery-text);
+  background: var(--gallery-background);
+  border: 1px solid var(--gallery-border);
+  border-radius: 14px;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.auth-form input:focus {
+  background: var(--gallery-surface);
+  border-color: var(--gallery-text);
+}
+
+.auth-form input::placeholder {
+  color: var(--gallery-text-muted);
+}
+
+/* Hauptaktion: Lime-Pille über die volle Breite */
+.auth-button {
+  display: inline-flex;
+  gap: 0.5em;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 8px;
+  padding: 0.8em 1.5em;
+  font: inherit;
+  font-weight: 700;
+  color: var(--gallery-accent-text);
+  background: var(--gallery-accent);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.auth-button:hover {
+  background: color-mix(in srgb, var(--gallery-accent) 85%, #000);
+}
+
+.auth-button:focus-visible,
+.auth-form input:focus-visible,
+.reset-link a:focus-visible {
+  outline: 2px solid var(--gallery-text);
+  outline-offset: 2px;
+}
+
+.reset-link {
+  text-align: center;
+}
+
+.reset-link a {
+  font-size: 14px;
+  color: var(--gallery-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.reset-link a:hover {
+  color: var(--gallery-text);
+}
+
+/* ---------- Passwortregeln (reset-password.html) ---------- */
+
+#password-rules {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 0;
+  padding: 12px 14px;
+  font-size: 13px;
+  list-style: none;
+  color: var(--gallery-text-muted);
+  background: var(--gallery-background);
+  border-radius: 14px;
+}
+
+#password-rules li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#password-rules li::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--gallery-track);
+  border-radius: 50%;
+}
+
+#password-rules li.valid {
+  color: var(--gallery-success);
+}
+
+#password-rules li.valid::before {
+  background: var(--gallery-accent);
+  box-shadow: 0 0 0 1px var(--gallery-success);
+}
+
+#password-rules li.invalid {
+  color: var(--gallery-text);
+}
+
+/* ---------- Rückmeldung ---------- */
+
+.msg-container:empty {
+  display: none;
+}
+
+.msg-container {
+  margin-top: 16px;
+  padding: 10px 14px;
+  font-size: 14px;
+  background: var(--gallery-background);
+  border-radius: 14px;
+}
+
+.msg-container.is-error {
+  color: var(--gallery-danger);
+  background: color-mix(in srgb, var(--gallery-danger) 8%, #fff);
+}
+
+.msg-container.is-success {
+  color: var(--gallery-success);
+  background: color-mix(in srgb, var(--gallery-accent) 25%, #fff);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-lang,
+  .auth-close,
+  .auth-button,
+  .auth-form input {
+    transition: none;
+  }
+}

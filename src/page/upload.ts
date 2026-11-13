@@ -1,4 +1,4 @@
-import { supabase } from "../lib/supabase";
+import { getUser, supabase } from "../lib/supabase";
 import { determineSection, isCountryCode } from "../lib/geo";
 import { v4 as uuidv4 } from "uuid";
 import imageCompression from "browser-image-compression";
@@ -23,13 +23,14 @@ function setUploadModalVisible(visible: boolean) {
     "modal-backdrop",
   ) as HTMLDivElement;
   const mapWrapper = document.getElementById("map") as HTMLDivElement;
-  const navWrapper = document.getElementById("nav-wrapper") as HTMLDivElement;
+  // Slider-Leiste entfernt
+  // const navWrapper = document.getElementById("nav-wrapper") as HTMLDivElement;
 
   uploadSection.style.visibility = visible ? "visible" : "hidden";
   uploadSection.style.opacity = visible ? "1" : "0";
   modalBackdrop.classList.toggle("active", visible);
   mapWrapper.classList.toggle("inactive-background", visible);
-  navWrapper.classList.toggle("inactive-background", visible);
+  // navWrapper.classList.toggle("inactive-background", visible);
 
   if (visible) {
     map.scrollWheelZoom.disable();
@@ -74,7 +75,6 @@ async function convertHeicToJpeg(file: File): Promise<File> {
 }
 
 export async function startUpload() {
-  const { data: userData } = await supabase.auth.getUser();
 
   type ProcessedFile = {
     fullImage: File;
@@ -113,7 +113,11 @@ export async function startUpload() {
   if (button) setUploadButtonBusy(button, false);
 
   button.addEventListener("click", async () => {
-    if (!userData.user) {
+    // Nutzer erst beim Klick aus der lokalen Sitzung lesen. Früher lief hier beim
+    // Start supabase.auth.getUser() (Server-Anfrage) und hat die Karte verzögert;
+    // die Berechtigung prüft ohnehin die Datenbank (RLS) beim Speichern.
+    const user = await getUser();
+    if (!user) {
       console.error("Kein Benutzer eingeloggt");
       alert(t("loginRequired"));
       return;
@@ -284,7 +288,7 @@ export async function startUpload() {
           latitude: avgLat,
           longitude: avgLng,
           taken_at: earliestDate.toISOString(),
-          user_id: userData.user.id,
+          user_id: user.id,
         })
         .select()
         .single();
@@ -301,7 +305,7 @@ export async function startUpload() {
           const result = await processAndUploadImage(
             fileData,
             entryId!,
-            userData.user.id,
+            user.id,
           );
 
           completed++;

@@ -1,3 +1,6 @@
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { supabase, onAuthRedirect, redirectIfLoggedIn } from "../lib/supabase";
 import { t, setLanguage, getCurrentLanguage, getStoredLanguage, getLanguageFlag, getLanguageFlagSet } from "../lib/i18n.ts";

@@ -9,8 +9,10 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Koala, Kiwi and Coconut" />
     <meta name="theme-color" content="#ffffff" />
+    <link rel="stylesheet" href="src/theme.css">
     <link rel="stylesheet" href="src/style.css">
     <link rel="stylesheet" href="src/swiper-gallery.css">
+    <link rel="stylesheet" href="src/map-ui.css">
     <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@14.0.1/swiper-bundle.min.css" /> -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow">
@@ -18,6 +20,10 @@
 </head>
 
 <body>
+    <div id="app-loader" class="app-loader" role="status" aria-live="polite">
+        <div class="app-loader__spinner" aria-hidden="true"></div>
+        <span>Karte wird geladen …</span>
+    </div>
     <div class="main_wrapper">
         <div id="modal-backdrop" class="modal-backdrop"></div>
         <!--Beginn Gallery-->
@@ -122,19 +128,50 @@
                             class="bi bi-person-add"></i></button>
                 </div>
                 <button class="nav-button rnd-button glassy" id="language-toggle" title="Sprache wechseln">
-                    <img src="https://flagcdn.com/w20/de.png" srcset="https://flagcdn.com/w40/de.png 2x" width="20"
+                    <img src="/assets/lang/de-20.png" srcset="/assets/lang/de-40.png 2x" width="20"
                         alt="Deutsch" />
                 </button>
             </div>
-            <div class="card_container">
-                <!-- <div class="app_logo" id="app-logo">
-                    <img src="/KoalaKiwiCocoFavi.png" alt="Koala, Kiwi and Coconut Logo" />
-
-                </div> -->
+            <aside id="entry-panel" class="entry-panel is-open" aria-label="Stationen">
+                <div class="entry-panel__head">
+                    <button id="entry-panel-header" class="entry-panel__header" type="button">
+                        <span class="entry-panel__flag">
+                            <img alt="" width="32" height="24" hidden>
+                            <i class="bi bi-globe2" aria-hidden="true"></i>
+                        </span>
+                        <span class="entry-panel__heading">
+                            <span id="entry-panel-eyebrow" class="entry-panel__eyebrow">Land</span>
+                            <span id="entry-panel-country" class="entry-panel__country"></span>
+                        </span>
+                        <i class="bi bi-chevron-down entry-panel__chevron" aria-hidden="true"></i>
+                    </button>
+                    <button id="entry-panel-collapse" class="entry-panel__collapse" type="button"
+                        aria-controls="entry-panel-body" aria-expanded="true">
+                        <i class="bi bi-chevron-up" aria-hidden="true"></i>
+                    </button>
+                    <ul id="entry-country-menu" class="entry-country-menu" role="listbox" hidden></ul>
+                </div>
+                <div id="entry-panel-body" class="entry-panel__body">
+                    <div class="entry-panel__inner">
+                        <div class="entry-panel__tabs" role="tablist">
+                            <button type="button" class="entry-tab" role="tab" data-filter="all"></button>
+                            <button type="button" class="entry-tab" role="tab" data-filter="new"></button>
+                            <button type="button" class="entry-tab" role="tab" data-filter="visited"></button>
+                        </div>
+                        <div class="entry-panel__meta">
+                            <span id="entry-panel-count"></span>
+                            <span id="entry-panel-sort"></span>
+                        </div>
+                        <ul id="entry-list" class="entry-list"></ul>
+                    </div>
+                </div>
+            </aside>
+            <!-- <div class="card_container">
                 <div class="card country-cd glassy" id="country-card">
                     <h2>Karte</h2>
                 </div>
-            </div>
+            </div> -->
+            <!-- Slider-Leiste: ersetzt durch die Länderauswahl in der Stationsliste
             <div class="nav_wrapper" id="nav-wrapper">
                 <div class="navbar_wrapper " id="navbar">
                     <div class="slider-track" id="slider-track">
@@ -142,7 +179,7 @@
                         <div class="slider-handle" id="slider-handle"></div>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
         <div class="modal_dialog">
             <div class="invitation_wrapper">
@@ -165,11 +202,11 @@
                         <input type="email" id="email" placeholder="Email" required />
                         <div class="language-selector">
                             <button type="button" class="lang-btn active" data-language="german" title="Deutsch">
-                                <img src="https://flagcdn.com/w20/de.png" srcset="https://flagcdn.com/w40/de.png 2x"
+                                <img src="/assets/lang/de-20.png" srcset="/assets/lang/de-40.png 2x"
                                     width="20" alt="Deutsch" />
                             </button>
                             <button type="button" class="lang-btn" data-language="spanish" title="Español">
-                                <img src="https://flagcdn.com/w20/es.png" srcset="https://flagcdn.com/w40/es.png 2x"
+                                <img src="/assets/lang/es-20.png" srcset="/assets/lang/es-40.png 2x"
                                     width="20" alt="Español" />
                             </button>
                         </div>
@@ -197,7 +234,7 @@
                         <div class="lang-fields">
                             <div class="lang-field-group">
                                 <span class="lang-field-label">
-                                    <img src="https://flagcdn.com/w20/de.png" srcset="https://flagcdn.com/w40/de.png 2x"
+                                    <img src="/assets/lang/de-20.png" srcset="/assets/lang/de-40.png 2x"
                                         width="20" alt="Deutsch" />
                                     Deutsch
                                 </span>
@@ -208,7 +245,7 @@
                             </div>
                             <div class="lang-field-group">
                                 <span class="lang-field-label">
-                                    <img src="https://flagcdn.com/w20/es.png" srcset="https://flagcdn.com/w40/es.png 2x"
+                                    <img src="/assets/lang/es-20.png" srcset="/assets/lang/es-40.png 2x"
                                         width="20" alt="Español" />
                                     Español
                                 </span>

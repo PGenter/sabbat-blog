@@ -7,7 +7,6 @@ import {
   localizedEntryColumn,
 } from "./i18n";
 import { currentCountry, isEditMode } from "./map";
-import Split from "split.js";
 import { getUser, supabase } from "./supabase";
 import type { User } from "@supabase/supabase-js";
 import Swiper from "swiper";
@@ -18,7 +17,6 @@ import "swiper/css/pagination";
 import "swiper/css/zoom";
 // import "swiper/css/effect-coverflow";
 
-let gallerySplit: any = null;
 export let currentGalleryEntryId: string | null = null;
 export let currentGalleryTitle: string | null = null;
 export let currentGalleryDescription: string | null = null;
@@ -28,8 +26,6 @@ let currentGalleryPhotoId: string | null = null;
 let activeCommentElements: CommentActionElements | null = null;
 let activeCommentUser: Awaited<ReturnType<typeof getUser>> = null;
 let activeCommentIsAdmin = false;
-// preserved comments panel size (percentage) across resizes
-let lastCommentsSize: number | null = null;
 let swiper: Swiper | null = null;
 let thumbsSwiper: Swiper | null = null;
 
@@ -424,132 +420,6 @@ function renderEditComment(
   return editableInput;
 }
 
-function destroyGallerySplit() {
-  gallerySplit?.destroy?.();
-  gallerySplit = null;
-}
-
-function getIsMobile() {
-  return window.innerWidth < 1024;
-}
-
-// function applyLayout(state: LayoutState) {
-//   const isMobile = getIsMobile();
-
-//   if (isMobile) {
-//     // inverted visual order durch column-reverse
-//     gallerySplit.setSizes([state.comments, 100 - state.comments]);
-//   } else {
-//     gallerySplit.setSizes([state.comments, 100 - state.comments]);
-//   }
-// }
-
-function initGallerySplit(initialOpenSize = 0) {
-  if (gallerySplit) return;
-
-  const commentsShell = document.getElementById("comments-shell");
-  const galleryShell = document.getElementById("gallery-shell");
-  if (!commentsShell || !galleryShell) return;
-
-  const isMobile = getIsMobile();
-  const direction = isMobile ? "vertical" : "horizontal";
-  const minSize = isMobile ? [0, 0] : [0, 0];
-  const maxSize = isMobile
-    ? [calculatePixel(0.5, "height"), Infinity]
-    : [600, Infinity];
-  const sizes = [initialOpenSize, 100 - initialOpenSize];
-  const snapOffset = isMobile ? 40 : 80;
-  const gutterSize = isMobile ? 10 : 12;
-
-  gallerySplit = Split(["#comments-shell", "#gallery-shell"], {
-    sizes,
-    minSize,
-    maxSize,
-    gutterSize,
-    cursor: isMobile ? "row-resize" : "col-resize",
-    direction,
-    snapOffset,
-  });
-  // if(isMobile) {
-  //   gallerySplit.setSizes(0, 200);
-  // }
-}
-
-function updateGallerySplitForViewport() {
-  const gallery = document.getElementById("photo-gallery");
-  if (!gallery?.classList.contains("active")) {
-    destroyGallerySplit();
-    return;
-  }
-
-  // preserve current comments panel size (percentage) so re-init keeps open/closed state
-  const prevSizes = gallerySplit?.getSizes?.();
-  const preservedSize = prevSizes?.[0] ?? lastCommentsSize ?? 0;
-
-  destroyGallerySplit();
-  requestAnimationFrame(() => {
-    initGallerySplit(preservedSize);
-  });
-}
-
-function calculatePixel(percentage: number, orientation: string) {
-  let maxValue = 0;
-  if (orientation === "height") {
-    maxValue = window.innerHeight;
-  }
-  if (orientation === "width") {
-    maxValue = window.innerWidth;
-  }
-  return maxValue * percentage;
-}
-
-function animateComments(targetComments: number, duration = 350) {
-  if (!gallerySplit) return;
-
-  const isMobile = getIsMobile();
-  const [start] = gallerySplit.getSizes();
-
-  // remember target size so re-inits on resize can restore it
-  lastCommentsSize = targetComments;
-
-  const startTime = performance.now();
-
-  function frame(now: number) {
-    const t = Math.min((now - startTime) / duration, 1);
-
-    const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-
-    let value = start + (targetComments - start) * eased;
-
-    if (isMobile) {
-      value = 100 - value;
-    }
-
-    gallerySplit.setSizes([value, 100 - value]);
-
-    if (t < 1) requestAnimationFrame(frame);
-  }
-
-  requestAnimationFrame(frame);
-}
-
-function setCommentsPanelState(isCollapsed: boolean) {
-  if (document.getElementById("photo-gallery")?.classList.contains("active")) {
-    requestAnimationFrame(() => {
-      if (!gallerySplit) return;
-
-      const isMobile = getIsMobile();
-
-      const targetComments = !isCollapsed ? 0 : isMobile ? 40 : 20;
-
-      // persist chosen state so resize won't close the panel
-      lastCommentsSize = targetComments;
-      animateComments(targetComments);
-    });
-  }
-}
-
-window.addEventListener("resize", updateGallerySplitForViewport);
 
 export function showPhotoGallery(entryId: string) {
   currentGalleryEntryId = entryId;
@@ -821,10 +691,6 @@ async function renderPhotos(photos: any[], description: string) {
   const firstPhoto = photos[0];
   // const total = photos.length;
   gallery.classList.add("active");
-  requestAnimationFrame(() => {
-    initGallerySplit(0);
-    setCommentsPanelState(false);
-  });
   commentsHeader.innerHTML = t("comments");
   commentInput.placeholder = t("commentPlaceholder");
   // submitCommentButton.textContent = t("addComment");
@@ -979,7 +845,6 @@ async function renderPhotos(photos: any[], description: string) {
 
     toggleImageFullscreen(false);
     gallery.classList.remove("active");
-    setCommentsPanelState(true);
 
     // Foto-/Thumbnail-Elemente entfernen. Sonst bleibt u.a. ein (leeres)
     // .item-content/.item-description mit pointer-events:auto über der Karte

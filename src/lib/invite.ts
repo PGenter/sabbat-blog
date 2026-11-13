@@ -1,11 +1,12 @@
 import { hideModal } from "../page/main";
-import { supabase } from "./supabase";
+import { getUser, supabase } from "./supabase";
 import { handleError } from "./errorHandler";
 import { t } from "./i18n.ts";
 
 let selectedLanguage = "german";
 
-const { data: userData } = await supabase.auth.getUser();
+// Nutzer wird erst beim Absenden geprüft: supabase.auth.getUser() auf
+// Modulebene war eine Server-Anfrage, die den Start der Karte blockiert hat.
 const button = document.getElementById("inviteBtn") as HTMLButtonElement;
 const languageButtons = document.querySelectorAll(".lang-btn");
 
@@ -47,7 +48,7 @@ button.addEventListener("click", async () => {
     const lastName = (document.getElementById("lastName") as HTMLInputElement)
       .value;
 
-    if (!userData.user) {
+    if (!(await getUser())) {
       alert(t("loginRequired"));
       return;
     }

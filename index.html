@@ -8,54 +8,42 @@
   <link rel="manifest" href="/site.webmanifest" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Koala, Kiwi and Coconut" />
-  <meta name="theme-color" content="#ffffff" />
-  <link rel="stylesheet" href="src/style.css">
+  <meta name="theme-color" content="#f5f4ee" />
+  <link rel="stylesheet" href="src/theme.css">
+  <link rel="stylesheet" href="src/auth.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow">
   <title>Koala, Kiwi and Coconut Login</title>
 </head>
 
 <body>
-  <div class="main_wrapper">
-
-    <div id="modal-backdrop" class="modal-backdrop active"></div>
-    <div class="map_wrapper">
-      <img style="width: 100%; height: 100%; object-fit: cover;" src="assets/login-bg.png" alt="">
-    </div>
-    <div class="login_container" id="map-section">
-      <div class="button_container">
-        <button class="nav-button rnd-button glassy" id="language-toggle" title="Sprache wechseln">
-          <img src="https://flagcdn.com/w20/de.png" srcset="https://flagcdn.com/w40/de.png 2x" width="20"
-            alt="Deutsch" />
-        </button>
-      </div>
-      <div class="login_wrapper" id="login_wrapper">
-        <div class="card upload-cd glassy modal" id="login-section">
-          <div class="card-head">
-            <h2>Bitte melde dich an</h2>
-            <div class="app_logo">
-              <img src="/KoalaKiwiCocoFavi.png" alt="Koala, Kiwi and Coconut Logo" />
-            </div>
-          </div>
-          <div class="modal-container">
-          <form id="login-form">
-            <input type="email" id="email" placeholder="Email" required />
-            <input type="password" id="password" placeholder="Passwort" required />
-            <div class="lg-button-container">
-              <div class="reset-link">
-                <a href="/reset-request.html" title="Passwort vergessen?">Passwort vergessen?</a>
-              </div>
-              <button type="submit" class="nav-button lg-button" id="login" title="Login"><i
-                  class="bi bi-box-arrow-in-right"></i>Login</button>
-            </div>
-          </form>
-        </div>
-      </div>
-      </div>
-    </div>
+  <div class="auth-bg" aria-hidden="true">
+    <img src="assets/login-bg.webp" alt="">
   </div>
-  <script type="module" src="/src/lib/confirm.ts"></script>
 
+  <button class="auth-lang" id="language-toggle" type="button" title="Sprache wechseln">
+    <img src="/assets/lang/de-20.png" srcset="/assets/lang/de-40.png 2x" width="20" alt="Deutsch" />
+  </button>
+
+  <main class="auth-shell">
+    <section class="auth-card" id="login-section">
+      <header class="auth-card__head">
+        <img class="auth-card__logo" src="/KoalaKiwiCocoFavi.png" alt="Koala, Kiwi and Coconut Logo" />
+        <h2>Bitte melde dich an</h2>
+      </header>
+      <form id="login-form" class="auth-form">
+        <input type="email" id="email" placeholder="Email" autocomplete="username" required />
+        <input type="password" id="password" placeholder="Passwort" autocomplete="current-password" required />
+        <button type="submit" class="auth-button" id="login" title="Login">
+          <i class="bi bi-box-arrow-in-right"></i>Login
+        </button>
+        <div class="reset-link">
+          <a href="/reset-request.html" title="Passwort vergessen?">Passwort vergessen?</a>
+        </div>
+      </form>
+    </section>
+  </main>
+  <script type="module" src="/src/lib/confirm.ts"></script>
   <script type="module" src="/src/page/login.ts"></script>
 </body>
 

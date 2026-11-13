@@ -1,3 +1,6 @@
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { supabase, redirectIfLoggedIn } from "../lib/supabase";
 import { t, setLanguage, getCurrentLanguage, getStoredLanguage, getLanguageFlag, getLanguageFlagSet } from "../lib/i18n.ts";
@@ -56,9 +59,10 @@ form.addEventListener("submit", async (e) => {
 
   if (error) {
     messageDiv.textContent = t("errorSaving") + error.message;
-    messageDiv.style.color = "red";
+    messageDiv.className = "msg-container is-error";
   } else {
     messageDiv.textContent = t("resetLinkSent");
+    messageDiv.className = "msg-container is-success";
   }
 });
 

@@ -97,6 +97,24 @@ const translations = {
     resetLinkSent: "Reset-Link wurde gesendet! Bitte prüfe deine Email.",
     passwordSetSuccess: "Passwort erfolgreich gesetzt! Weiterleitung...",
     passwordPlaceholder: "Passwort",
+    // Stationsliste
+    entryListCountry: "Land",
+    entryListFilterAll: "Alle",
+    entryListFilterNew: "Neu",
+    entryListFilterVisited: "Besucht",
+    entryListEntriesOne: "{count} Station",
+    entryListEntriesMany: "{count} Stationen",
+    entryListHasNew: "Neu",
+    entryListHasNewTitle: "Neue Stationen vorhanden",
+    entryListNewest: "Neueste zuerst",
+    entryListCreated: "Erstellt",
+    entryListImages: "Bilder",
+    entryListVisitors: "Besucher",
+    entryListStatusNew: "Neu",
+    entryListStatusVisited: "Besucht",
+    entryListEmpty: "Keine Stationen in dieser Ansicht",
+    entryListToggle: "Stationsliste ein- oder ausklappen",
+    entryListSelectCountry: "Land auswählen",
   },
   spanish: {
     cancel: "Cancelar",
@@ -193,6 +211,24 @@ const translations = {
     resetLinkSent: "¡Enlace de restablecimiento enviado! Por favor revisa tu correo.",
     passwordSetSuccess: "¡Contraseña establecida correctamente! Redirigiendo...",
     passwordPlaceholder: "Contraseña",
+    // Stationsliste
+    entryListCountry: "País",
+    entryListFilterAll: "Todas",
+    entryListFilterNew: "Nuevas",
+    entryListFilterVisited: "Visitadas",
+    entryListEntriesOne: "{count} estación",
+    entryListEntriesMany: "{count} estaciones",
+    entryListHasNew: "Nuevo",
+    entryListHasNewTitle: "Hay estaciones nuevas",
+    entryListNewest: "Más recientes primero",
+    entryListCreated: "Creada",
+    entryListImages: "Imágenes",
+    entryListVisitors: "Visitantes",
+    entryListStatusNew: "Nueva",
+    entryListStatusVisited: "Visitada",
+    entryListEmpty: "No hay estaciones en esta vista",
+    entryListToggle: "Mostrar u ocultar la lista de estaciones",
+    entryListSelectCountry: "Elegir país",
   },
 } as const;
 
@@ -240,6 +276,17 @@ export function t<Key extends keyof typeof translations["german"]>(key: Key): st
   return dictionary[key] ?? translations.german[key];
 }
 
+type TranslationKey = keyof (typeof translations)["german"];
+
+// Text mit Anzahl: wählt Singular- oder Pluralschlüssel und setzt {count} ein.
+export function tCount(
+  oneKey: TranslationKey,
+  manyKey: TranslationKey,
+  count: number,
+): string {
+  return t(count === 1 ? oneKey : manyKey).replace("{count}", String(count));
+}
+
 type LocalizableEntry = {
   title?: string | null;
   description?: string | null;
@@ -273,14 +320,14 @@ export function localizedEntryColumn(
 
 export function getLanguageFlag(language: Language) {
   return language === "german"
-    ? "https://flagcdn.com/w20/de.png"
-    : "https://flagcdn.com/w20/es.png";
+    ? "/assets/lang/de-20.png"
+    : "/assets/lang/es-20.png";
 }
 
 export function getLanguageFlagSet(language: Language) {
   return language === "german"
-    ? "https://flagcdn.com/w40/de.png"
-    : "https://flagcdn.com/w40/es.png";
+    ? "/assets/lang/de-40.png"
+    : "/assets/lang/es-40.png";
 }
 
 export function getLanguageCode(language: Language) {

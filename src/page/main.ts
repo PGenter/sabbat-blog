@@ -10,13 +10,14 @@ import {
 } from "../lib/supabase.ts";
 import {
   initMap,
-  selectCountry,
+  // selectCountry, // nur für die Slider-Leiste benötigt
   clearMarkers,
   map,
   toggleEditMode,
   refreshLanguage,
 } from "../lib/map.ts";
-import { setOnCountryChange, updateCountryLabels } from "../lib/slider";
+// Slider-Leiste entfernt
+// import { setOnCountryChange, updateCountryLabels } from "../lib/slider";
 import { startUpload } from "./upload.ts";
 import {
   setLanguage,
@@ -26,6 +27,9 @@ import {
   getStoredLanguage,
   getLanguageFlagSet,
 } from "../lib/i18n.ts";
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
 
 const logoutButton = document.getElementById("logout")!;
 const uploadButton = document.getElementById("upload")!;
@@ -48,7 +52,7 @@ const invitesection = document.getElementById(
   "invitation-section",
 ) as HTMLDivElement;
 const mapWrapper = document.getElementById("map") as HTMLDivElement;
-const navwrapper = document.getElementById("nav-wrapper") as HTMLDivElement;
+// const navwrapper = document.getElementById("nav-wrapper") as HTMLDivElement;
 const modalBackdrop = document.getElementById(
   "modal-backdrop",
 ) as HTMLDivElement;
@@ -110,7 +114,7 @@ function showModal(dialogType: HTMLDivElement) {
   dialogType.style.opacity = "1";
   modalBackdrop.classList.add("active");
   mapWrapper.classList.add("inactive-background");
-  navwrapper.classList.add("inactive-background");
+  // navwrapper.classList.add("inactive-background");
   map.scrollWheelZoom.disable();
 }
 
@@ -119,7 +123,7 @@ export function hideModal(dialogType: HTMLDivElement) {
   dialogType.style.opacity = "0";
   modalBackdrop.classList.remove("active");
   mapWrapper.classList.remove("inactive-background");
-  navwrapper.classList.remove("inactive-background");
+  // navwrapper.classList.remove("inactive-background");
   map.scrollWheelZoom.enable();
 }
 
@@ -130,7 +134,7 @@ function updateLanguageToggleIcon(language: "german" | "spanish") {
   ) as HTMLImageElement | null;
   if (!img) return;
   img.src = getLanguageFlag(language);
-  img.srcset = getLanguageFlagSet(language);
+  img.srcset = `${getLanguageFlagSet(language)} 2x`;
   img.alt = language === "german" ? "Deutsch" : "Español";
   languageToggleButton.title = t("languageToggleTitle");
 }
@@ -253,7 +257,7 @@ languageToggleButton.addEventListener("click", async () => {
   setLanguage(newLanguage);
   updateLanguageToggleIcon(newLanguage);
   applyTranslations();
-  updateCountryLabels();
+  // updateCountryLabels();
   await updateUserLanguage(newLanguage);
   await refreshLanguage();
 });
@@ -293,6 +297,6 @@ await startUpload();
 
 await initMap();
 
-setOnCountryChange((country) => {
-  selectCountry(country);
-});
+// setOnCountryChange((country) => {
+//   selectCountry(country);
+// });

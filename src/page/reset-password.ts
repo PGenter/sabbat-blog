@@ -1,3 +1,6 @@
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
 import { supabase, getUserLanguage } from "../lib/supabase";
 import { t, setLanguage, getCurrentLanguage, getStoredLanguage, getLanguageFlag, getLanguageFlagSet } from "../lib/i18n.ts";
 
@@ -97,7 +100,7 @@ form.addEventListener("submit", async (e) => {
 
   if (!isValid) {
     messageDiv.textContent = t("passwordRequirementsNotMet");
-    messageDiv.style.color = "red";
+    messageDiv.className = "msg-container is-error";
     return;
   }
 
@@ -107,10 +110,10 @@ form.addEventListener("submit", async (e) => {
 
   if (error) {
     messageDiv.textContent = t("errorSaving") + error.message;
-    messageDiv.style.color = "red";
+    messageDiv.className = "msg-container is-error";
   } else {
     messageDiv.textContent = t("passwordSetSuccess");
-    messageDiv.style.color = "green";
+    messageDiv.className = "msg-container is-success";
 
     if ("PasswordCredential" in window) {
       try {
