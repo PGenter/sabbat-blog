@@ -19,6 +19,7 @@ import {
   isCountryCode,
 } from "./geo";
 import "./gallery.ts";
+import { focusFirstField, setBackgroundBlocked } from "./modal.ts";
 // Slider-Leiste entfernt
 // import { getCountryIndex, snapTo, updateUnvisitedMarkers } from "./slider.ts";
 import {
@@ -760,16 +761,14 @@ async function showEditMenu(entryId: string, currentTitle: string) {
   // Show modal
   editModal.style.visibility = "visible";
   editModal.style.opacity = "1";
-  const modalBackdrop = document.getElementById(
-    "modal-backdrop",
-  ) as HTMLDivElement;
-  modalBackdrop.classList.add("active");
+  setBackgroundBlocked(true);
   map.scrollWheelZoom.disable();
+  focusFirstField(editModal);
 
   const closeModal = () => {
     editModal.style.visibility = "hidden";
     editModal.style.opacity = "0";
-    modalBackdrop.classList.remove("active");
+    setBackgroundBlocked(false);
     map.scrollWheelZoom.enable();
   };
 
