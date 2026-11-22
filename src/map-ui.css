@@ -524,6 +524,43 @@
   color: var(--gallery-text-muted);
 }
 
+/* Zeile mit Kommentar-Hinweis und „Neu“-Status */
+.entry-item__flags {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Hinweis auf ungelesene Kommentare (nur Administrator/Superuser) */
+.entry-item__comments,
+.entry-country__comments {
+  flex: none;
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  background: var(--gallery-text);
+  border-radius: 999px;
+}
+
+.entry-item__comments {
+  height: 18px;
+}
+
+.entry-country__comments {
+  padding-block: 3px;
+}
+
+.entry-item__comments i,
+.entry-country__comments i {
+  font-size: 10px;
+}
+
 .entry-item__stats {
   display: inline-flex;
   gap: 10px;

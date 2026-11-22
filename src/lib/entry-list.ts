@@ -10,6 +10,9 @@ export type EntryListItem = {
   visitors: number;
   /** Summe aller Likes auf den Fotos dieses Eintrags */
   likes: number;
+  /** Kommentare, die die angemeldete Person noch nicht gesehen hat
+   *  (nur für Administratoren und Superuser, sonst 0) */
+  newComments: number;
   visited: boolean;
 };
 
@@ -21,6 +24,8 @@ export type EntryListCountry = {
   total: number;
   /** Anzahl noch unbesuchter Stationen in diesem Land */
   newCount: number;
+  /** Anzahl ungelesener Kommentare in diesem Land (Admin/Superuser) */
+  newComments: number;
 };
 
 export type EntryListCallbacks = {
@@ -63,6 +68,26 @@ function buildStat(icon: string, value: number, label: string) {
   return el;
 }
 
+// Hinweis auf ungelesene Kommentare (Sprechblase mit Anzahl)
+function buildNewCommentsBadge(count: number, className: string) {
+  const badge = document.createElement("span");
+  badge.className = className;
+  const label = tCount("newCommentsOne", "newCommentsMany", count);
+  badge.title = label;
+  badge.setAttribute("aria-label", label);
+
+  const icon = document.createElement("i");
+  icon.className = "bi bi-chat-dots-fill";
+  icon.setAttribute("aria-hidden", "true");
+
+  const value = document.createElement("span");
+  value.textContent = String(count);
+  value.setAttribute("aria-hidden", "true");
+
+  badge.append(icon, value);
+  return badge;
+}
+
 function buildItem(item: EntryListItem, locale: string) {
   const li = document.createElement("li");
 
@@ -103,6 +128,16 @@ function buildItem(item: EntryListItem, locale: string) {
     : "entry-item__status entry-item__status--new";
   status.textContent = item.visited ? "" : t("entryListStatusNew");
 
+  // Zeile oben rechts: Hinweis auf neue Kommentare und „Neu“-Status
+  const flags = document.createElement("span");
+  flags.className = "entry-item__flags";
+  if (item.newComments > 0) {
+    flags.append(
+      buildNewCommentsBadge(item.newComments, "entry-item__comments"),
+    );
+  }
+  flags.append(status);
+
   const stats = document.createElement("span");
   stats.className = "entry-item__stats";
   stats.append(
@@ -111,7 +146,7 @@ function buildItem(item: EntryListItem, locale: string) {
     buildStat("bi-heart-fill", item.likes, t("entryListLikes")),
   );
 
-  side.append(status, stats);
+  side.append(flags, stats);
   button.append(badge, main, side);
   li.append(button);
   return li;
@@ -236,6 +271,12 @@ export function createEntryList(callbacks: EntryListCallbacks) {
       total.className = "entry-country__total";
       total.textContent = entriesText(item.total);
       button.append(total);
+
+      if (item.newComments > 0) {
+        button.append(
+          buildNewCommentsBadge(item.newComments, "entry-country__comments"),
+        );
+      }
 
       if (item.newCount > 0) {
         const badge = document.createElement("span");

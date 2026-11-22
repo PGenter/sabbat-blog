@@ -6,7 +6,12 @@ import {
   localizeEntryField,
   localizedEntryColumn,
 } from "./i18n";
-import { adjustEntryLikes, currentCountry, isEditMode } from "./map";
+import {
+  adjustEntryLikes,
+  currentCountry,
+  isEditMode,
+  refreshNewCommentCounts,
+} from "./map";
 import { getUser, supabase } from "./supabase";
 import type { User } from "@supabase/supabase-js";
 import Swiper from "swiper";
@@ -404,6 +409,12 @@ async function loadCommentsForPhoto(
   }
 
   emptyState.hidden = true;
+
+  // Administratoren/Superuser: angezeigte Kommentare gelten als gelesen
+  if (activeCommentIsAdmin && currentUser) {
+    void markCommentsRead(data, currentUser.id);
+  }
+
   data.forEach((comment: GalleryComment) => {
     const item = document.createElement("li");
     item.className = "comment-item";
@@ -449,6 +460,31 @@ async function loadCommentsForPhoto(
     item.appendChild(contentContainer);
     commentsList.appendChild(item);
   });
+}
+
+// Bereits in dieser Sitzung als gelesen gespeicherte Kommentare (spart
+// wiederholte Anfragen beim Hin- und Herblättern)
+const commentsMarkedRead = new Set<string>();
+
+async function markCommentsRead(comments: GalleryComment[], userId: string) {
+  const unread = comments.filter(
+    (comment) =>
+      comment.user_id !== userId && !commentsMarkedRead.has(String(comment.id)),
+  );
+  if (unread.length === 0) return;
+
+  const { error } = await supabase.from("comment_reads").upsert(
+    unread.map((comment) => ({ comment_id: comment.id, user_id: userId })),
+    { onConflict: "comment_id,user_id", ignoreDuplicates: true },
+  );
+
+  if (error) {
+    console.error("Error marking comments as read:", error);
+    return;
+  }
+
+  unread.forEach((comment) => commentsMarkedRead.add(String(comment.id)));
+  await refreshNewCommentCounts();
 }
 
 function renderEditComment(

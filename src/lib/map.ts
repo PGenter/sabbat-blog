@@ -2,7 +2,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import L from "leaflet";
-import { getUser, supabase } from "../lib/supabase";
+import { getRole, getUser, supabase } from "../lib/supabase";
 import {
   getCurrentLanguage,
   getLanguageCode,
@@ -71,6 +71,12 @@ let entryList: EntryList | undefined;
 let visitedMarkers: Set<string> = new Set();
 let unvisitedCountsByCountry = new Map<CountryCode, number>();
 let totalCountsByCountry = new Map<CountryCode, number>();
+
+// Neue (noch nicht gesehene) Kommentare je Eintrag, nur für Administratoren
+// und Superuser. Schlüssel sind Eintrags-IDs als String.
+let canSeeNewComments = false;
+let newCommentsByEntry = new Map<string, number>();
+let entrySectionById = new Map<string, CountryCode>();
 let routeLine: L.Polyline;
 let routeGlow: L.Polyline;
 let routeAnimationFrame: number | null = null;
@@ -115,6 +121,7 @@ async function setupMap() {
   const [overview] = await Promise.all([
     loadEntryOverview(),
     loadVisitedMarkers(),
+    initNewComments(),
   ]);
   updateCountryCounts(overview);
   const latestEntry = overview[0];
@@ -346,12 +353,20 @@ function syncCountryMenu() {
   if (!entryList) return;
 
   const language = getCurrentLanguage();
+  const newCommentsPerCountry = new Map<CountryCode, number>();
+  for (const [entryId, count] of newCommentsByEntry) {
+    const code = entrySectionById.get(entryId);
+    if (!code) continue;
+    newCommentsPerCountry.set(code, (newCommentsPerCountry.get(code) ?? 0) + count);
+  }
+
   const options = (Object.keys(COUNTRIES) as CountryCode[]).map((code) => ({
     code,
     name: getCountryName(code, language),
     flagUrl: getCountryFlagUrl(code),
     total: totalCountsByCountry.get(code) ?? 0,
     newCount: unvisitedCountsByCountry.get(code) ?? 0,
+    newComments: newCommentsPerCountry.get(code) ?? 0,
   }));
 
   entryList.setCountries(options, currentCountry);
@@ -821,6 +836,42 @@ async function showEditMenu(entryId: string, currentTitle: string) {
    Laden und Rendern
    ========================================================================== */
 
+/* ==========================================================================
+   Neue Kommentare (Administrator/Superuser)
+   ========================================================================== */
+
+async function initNewComments() {
+  const role = await getRole();
+  canSeeNewComments = role === "administrator" || role === "superuser";
+  await refreshNewCommentCounts();
+}
+
+// Lädt die Anzahl ungelesener Kommentare je Eintrag neu und aktualisiert
+// Liste und Länderauswahl. Wird auch von der Galerie aufgerufen, nachdem
+// Kommentare angezeigt (und damit als gelesen markiert) wurden.
+export async function refreshNewCommentCounts() {
+  if (!canSeeNewComments) return;
+
+  const { data, error } = await supabase.rpc("new_comment_counts");
+  if (error) {
+    console.error("Error loading new comment counts:", error);
+    return;
+  }
+
+  newCommentsByEntry = new Map(
+    (data ?? []).map((row: { entry_id: string; new_count: number }) => [
+      String(row.entry_id),
+      Number(row.new_count),
+    ]),
+  );
+
+  for (const item of entryItems.values()) {
+    item.newComments = newCommentsByEntry.get(String(item.id)) ?? 0;
+  }
+  syncEntryList();
+  syncCountryMenu();
+}
+
 // Like-Summe eines Eintrags nach einem Like/Unlike in der Galerie anpassen,
 // ohne alle Einträge neu zu laden.
 export function adjustEntryLikes(entryId: string, delta: number) {
@@ -873,6 +924,7 @@ async function loadMarkersInView() {
       images: entry.photos?.[0]?.count ?? 0,
       visitors: entry.visited_entries?.[0]?.count ?? 0,
       likes: entry.photo_likes?.[0]?.count ?? 0,
+      newComments: newCommentsByEntry.get(String(entry.id)) ?? 0,
       visited: visitedMarkers.has(entry.id),
     });
   });
@@ -1037,8 +1089,10 @@ async function loadEntryOverview(): Promise<EntryOverview[]> {
 function updateCountryCounts(overview: EntryOverview[]) {
   const counts = new Map<CountryCode, number>();
   const totals = new Map<CountryCode, number>();
+  entrySectionById = new Map();
   for (const entry of overview) {
     if (!isCountryCode(entry.section)) continue;
+    entrySectionById.set(String(entry.id), entry.section);
     totals.set(entry.section, (totals.get(entry.section) ?? 0) + 1);
     if (visitedMarkers.has(entry.id)) continue;
     counts.set(entry.section, (counts.get(entry.section) ?? 0) + 1);
