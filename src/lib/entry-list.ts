@@ -272,12 +272,6 @@ export function createEntryList(callbacks: EntryListCallbacks) {
       total.textContent = entriesText(item.total);
       button.append(total);
 
-      if (item.newComments > 0) {
-        button.append(
-          buildNewCommentsBadge(item.newComments, "entry-country__comments"),
-        );
-      }
-
       if (item.newCount > 0) {
         const badge = document.createElement("span");
         badge.className = "entry-country__new";
@@ -286,7 +280,13 @@ export function createEntryList(callbacks: EntryListCallbacks) {
         badge.title = t("entryListHasNewTitle");
         button.append(badge);
       }
-
+      
+      if (item.newComments > 0) {
+        button.append(
+          buildNewCommentsBadge(item.newComments, "entry-country__comments"),
+        );
+      }
+      
       li.append(button);
       menu.append(li);
     });

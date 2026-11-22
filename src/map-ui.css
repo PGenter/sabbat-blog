@@ -527,6 +527,7 @@
 /* Zeile mit Kommentar-Hinweis und „Neu“-Status */
 .entry-item__flags {
   display: inline-flex;
+  flex-direction: row-reverse;
   gap: 6px;
   align-items: center;
 }
