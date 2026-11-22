@@ -19,6 +19,7 @@ import {
 // Slider-Leiste entfernt
 // import { setOnCountryChange, updateCountryLabels } from "../lib/slider";
 import { startUpload } from "./upload.ts";
+import { focusFirstField, setBackgroundBlocked } from "../lib/modal.ts";
 import {
   setLanguage,
   t,
@@ -51,11 +52,7 @@ const uploadsection = document.getElementById(
 const invitesection = document.getElementById(
   "invitation-section",
 ) as HTMLDivElement;
-const mapWrapper = document.getElementById("map") as HTMLDivElement;
 // const navwrapper = document.getElementById("nav-wrapper") as HTMLDivElement;
-const modalBackdrop = document.getElementById(
-  "modal-backdrop",
-) as HTMLDivElement;
 const input = document.getElementById("images") as HTMLInputElement;
 const fileInfo = document.getElementById("file-info") as HTMLDivElement;
 
@@ -112,18 +109,15 @@ function hideInvitationButton() {
 function showModal(dialogType: HTMLDivElement) {
   dialogType.style.visibility = "visible";
   dialogType.style.opacity = "1";
-  modalBackdrop.classList.add("active");
-  mapWrapper.classList.add("inactive-background");
-  // navwrapper.classList.add("inactive-background");
+  setBackgroundBlocked(true);
   map.scrollWheelZoom.disable();
+  focusFirstField(dialogType);
 }
 
 export function hideModal(dialogType: HTMLDivElement) {
   dialogType.style.visibility = "hidden";
   dialogType.style.opacity = "0";
-  modalBackdrop.classList.remove("active");
-  mapWrapper.classList.remove("inactive-background");
-  // navwrapper.classList.remove("inactive-background");
+  setBackgroundBlocked(false);
   map.scrollWheelZoom.enable();
 }
 
