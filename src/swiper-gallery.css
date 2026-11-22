@@ -461,6 +461,85 @@ to take effect, as the specificity is the same */
   font-size: 11px;
 }
 
+/* ---------- Like-Button (Herz) unten rechts im Foto ---------- */
+
+/* --like-inset-x/y setzt gallery.ts im Vollbild (Abstand des eingepassten
+   Fotos zum Slide-Rand). --like-min-bottom hält das Herz über der
+   Fortschrittsleiste, wo diese über dem Foto liegt. */
+.my-swiper {
+  --like-min-bottom: 12px;
+}
+
+.photo-like-button {
+  position: absolute;
+  right: calc(var(--like-inset-x, 0px) + 12px);
+  bottom: max(calc(var(--like-inset-y, 0px) + 12px), var(--like-min-bottom));
+  z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 11px;
+  font-family: var(--gallery-font);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--gallery-text);
+  background: rgba(255, 255, 255, 0.85);
+  border: 0;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.photo-like-button i {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.photo-like-button:hover {
+  background: var(--gallery-surface);
+}
+
+.photo-like-button:active {
+  transform: scale(0.94);
+}
+
+.photo-like-button:focus-visible {
+  outline: 2px solid var(--gallery-accent);
+  outline-offset: 2px;
+}
+
+.photo-like-button.is-liked i {
+  color: var(--gallery-danger);
+  animation: photoLikePop 0.25s ease;
+}
+
+.photo-like-count:empty {
+  display: none;
+}
+
+@keyframes photoLikePop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.photo-gallery.image-fullscreen .my-swiper {
+  --like-min-bottom: 32px;
+}
+
+@media (orientation: landscape) and (max-width: 1024px), (min-width: 1024px) {
+  .my-swiper {
+    --like-min-bottom: 32px;
+  }
+}
+
 /* ---------- Kommentare ---------- */
 
 .gallery-comments {
@@ -838,8 +917,13 @@ to take effect, as the specificity is the same */
 @media (prefers-reduced-motion: reduce) {
   .photo-gallery,
   .galleryheader-button,
-  .thumbs-swiper .swiper-slide {
+  .thumbs-swiper .swiper-slide,
+  .photo-like-button {
     transition: none;
+  }
+
+  .photo-like-button.is-liked i {
+    animation: none;
   }
 }
 

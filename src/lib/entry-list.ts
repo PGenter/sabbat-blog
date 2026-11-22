@@ -8,6 +8,8 @@ export type EntryListItem = {
   createdAt: string;
   images: number;
   visitors: number;
+  /** Summe aller Likes auf den Fotos dieses Eintrags */
+  likes: number;
   visited: boolean;
 };
 
@@ -106,6 +108,7 @@ function buildItem(item: EntryListItem, locale: string) {
   stats.append(
     buildStat("bi-images", item.images, t("entryListImages")),
     buildStat("bi-people-fill", item.visitors, t("entryListVisitors")),
+    buildStat("bi-heart-fill", item.likes, t("entryListLikes")),
   );
 
   side.append(status, stats);

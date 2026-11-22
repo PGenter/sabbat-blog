@@ -6,7 +6,7 @@ import {
   localizeEntryField,
   localizedEntryColumn,
 } from "./i18n";
-import { currentCountry, isEditMode } from "./map";
+import { adjustEntryLikes, currentCountry, isEditMode } from "./map";
 import { getUser, supabase } from "./supabase";
 import type { User } from "@supabase/supabase-js";
 import Swiper from "swiper";
@@ -28,6 +28,10 @@ let activeCommentUser: Awaited<ReturnType<typeof getUser>> = null;
 let activeCommentIsAdmin = false;
 let swiper: Swiper | null = null;
 let thumbsSwiper: Swiper | null = null;
+
+// Likes der Fotos der aktuell geöffneten Galerie (photo_id -> Zustand)
+type PhotoLikeState = { count: number; liked: boolean; pending: boolean };
+const photoLikes = new Map<string, PhotoLikeState>();
 
 type GalleryComment = {
   id: string;
@@ -80,7 +84,162 @@ function toggleImageFullscreen(force?: boolean) {
   swiper?.zoom?.out();
   isImageFullscreen = force ?? !isImageFullscreen;
   gallery.classList.toggle("image-fullscreen", isImageFullscreen);
+  updateLikeButtonInsets();
 }
+
+/* ==========================================================================
+   Likes
+   ========================================================================== */
+
+function getLikeState(photoId: string): PhotoLikeState {
+  let state = photoLikes.get(photoId);
+  if (!state) {
+    state = { count: 0, liked: false, pending: false };
+    photoLikes.set(photoId, state);
+  }
+  return state;
+}
+
+async function loadLikesForPhotos(photoIds: string[], userId: string | null) {
+  photoLikes.clear();
+  photoIds.forEach((id) => getLikeState(id));
+  if (photoIds.length === 0) return;
+
+  const { data, error } = await supabase
+    .from("photo_likes")
+    .select("photo_id, user_id")
+    .in("photo_id", photoIds);
+
+  if (error) {
+    console.error("Error loading likes:", error);
+    return;
+  }
+
+  data?.forEach((like: { photo_id: string; user_id: string }) => {
+    const state = getLikeState(String(like.photo_id));
+    state.count += 1;
+    if (userId && like.user_id === userId) state.liked = true;
+  });
+}
+
+function createLikeButton(photoId: string) {
+  const button = document.createElement("button");
+  button.type = "button";
+  // swiper-no-swiping: ein Tipp aufs Herz startet kein Wischen
+  button.className = "photo-like-button swiper-no-swiping";
+  button.dataset.photoId = photoId;
+
+  const icon = document.createElement("i");
+  icon.setAttribute("aria-hidden", "true");
+  const count = document.createElement("span");
+  count.className = "photo-like-count";
+  button.append(icon, count);
+
+  button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    void togglePhotoLike(photoId);
+  });
+
+  renderLikeButton(button);
+  return button;
+}
+
+function renderLikeButton(button: HTMLButtonElement) {
+  const state = getLikeState(button.dataset.photoId!);
+  const icon = button.querySelector("i")!;
+  const count = button.querySelector(".photo-like-count")!;
+  const label = state.liked ? t("unlikePhoto") : t("likePhoto");
+
+  button.classList.toggle("is-liked", state.liked);
+  button.setAttribute("aria-pressed", String(state.liked));
+  button.setAttribute("aria-label", `${label} (${state.count} ${t("likesCount")})`);
+  button.title = label;
+  icon.className = `bi ${state.liked ? "bi-heart-fill" : "bi-heart"}`;
+  count.textContent = state.count > 0 ? String(state.count) : "";
+}
+
+function renderLikeButtons(photoId: string) {
+  document
+    .querySelectorAll<HTMLButtonElement>(
+      `.photo-like-button[data-photo-id="${photoId}"]`,
+    )
+    .forEach(renderLikeButton);
+}
+
+async function togglePhotoLike(photoId: string) {
+  const user = await getUser();
+  if (!user) {
+    alert(t("loginRequiredLike"));
+    return;
+  }
+
+  const state = getLikeState(photoId);
+  if (state.pending) return;
+
+  const entryId = currentGalleryEntryId;
+  const wasLiked = state.liked;
+  const delta = wasLiked ? -1 : 1;
+
+  // sofort anzeigen, bei einem Fehler zurücknehmen
+  state.pending = true;
+  state.liked = !wasLiked;
+  state.count = Math.max(0, state.count + delta);
+  renderLikeButtons(photoId);
+  if (entryId) adjustEntryLikes(entryId, delta);
+
+  const { error } = wasLiked
+    ? await supabase
+        .from("photo_likes")
+        .delete()
+        .eq("photo_id", photoId)
+        .eq("user_id", user.id)
+    : await supabase
+        .from("photo_likes")
+        .insert({ photo_id: photoId, user_id: user.id });
+
+  state.pending = false;
+
+  if (error) {
+    console.error("Error saving like:", error);
+    state.liked = wasLiked;
+    state.count = Math.max(0, state.count - delta);
+    renderLikeButtons(photoId);
+    if (entryId) adjustEntryLikes(entryId, -delta);
+    alert(t("errorLike"));
+  }
+}
+
+// Im Vollbild wird das Foto mit object-fit: contain eingepasst. Damit das Herz
+// trotzdem unten rechts IM Bild sitzt (und nicht im schwarzen Rand), wird der
+// Abstand des sichtbaren Bilds zum Slide-Rand als CSS-Variable gesetzt.
+// In der normalen Galerie füllt das Bild den Slide (cover), dort bleibt 0.
+// Die Breite kommt vom Swiper-Container (ein Slide pro Ansicht): Swiper passt
+// die Slide-Breiten erst verzögert an, der Container stimmt dagegen sofort.
+function updateLikeButtonInsets() {
+  const container = document.querySelector<HTMLElement>(".my-swiper");
+  document
+    .querySelectorAll<HTMLElement>(".my-swiper .swiper-slide")
+    .forEach((slide) => {
+      const img = slide.querySelector("img");
+      let insetX = 0;
+      let insetY = 0;
+
+      if (isImageFullscreen && img?.naturalWidth && img.naturalHeight) {
+        const width = container?.clientWidth ?? slide.clientWidth;
+        const height = slide.clientHeight;
+        const scale = Math.min(
+          width / img.naturalWidth,
+          height / img.naturalHeight,
+        );
+        insetX = Math.max(0, (width - img.naturalWidth * scale) / 2);
+        insetY = Math.max(0, (height - img.naturalHeight * scale) / 2);
+      }
+
+      slide.style.setProperty("--like-inset-x", `${insetX}px`);
+      slide.style.setProperty("--like-inset-y", `${insetY}px`);
+    });
+}
+
 
 // Setzt die Bildquelle und fängt Ladefehler (z.B. abgelaufene/fehlende
 // signierte URL) ab, damit statt des rohen alt-Texts eine dezente
@@ -596,6 +755,11 @@ export async function loadPhotosOfMarker(entryId: string) {
   }
 
   const photos = await withSignedPhotoUrls(data);
+  const user = await getUser();
+  await loadLikesForPhotos(
+    photos.map((photo) => String(photo.id)),
+    user?.id ?? null,
+  );
 
   await renderPhotos(photos, description);
 }
@@ -801,6 +965,10 @@ async function renderPhotos(photos: any[], description: string) {
     zoomContainer.className = "swiper-zoom-container";
     zoomContainer.appendChild(swiperSlideImg);
     swiperSlide.appendChild(zoomContainer);
+    swiperSlide.appendChild(createLikeButton(String(photo.id)));
+    swiperSlideImg.addEventListener("load", () => {
+      if (isImageFullscreen) updateLikeButtonInsets();
+    });
     swiperWrapper?.appendChild(swiperSlide);
 
     if (canDeletePhotos) {
@@ -969,7 +1137,7 @@ function ensureSwiper() {
 
   swiper.on("click", (_swiperInstance, event) => {
     const target = event.target as HTMLElement;
-    if (target.closest(".image-delete-button")) return;
+    if (target.closest(".image-delete-button, .photo-like-button")) return;
     if (swiper && swiper.zoom.scale > 1) return;
     toggleImageFullscreen();
   });
@@ -977,6 +1145,11 @@ function ensureSwiper() {
   swiper.on("slideChange", () => {
     void refreshCommentsForActivePhoto();
     updateItemNo();
+  });
+
+  // Größenänderung (Fenster, Drehen, Vollbild): Herz neu im Foto platzieren
+  swiper.on("resize", () => {
+    if (isImageFullscreen) updateLikeButtonInsets();
   });
 
   return swiper;

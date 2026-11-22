@@ -821,6 +821,15 @@ async function showEditMenu(entryId: string, currentTitle: string) {
    Laden und Rendern
    ========================================================================== */
 
+// Like-Summe eines Eintrags nach einem Like/Unlike in der Galerie anpassen,
+// ohne alle Einträge neu zu laden.
+export function adjustEntryLikes(entryId: string, delta: number) {
+  const item = entryItems.get(entryId);
+  if (!item) return;
+  item.likes = Math.max(0, item.likes + delta);
+  syncEntryList();
+}
+
 // Neueste Station zuerst, so wie sie in der Liste erscheint.
 function syncEntryList() {
   const sorted = [...entryItems.values()].sort((a, b) => b.number - a.number);
@@ -835,7 +844,7 @@ async function loadMarkersInView() {
   const { data, error } = await supabase
     .from("entries")
     .select(
-      "id, latitude, longitude, title, description, title_es, description_es, user_id, taken_at, created_at, visited_entries(count), photos!photos_entry_id_fkey(count)",
+      "id, latitude, longitude, title, description, title_es, description_es, user_id, taken_at, created_at, visited_entries(count), photos!photos_entry_id_fkey(count), photo_likes!photo_likes_entry_id_fkey(count)",
     )
     .eq("section", currentCountry)
     .order("created_at", { ascending: true })
@@ -863,6 +872,7 @@ async function loadMarkersInView() {
       longitude: entry.longitude,
       images: entry.photos?.[0]?.count ?? 0,
       visitors: entry.visited_entries?.[0]?.count ?? 0,
+      likes: entry.photo_likes?.[0]?.count ?? 0,
       visited: visitedMarkers.has(entry.id),
     });
   });
