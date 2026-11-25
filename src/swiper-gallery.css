@@ -69,18 +69,31 @@ to take effect, as the specificity is the same */
   font-family: var(--gallery-font);
   color: var(--gallery-text);
   background-color: var(--gallery-background);
+  /* Geschlossen: per visibility statt pointer-events ausblenden. Auf iOS
+     (WebKit) wurden die Touch-Bereiche nach dem Umschalten von
+     pointer-events auf dem skalierten (transform) Container nicht sauber
+     aktualisiert: Die Kommentarliste ließ sich dann nur in einem kleinen
+     Bereich scrollen, auf dem Kommentartext gar nicht. visibility wird beim
+     Schließen erst nach dem Ausblenden (0.5s) umgeschaltet. */
+  visibility: hidden;
   opacity: 0;
   transform: scale(0.95);
   transition:
     opacity 0.5s ease,
-    transform 0.5s ease;
-  pointer-events: none;
+    transform 0.5s ease,
+    visibility 0s linear 0.5s;
 }
 
 .photo-gallery.active {
+  visibility: visible;
   opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
+  /* Im geöffneten Zustand kein transform: Scroll-Container in transformierten
+     Vorfahren werden auf iOS teils nicht per Touch gescrollt. */
+  transform: none;
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease,
+    visibility 0s linear 0s;
 }
 
 .photo-gallery,
@@ -590,6 +603,10 @@ to take effect, as the specificity is the same */
   padding: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* vertikales Wischen auf dem gesamten Kommentar (auch auf dem Text)
+     scrollt die Liste */
+  touch-action: pan-y;
   list-style: none;
 }
 
