@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import imageCompression from "browser-image-compression";
 import * as exifr from "exifr";
 import { handleError } from "../lib/errorHandler";
+import { setBackgroundBlocked } from "../lib/modal.ts";
 import { t } from "../lib/i18n.ts";
 import {
   currentCountry,
@@ -13,24 +14,20 @@ import {
   selectCountry,
 } from "../lib/map.ts";
 
-// Blendet das Upload-Modal kurz aus, damit die Karte für die manuelle
-// Standortauswahl klickbar wird, und stellt es danach wieder her.
+// Blendet das Upload-Modal aus bzw. wieder ein, z. B. damit die Karte für die
+// manuelle Standortauswahl klickbar wird oder nach erfolgreichem Upload.
+// Wichtig: Der Hintergrund wird über setBackgroundBlocked() gesperrt/entsperrt
+// (inert-Attribut), genau wie beim Öffnen des Modals in main.ts. Früher wurde
+// hier nur der Backdrop umgeschaltet; das inert-Attribut blieb nach dem Upload
+// stehen und die ganze Seite reagierte nicht mehr, bis man neu geladen hat.
 function setUploadModalVisible(visible: boolean) {
   const uploadSection = document.getElementById(
     "upload-section",
   ) as HTMLDivElement;
-  const modalBackdrop = document.getElementById(
-    "modal-backdrop",
-  ) as HTMLDivElement;
-  const mapWrapper = document.getElementById("map") as HTMLDivElement;
-  // Slider-Leiste entfernt
-  // const navWrapper = document.getElementById("nav-wrapper") as HTMLDivElement;
 
   uploadSection.style.visibility = visible ? "visible" : "hidden";
   uploadSection.style.opacity = visible ? "1" : "0";
-  modalBackdrop.classList.toggle("active", visible);
-  mapWrapper.classList.toggle("inactive-background", visible);
-  // navWrapper.classList.toggle("inactive-background", visible);
+  setBackgroundBlocked(visible);
 
   if (visible) {
     map.scrollWheelZoom.disable();
