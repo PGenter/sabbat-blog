@@ -404,11 +404,16 @@ async function loadCommentsForPhoto(
   }
 
   if (!data?.length) {
+    commentReactions.clear();
     emptyState.hidden = false;
     return;
   }
 
   emptyState.hidden = true;
+
+  await loadReactionsForComments(
+    data.map((comment: GalleryComment) => String(comment.id)),
+  );
 
   // Administratoren/Superuser: angezeigte Kommentare gelten als gelesen
   if (activeCommentIsAdmin && currentUser) {
@@ -418,6 +423,9 @@ async function loadCommentsForPhoto(
   data.forEach((comment: GalleryComment) => {
     const item = document.createElement("li");
     item.className = "comment-item";
+    if (currentUser?.id && comment.user_id === currentUser.id) {
+      item.classList.add("comment-item--own");
+    }
 
     const meta = document.createElement("div");
     meta.className = "comment-meta";
@@ -456,8 +464,13 @@ async function loadCommentsForPhoto(
       );
     }
 
+    const footer = document.createElement("div");
+    footer.className = "comment-footer";
+    footer.appendChild(createReactionBadge(String(comment.id)));
+
     item.appendChild(meta);
     item.appendChild(contentContainer);
+    item.appendChild(footer);
     commentsList.appendChild(item);
   });
 }
@@ -485,6 +498,300 @@ async function markCommentsRead(comments: GalleryComment[], userId: string) {
 
   unread.forEach((comment) => commentsMarkedRead.add(String(comment.id)));
   await refreshNewCommentCounts();
+}
+
+/* ==========================================================================
+   Emoji-Reaktionen auf Kommentare
+   ========================================================================== */
+
+// Muss mit der Check-Constraint in supabase/snippets/comment-reactions.sql
+// übereinstimmen (inkl. Variation Selector bei ❤️).
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🔥"] as const;
+type ReactionEmoji = (typeof REACTION_EMOJIS)[number];
+
+type CommentReaction = {
+  user_id: string;
+  emoji: ReactionEmoji;
+  author_name: string | null;
+};
+type CommentReactionState = { reactions: CommentReaction[]; pending: boolean };
+
+// Reaktionen der aktuell angezeigten Kommentare (comment_id -> Zustand)
+const commentReactions = new Map<string, CommentReactionState>();
+
+function getReactionState(commentId: string): CommentReactionState {
+  let state = commentReactions.get(commentId);
+  if (!state) {
+    state = { reactions: [], pending: false };
+    commentReactions.set(commentId, state);
+  }
+  return state;
+}
+
+async function loadReactionsForComments(commentIds: string[]) {
+  commentReactions.clear();
+  commentIds.forEach((id) => getReactionState(id));
+  if (commentIds.length === 0) return;
+
+  const { data, error } = await supabase
+    .from("comment_reactions")
+    .select("comment_id, user_id, emoji, author_name, created_at")
+    .in("comment_id", commentIds)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Error loading comment reactions:", error);
+    return;
+  }
+
+  data?.forEach((row: CommentReaction & { comment_id: string }) => {
+    getReactionState(String(row.comment_id)).reactions.push({
+      user_id: row.user_id,
+      emoji: row.emoji,
+      author_name: row.author_name,
+    });
+  });
+}
+
+// Emojis nach Häufigkeit (bei Gleichstand in der Reihenfolge der Auswahl)
+function summarizeReactions(reactions: CommentReaction[]) {
+  return REACTION_EMOJIS.map((emoji) => {
+    const matching = reactions.filter((reaction) => reaction.emoji === emoji);
+    return {
+      emoji,
+      count: matching.length,
+      names: matching.map(
+        (reaction) => reaction.author_name || t("commentAuthor"),
+      ),
+    };
+  })
+    .filter((entry) => entry.count > 0)
+    .sort((a, b) => b.count - a.count);
+}
+
+function getOwnReaction(commentId: string) {
+  const userId = activeCommentUser?.id;
+  if (!userId) return null;
+  return (
+    getReactionState(commentId).reactions.find(
+      (reaction) => reaction.user_id === userId,
+    )?.emoji ?? null
+  );
+}
+
+function createReactionBadge(commentId: string) {
+  const wrap = document.createElement("div");
+  wrap.className = "comment-reactions";
+  wrap.dataset.commentId = commentId;
+
+  const badge = document.createElement("button");
+  badge.type = "button";
+  badge.className = "comment-reaction-badge";
+  badge.setAttribute("aria-haspopup", "dialog");
+
+  const picker = document.createElement("div");
+  picker.className = "reaction-picker";
+  picker.popover = "auto";
+  picker.setAttribute("role", "dialog");
+  picker.setAttribute("aria-label", t("reactionPickerTitle"));
+  badge.popoverTargetElement = picker;
+  badge.popoverTargetAction = "toggle";
+
+  // Vor dem Öffnen neben den Badge setzen (Desktop). Auf schmalen
+  // Bildschirmen erscheint die Auswahl per CSS als Leiste am unteren Rand.
+  picker.addEventListener("beforetoggle", (event) => {
+    if ((event as ToggleEvent).newState !== "open") return;
+    renderReactionPicker(picker, commentId);
+    const rect = badge.getBoundingClientRect();
+    const pickerWidth = 300;
+    const left = Math.min(
+      Math.max(8, rect.left),
+      window.innerWidth - pickerWidth - 8,
+    );
+    picker.style.setProperty("--picker-left", `${left}px`);
+    picker.style.setProperty(
+      "--picker-bottom",
+      `${window.innerHeight - rect.top + 6}px`,
+    );
+  });
+
+  wrap.append(badge, picker);
+  renderReactionBadge(wrap);
+  return wrap;
+}
+
+function renderReactionBadge(wrap: HTMLElement) {
+  const commentId = wrap.dataset.commentId!;
+  const badge = wrap.querySelector<HTMLButtonElement>(
+    ".comment-reaction-badge",
+  )!;
+  const state = getReactionState(commentId);
+  const summary = summarizeReactions(state.reactions);
+  const own = getOwnReaction(commentId);
+  const total = state.reactions.length;
+
+  badge.replaceChildren();
+  badge.classList.toggle("is-empty", total === 0);
+  badge.classList.toggle("is-own", !!own);
+
+  if (total === 0) {
+    const icon = document.createElement("i");
+    icon.className = "bi bi-emoji-smile";
+    icon.setAttribute("aria-hidden", "true");
+    const plus = document.createElement("span");
+    plus.className = "comment-reaction-plus";
+    plus.textContent = "+";
+    plus.setAttribute("aria-hidden", "true");
+    badge.append(icon, plus);
+  } else {
+    const emojis = document.createElement("span");
+    emojis.className = "comment-reaction-emojis";
+    emojis.setAttribute("aria-hidden", "true");
+    summary.slice(0, 3).forEach(({ emoji }) => {
+      const span = document.createElement("span");
+      span.textContent = emoji;
+      emojis.appendChild(span);
+    });
+    const count = document.createElement("span");
+    count.className = "comment-reaction-count";
+    count.textContent = String(total);
+    count.setAttribute("aria-hidden", "true");
+    badge.append(emojis, count);
+  }
+
+  const detail = summary.map(({ emoji, count }) => `${emoji} ${count}`).join(", ");
+  const label = own ? t("reactionChange") : t("reactionAdd");
+  badge.setAttribute("aria-label", detail ? `${label} (${detail})` : label);
+  badge.title = label;
+}
+
+function renderReactionPicker(picker: HTMLElement, commentId: string) {
+  const state = getReactionState(commentId);
+  const own = getOwnReaction(commentId);
+  const summary = summarizeReactions(state.reactions);
+
+  picker.replaceChildren();
+
+  const title = document.createElement("div");
+  title.className = "reaction-picker-title";
+  title.textContent = own ? t("reactionChange") : t("reactionPickerTitle");
+
+  const options = document.createElement("div");
+  options.className = "reaction-picker-options";
+  REACTION_EMOJIS.forEach((emoji) => {
+    const option = document.createElement("button");
+    option.type = "button";
+    option.className = "reaction-option";
+    const selected = own === emoji;
+    option.classList.toggle("is-selected", selected);
+    option.setAttribute("aria-pressed", String(selected));
+    option.title = selected ? t("reactionRemove") : emoji;
+
+    const glyph = document.createElement("span");
+    glyph.className = "reaction-option-emoji";
+    glyph.textContent = emoji;
+    const count = document.createElement("span");
+    count.className = "reaction-option-count";
+    const n = summary.find((entry) => entry.emoji === emoji)?.count ?? 0;
+    count.textContent = n > 0 ? String(n) : "";
+    option.append(glyph, count);
+
+    option.addEventListener("click", () => {
+      picker.hidePopover();
+      void setCommentReaction(commentId, selected ? null : emoji);
+    });
+    options.appendChild(option);
+  });
+
+  picker.append(title, options);
+
+  if (summary.length > 0) {
+    const who = document.createElement("ul");
+    who.className = "reaction-picker-who";
+    summary.forEach(({ emoji, names }) => {
+      const row = document.createElement("li");
+      const glyph = document.createElement("span");
+      glyph.textContent = emoji;
+      glyph.setAttribute("aria-hidden", "true");
+      const list = document.createElement("span");
+      list.textContent = names.join(", ");
+      row.append(glyph, list);
+      who.appendChild(row);
+    });
+    picker.appendChild(who);
+  }
+
+  if (own) {
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "reaction-picker-remove";
+    remove.innerHTML = '<i class="bi bi-x-circle"></i> ';
+    remove.append(t("reactionRemove"));
+    remove.addEventListener("click", () => {
+      picker.hidePopover();
+      void setCommentReaction(commentId, null);
+    });
+    picker.appendChild(remove);
+  }
+}
+
+function renderReactionBadges(commentId: string) {
+  document
+    .querySelectorAll<HTMLElement>(
+      `.comment-reactions[data-comment-id="${commentId}"]`,
+    )
+    .forEach(renderReactionBadge);
+}
+
+// emoji = null nimmt die eigene Reaktion zurück
+async function setCommentReaction(
+  commentId: string,
+  emoji: ReactionEmoji | null,
+) {
+  const user = activeCommentUser ?? (await getUser());
+  if (!user) {
+    alert(t("loginRequiredReaction"));
+    return;
+  }
+
+  const state = getReactionState(commentId);
+  if (state.pending) return;
+
+  const previous = state.reactions.slice();
+  const others = state.reactions.filter((r) => r.user_id !== user.id);
+  const authorName = getCommentAuthorName(user);
+
+  // sofort anzeigen, bei einem Fehler zurücknehmen
+  state.pending = true;
+  state.reactions = emoji
+    ? [...others, { user_id: user.id, emoji, author_name: authorName }]
+    : others;
+  renderReactionBadges(commentId);
+
+  const { error } = emoji
+    ? await supabase.from("comment_reactions").upsert(
+        {
+          comment_id: commentId,
+          user_id: user.id,
+          emoji,
+          author_name: authorName,
+        },
+        { onConflict: "comment_id,user_id" },
+      )
+    : await supabase
+        .from("comment_reactions")
+        .delete()
+        .eq("comment_id", commentId)
+        .eq("user_id", user.id);
+
+  state.pending = false;
+
+  if (error) {
+    console.error("Error saving comment reaction:", error);
+    state.reactions = previous;
+    renderReactionBadges(commentId);
+    alert(t("errorReaction"));
+  }
 }
 
 function renderEditComment(

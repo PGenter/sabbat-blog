@@ -677,10 +677,23 @@ to take effect, as the specificity is the same */
   cursor: pointer;
 }
 
+/* Jeder Kommentar als eigene Karte, damit sie sich klar voneinander abheben */
 .comment-item {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  flex: none;
+  padding: 10px 12px 8px;
+  background: var(--gallery-surface);
+  border: 1px solid var(--gallery-border);
+  border-radius: var(--gallery-radius-box);
+  box-shadow: 0 1px 2px rgba(17, 17, 17, 0.04);
+}
+
+/* eigene Kommentare: dezente Akzentkante links */
+.comment-item--own {
+  border-left: 4px solid var(--gallery-accent);
+  padding-left: 10px;
 }
 
 .comment-meta {
@@ -768,6 +781,226 @@ to take effect, as the specificity is the same */
 
 .comment-menu-shell .comment-delete-button {
   color: var(--gallery-danger);
+}
+
+/* ---------- Emoji-Reaktionen ---------- */
+
+.comment-footer {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 2px;
+}
+
+.comment-reaction-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  padding: 3px 10px;
+  font: 500 13px/1 var(--gallery-font);
+  color: var(--gallery-text);
+  background: var(--gallery-background);
+  border: 1px solid var(--gallery-border);
+  border-radius: 999px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  position: relative;
+}
+
+/* größere Trefferfläche als die sichtbare Pille */
+.comment-reaction-badge::after {
+  content: "";
+  position: absolute;
+  inset: -7px -4px;
+}
+
+.comment-reaction-badge:hover {
+  border-color: var(--gallery-text-muted);
+}
+
+.comment-reaction-badge:focus-visible {
+  outline: 2px solid var(--gallery-text);
+  outline-offset: 2px;
+}
+
+.comment-reaction-badge.is-empty {
+  color: var(--gallery-text-muted);
+  background: transparent;
+  font-size: 15px;
+  padding: 3px 9px;
+}
+
+.comment-reaction-plus {
+  font-size: 13px;
+  font-weight: 700;
+  margin-left: -2px;
+}
+
+.comment-reaction-badge.is-own {
+  background: color-mix(in srgb, var(--gallery-accent) 45%, #fff);
+  border-color: color-mix(in srgb, var(--gallery-accent) 60%, #111 10%);
+}
+
+.comment-reaction-emojis {
+  display: inline-flex;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.comment-reaction-emojis span + span {
+  margin-left: 1px;
+}
+
+.comment-reaction-count {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Auswahl: auf großen Bildschirmen über dem Badge */
+.reaction-picker {
+  position: fixed;
+  inset: auto auto var(--picker-bottom, 50%) var(--picker-left, 50%);
+  margin: 0;
+  width: 300px;
+  max-width: calc(100vw - 16px);
+  padding: 12px;
+  color: var(--gallery-text);
+  font-family: var(--gallery-font);
+  border-radius: 16px;
+}
+
+.reaction-picker::backdrop {
+  background: transparent;
+}
+
+.reaction-picker-title {
+  margin: 0 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gallery-text-muted);
+}
+
+.reaction-picker-options {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.reaction-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: 4px 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.12s ease, background-color 0.12s ease;
+}
+
+.reaction-option:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.reaction-option:active {
+  transform: scale(0.9);
+}
+
+.reaction-option:focus-visible {
+  outline: 2px solid var(--gallery-text);
+  outline-offset: 1px;
+}
+
+.reaction-option.is-selected {
+  background: color-mix(in srgb, var(--gallery-accent) 55%, #fff);
+  border-color: color-mix(in srgb, var(--gallery-accent) 60%, #111 10%);
+}
+
+.reaction-option-emoji {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.reaction-option-count {
+  min-height: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--gallery-text-muted);
+}
+
+.reaction-picker-who {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 30vh;
+  margin: 10px 0 0;
+  padding: 10px 2px 0;
+  overflow-y: auto;
+  font-size: 13px;
+  list-style: none;
+  border-top: 1px solid var(--gallery-border);
+}
+
+.reaction-picker-who li {
+  display: flex;
+  gap: 8px;
+  line-height: 1.35;
+}
+
+.reaction-picker-who li span:last-child {
+  color: #3a3a36;
+  overflow-wrap: anywhere;
+}
+
+.reaction-picker-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 10px;
+  font: 500 14px var(--gallery-font);
+  color: var(--gallery-danger);
+  background: transparent;
+  border: 1px solid var(--gallery-border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Smartphones: Auswahl als Leiste am unteren Rand (gut mit dem Daumen
+   erreichbar, große Trefferflächen), mit leicht abgedunkeltem Hintergrund */
+@media (max-width: 640px) {
+  .reaction-picker {
+    inset: auto 0 0 0;
+    width: 100%;
+    max-width: none;
+    padding: 14px 14px calc(16px + env(safe-area-inset-bottom));
+    border-radius: 20px 20px 0 0;
+  }
+
+  .reaction-picker::backdrop {
+    background: rgba(17, 17, 17, 0.25);
+  }
+
+  .reaction-option {
+    min-height: 60px;
+  }
+
+  .reaction-option-emoji {
+    font-size: 28px;
+  }
 }
 
 /* ==========================================================================
