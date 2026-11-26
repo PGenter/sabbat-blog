@@ -642,6 +642,11 @@ to take effect, as the specificity is the same */
 .comment-input {
   flex: 1;
   min-width: 0;
+  /* style.css gibt allen Textareas min-height: min(7rem, 15vh). Das gewinnt
+     gegen max-height, die Textarea ragte dadurch nach oben aus der Eingabebox
+     heraus und lag (unsichtbar) über der Kommentarliste. Touches auf den
+     Kommentartext landeten so in der Textarea statt in der Liste. */
+  min-height: 0;
   max-height: 2lh;
   padding: 7px 0;
   font: 14px/1.4 var(--gallery-font);
