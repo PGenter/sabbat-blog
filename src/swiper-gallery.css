@@ -795,7 +795,7 @@ to take effect, as the specificity is the same */
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  min-height: 30px;
+  min-height: 26px;
   padding: 3px 10px;
   font: 500 13px/1 var(--gallery-font);
   color: var(--gallery-text);
