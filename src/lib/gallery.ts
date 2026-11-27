@@ -597,15 +597,25 @@ function createReactionBadge(commentId: string) {
   badge.popoverTargetElement = picker;
   badge.popoverTargetAction = "toggle";
 
-  // Die Auswahl liegt genau über dem Badge und "wächst" aus ihm heraus:
-  // Position und Start-Ausschnitt (clip-path) entsprechen dem Badge.
+  // Das Badge "wächst" zur Auswahl: Die Auswahl startet in Größe, Position
+  // und Farbe des Badges und zieht sich dann auf (beim Schließen zurück).
+  let closeTimer: number | undefined;
   picker.addEventListener("beforetoggle", (event) => {
     if ((event as ToggleEvent).newState !== "open") return;
+    window.clearTimeout(closeTimer);
     renderReactionPicker(picker, commentId);
     positionReactionPicker(picker, badge);
   });
   picker.addEventListener("toggle", (event) => {
-    wrap.classList.toggle("is-open", (event as ToggleEvent).newState === "open");
+    if ((event as ToggleEvent).newState === "open") {
+      wrap.classList.add("is-open");
+    } else {
+      // Badge erst wieder zeigen, wenn die Auswahl zurückgeschrumpft ist
+      closeTimer = window.setTimeout(
+        () => wrap.classList.remove("is-open"),
+        PICKER_ANIMATION_MS,
+      );
+    }
   });
 
   wrap.append(badge, picker);
@@ -663,34 +673,41 @@ function renderReactionBadge(wrap: HTMLElement) {
 }
 
 // Maße der Auswahl (müssen zu .reaction-picker / .reaction-option passen)
-const PICKER_OPTION_SIZE = 40;
+const PICKER_ANIMATION_MS = 240;
 const PICKER_GAP = 2;
 const PICKER_PADDING = 3;
-const PICKER_WIDTH =
-  REACTION_EMOJIS.length * PICKER_OPTION_SIZE +
-  (REACTION_EMOJIS.length - 1) * PICKER_GAP +
-  2 * PICKER_PADDING;
-const PICKER_HEIGHT = PICKER_OPTION_SIZE + 2 * PICKER_PADDING;
+const PICKER_BORDER = 1;
+const mobilePicker = window.matchMedia("(max-width: 640px)");
 
 function positionReactionPicker(picker: HTMLElement, badge: HTMLElement) {
+  const optionSize = mobilePicker.matches ? 34 : 40;
+  const width =
+    REACTION_EMOJIS.length * optionSize +
+    (REACTION_EMOJIS.length - 1) * PICKER_GAP +
+    2 * (PICKER_PADDING + PICKER_BORDER);
+  const height = optionSize + 2 * (PICKER_PADDING + PICKER_BORDER);
+
   const rect = badge.getBoundingClientRect();
-  const left = Math.min(
-    Math.max(8, rect.left - PICKER_PADDING),
-    window.innerWidth - PICKER_WIDTH - 8,
-  );
-  const top = rect.top + rect.height / 2 - PICKER_HEIGHT / 2;
+  // links bündig mit dem Badge, vertikal um seine Mitte herum aufziehen
+  const left = Math.min(Math.max(8, rect.left), window.innerWidth - width - 8);
+  const top = rect.top + rect.height / 2 - height / 2;
+  const badgeStyle = getComputedStyle(badge);
 
-  // Ausschnitt des Badges innerhalb der Auswahl (Startzustand der Animation)
-  const clipTop = Math.max(0, (PICKER_HEIGHT - rect.height) / 2);
-  const clipLeft = Math.max(0, rect.left - left);
-  const clipRight = Math.max(0, PICKER_WIDTH - clipLeft - rect.width);
-
-  picker.style.setProperty("--picker-left", `${left}px`);
-  picker.style.setProperty("--picker-top", `${top}px`);
-  picker.style.setProperty("--picker-width", `${PICKER_WIDTH}px`);
-  picker.style.setProperty(
-    "--picker-clip-start",
-    `inset(${clipTop}px ${clipRight}px ${clipTop}px ${clipLeft}px round 999px)`,
+  const vars: Record<string, string> = {
+    "--badge-left": `${rect.left}px`,
+    "--badge-top": `${rect.top}px`,
+    "--badge-width": `${rect.width}px`,
+    "--badge-height": `${rect.height}px`,
+    "--badge-bg": badgeStyle.backgroundColor,
+    "--badge-border": badgeStyle.borderTopColor,
+    "--picker-left": `${left}px`,
+    "--picker-top": `${top}px`,
+    "--picker-width": `${width}px`,
+    "--picker-height": `${height}px`,
+    "--option-size": `${optionSize}px`,
+  };
+  Object.entries(vars).forEach(([key, value]) =>
+    picker.style.setProperty(key, value),
   );
 }
 

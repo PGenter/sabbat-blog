@@ -864,48 +864,67 @@ to take effect, as the specificity is the same */
   visibility: hidden;
 }
 
-/* Auswahl: Pille im Stil des Badges, die sich vom Badge aus nach rechts
-   aufzieht. Position und Startausschnitt setzt gallery.ts. */
+/* Auswahl: das Badge wächst zur Pille mit den Emojis. Geschlossen (und als
+   Startzustand) hat sie Größe, Position und Farbe des Badges, geöffnet ihre
+   volle Größe. Die Werte setzt gallery.ts (positionReactionPicker). */
 .reaction-picker {
   position: fixed;
-  inset: var(--picker-top, 50%) auto auto var(--picker-left, 50%);
+  inset: var(--badge-top, 50%) auto auto var(--badge-left, 50%);
+  box-sizing: border-box;
+  width: var(--badge-width, 40px);
+  height: var(--badge-height, 26px);
   margin: 0;
   /* display hier NICHT setzen: sonst überschreibt es das display: none des
      geschlossenen Popovers, die unsichtbare Pille bleibt über dem Badge
      liegen und fängt die nächsten Klicks ab. */
+  align-items: center;
   gap: 2px;
-  width: var(--picker-width, 256px);
-  height: 46px;
   padding: 3px;
-  background: var(--gallery-surface);
-  border: 1px solid var(--gallery-border);
+  background: var(--badge-bg, var(--gallery-surface));
+  border: 1px solid var(--badge-border, var(--gallery-border));
   border-radius: 999px;
-  box-shadow: 0 4px 14px rgba(17, 17, 17, 0.12);
+  box-shadow: 0 0 0 rgba(17, 17, 17, 0);
   overflow: hidden;
 
   /* globale [popover]-Animation (scaleY) ersetzen */
   transform: none;
-  opacity: 0;
-  clip-path: var(--picker-clip-start, inset(0 round 999px));
+  opacity: 1;
   transition:
-    clip-path 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
-    opacity 0.12s ease,
-    display 0.22s allow-discrete,
-    overlay 0.22s allow-discrete;
+    top 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.15),
+    left 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.15),
+    width 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.15),
+    height 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.15),
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.24s ease,
+    display 0.24s allow-discrete,
+    overlay 0.24s allow-discrete;
 }
 
 .reaction-picker:popover-open {
   display: flex;
+  top: var(--picker-top);
+  left: var(--picker-left);
+  width: var(--picker-width);
+  height: var(--picker-height);
+  background: var(--gallery-surface);
+  border-color: var(--gallery-border);
+  box-shadow: 0 6px 18px rgba(17, 17, 17, 0.14);
   transform: none;
   opacity: 1;
-  clip-path: inset(0 round 999px);
 }
 
 @starting-style {
   .reaction-picker:popover-open {
-    opacity: 0;
+    top: var(--badge-top);
+    left: var(--badge-left);
+    width: var(--badge-width);
+    height: var(--badge-height);
+    background: var(--badge-bg);
+    border-color: var(--badge-border);
+    box-shadow: 0 0 0 rgba(17, 17, 17, 0);
     transform: none;
-    clip-path: var(--picker-clip-start, inset(0 round 999px));
+    opacity: 1;
   }
 }
 
@@ -917,8 +936,8 @@ to take effect, as the specificity is the same */
   flex: none;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: var(--option-size, 40px);
+  height: var(--option-size, 40px);
   padding: 0;
   font-size: 22px;
   line-height: 1;
@@ -928,13 +947,26 @@ to take effect, as the specificity is the same */
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  /* beim Schließen sofort ausblenden */
+  opacity: 0;
+  transform: scale(0.4);
   transition:
-    transform 0.18s ease calc(var(--i, 0) * 25ms),
-    opacity 0.18s ease calc(var(--i, 0) * 25ms),
+    transform 0.12s ease,
+    opacity 0.1s ease,
     background-color 0.12s ease;
 }
 
-/* Emojis rollen nacheinander herein */
+/* beim Öffnen rollen die Emojis nacheinander herein, während das Badge wächst */
+.reaction-picker:popover-open .reaction-option {
+  opacity: 1;
+  transform: none;
+  transition:
+    transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.3)
+      calc(60ms + var(--i, 0) * 25ms),
+    opacity 0.16s ease calc(60ms + var(--i, 0) * 25ms),
+    background-color 0.12s ease;
+}
+
 @starting-style {
   .reaction-picker:popover-open .reaction-option {
     opacity: 0;
@@ -942,12 +974,19 @@ to take effect, as the specificity is the same */
   }
 }
 
+@media (max-width: 640px) {
+  .reaction-option {
+    font-size: 18px;
+  }
+}
+
 .reaction-option:hover {
   background: rgba(0, 0, 0, 0.06);
 }
 
-.reaction-option:active {
+.reaction-picker:popover-open .reaction-option:active {
   transform: scale(0.85);
+  transition-delay: 0s;
 }
 
 .reaction-option:focus-visible {
