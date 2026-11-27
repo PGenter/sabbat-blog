@@ -870,7 +870,9 @@ to take effect, as the specificity is the same */
   position: fixed;
   inset: var(--picker-top, 50%) auto auto var(--picker-left, 50%);
   margin: 0;
-  display: flex;
+  /* display hier NICHT setzen: sonst überschreibt es das display: none des
+     geschlossenen Popovers, die unsichtbare Pille bleibt über dem Badge
+     liegen und fängt die nächsten Klicks ab. */
   gap: 2px;
   width: var(--picker-width, 256px);
   height: 46px;
@@ -893,6 +895,7 @@ to take effect, as the specificity is the same */
 }
 
 .reaction-picker:popover-open {
+  display: flex;
   transform: none;
   opacity: 1;
   clip-path: inset(0 round 999px);
