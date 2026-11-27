@@ -597,22 +597,15 @@ function createReactionBadge(commentId: string) {
   badge.popoverTargetElement = picker;
   badge.popoverTargetAction = "toggle";
 
-  // Vor dem Öffnen neben den Badge setzen (Desktop). Auf schmalen
-  // Bildschirmen erscheint die Auswahl per CSS als Leiste am unteren Rand.
+  // Die Auswahl liegt genau über dem Badge und "wächst" aus ihm heraus:
+  // Position und Start-Ausschnitt (clip-path) entsprechen dem Badge.
   picker.addEventListener("beforetoggle", (event) => {
     if ((event as ToggleEvent).newState !== "open") return;
     renderReactionPicker(picker, commentId);
-    const rect = badge.getBoundingClientRect();
-    const pickerWidth = 300;
-    const left = Math.min(
-      Math.max(8, rect.left),
-      window.innerWidth - pickerWidth - 8,
-    );
-    picker.style.setProperty("--picker-left", `${left}px`);
-    picker.style.setProperty(
-      "--picker-bottom",
-      `${window.innerHeight - rect.top + 6}px`,
-    );
+    positionReactionPicker(picker, badge);
+  });
+  picker.addEventListener("toggle", (event) => {
+    wrap.classList.toggle("is-open", (event as ToggleEvent).newState === "open");
   });
 
   wrap.append(badge, picker);
@@ -662,77 +655,68 @@ function renderReactionBadge(wrap: HTMLElement) {
   const detail = summary.map(({ emoji, count }) => `${emoji} ${count}`).join(", ");
   const label = own ? t("reactionChange") : t("reactionAdd");
   badge.setAttribute("aria-label", detail ? `${label} (${detail})` : label);
-  badge.title = label;
+  // Tooltip (Desktop): wer wie reagiert hat
+  badge.title = [
+    label,
+    ...summary.map(({ emoji, names }) => `${emoji} ${names.join(", ")}`),
+  ].join("\n");
+}
+
+// Maße der Auswahl (müssen zu .reaction-picker / .reaction-option passen)
+const PICKER_OPTION_SIZE = 40;
+const PICKER_GAP = 2;
+const PICKER_PADDING = 3;
+const PICKER_WIDTH =
+  REACTION_EMOJIS.length * PICKER_OPTION_SIZE +
+  (REACTION_EMOJIS.length - 1) * PICKER_GAP +
+  2 * PICKER_PADDING;
+const PICKER_HEIGHT = PICKER_OPTION_SIZE + 2 * PICKER_PADDING;
+
+function positionReactionPicker(picker: HTMLElement, badge: HTMLElement) {
+  const rect = badge.getBoundingClientRect();
+  const left = Math.min(
+    Math.max(8, rect.left - PICKER_PADDING),
+    window.innerWidth - PICKER_WIDTH - 8,
+  );
+  const top = rect.top + rect.height / 2 - PICKER_HEIGHT / 2;
+
+  // Ausschnitt des Badges innerhalb der Auswahl (Startzustand der Animation)
+  const clipTop = Math.max(0, (PICKER_HEIGHT - rect.height) / 2);
+  const clipLeft = Math.max(0, rect.left - left);
+  const clipRight = Math.max(0, PICKER_WIDTH - clipLeft - rect.width);
+
+  picker.style.setProperty("--picker-left", `${left}px`);
+  picker.style.setProperty("--picker-top", `${top}px`);
+  picker.style.setProperty("--picker-width", `${PICKER_WIDTH}px`);
+  picker.style.setProperty(
+    "--picker-clip-start",
+    `inset(${clipTop}px ${clipRight}px ${clipTop}px ${clipLeft}px round 999px)`,
+  );
 }
 
 function renderReactionPicker(picker: HTMLElement, commentId: string) {
-  const state = getReactionState(commentId);
   const own = getOwnReaction(commentId);
-  const summary = summarizeReactions(state.reactions);
 
   picker.replaceChildren();
-
-  const title = document.createElement("div");
-  title.className = "reaction-picker-title";
-  title.textContent = own ? t("reactionChange") : t("reactionPickerTitle");
-
-  const options = document.createElement("div");
-  options.className = "reaction-picker-options";
-  REACTION_EMOJIS.forEach((emoji) => {
+  REACTION_EMOJIS.forEach((emoji, index) => {
     const option = document.createElement("button");
     option.type = "button";
     option.className = "reaction-option";
+    option.style.setProperty("--i", String(index));
     const selected = own === emoji;
     option.classList.toggle("is-selected", selected);
     option.setAttribute("aria-pressed", String(selected));
+    option.setAttribute("aria-label", selected ? `${emoji} – ${t("reactionRemove")}` : emoji);
     option.title = selected ? t("reactionRemove") : emoji;
+    option.textContent = emoji;
 
-    const glyph = document.createElement("span");
-    glyph.className = "reaction-option-emoji";
-    glyph.textContent = emoji;
-    const count = document.createElement("span");
-    count.className = "reaction-option-count";
-    const n = summary.find((entry) => entry.emoji === emoji)?.count ?? 0;
-    count.textContent = n > 0 ? String(n) : "";
-    option.append(glyph, count);
-
+    // erneutes Antippen des markierten Emojis entfernt die Reaktion
     option.addEventListener("click", () => {
       picker.hidePopover();
       void setCommentReaction(commentId, selected ? null : emoji);
     });
-    options.appendChild(option);
+    picker.appendChild(option);
   });
-
-  picker.append(title, options);
-
-  if (summary.length > 0) {
-    const who = document.createElement("ul");
-    who.className = "reaction-picker-who";
-    summary.forEach(({ emoji, names }) => {
-      const row = document.createElement("li");
-      const glyph = document.createElement("span");
-      glyph.textContent = emoji;
-      glyph.setAttribute("aria-hidden", "true");
-      const list = document.createElement("span");
-      list.textContent = names.join(", ");
-      row.append(glyph, list);
-      who.appendChild(row);
-    });
-    picker.appendChild(who);
-  }
-
-  if (own) {
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "reaction-picker-remove";
-    remove.innerHTML = '<i class="bi bi-x-circle"></i> ';
-    remove.append(t("reactionRemove"));
-    remove.addEventListener("click", () => {
-      picker.hidePopover();
-      void setCommentReaction(commentId, null);
-    });
-    picker.appendChild(remove);
-  }
 }
 
 function renderReactionBadges(commentId: string) {
