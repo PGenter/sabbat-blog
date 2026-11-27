@@ -896,13 +896,14 @@ to take effect, as the specificity is the same */
     height 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.15),
     background-color 0.2s ease,
     border-color 0.2s ease,
-    box-shadow 0.24s ease,
-    display 0.24s allow-discrete,
-    overlay 0.24s allow-discrete;
+    box-shadow 0.24s ease;
 }
 
 .reaction-picker:popover-open {
   display: flex;
+}
+
+.reaction-picker:popover-open:not(.is-closing) {
   top: var(--picker-top);
   left: var(--picker-left);
   width: var(--picker-width);
@@ -957,7 +958,7 @@ to take effect, as the specificity is the same */
 }
 
 /* beim Öffnen rollen die Emojis nacheinander herein, während das Badge wächst */
-.reaction-picker:popover-open .reaction-option {
+.reaction-picker:popover-open:not(.is-closing) .reaction-option {
   opacity: 1;
   transform: none;
   transition:
@@ -984,7 +985,7 @@ to take effect, as the specificity is the same */
   background: rgba(0, 0, 0, 0.06);
 }
 
-.reaction-picker:popover-open .reaction-option:active {
+.reaction-picker:popover-open:not(.is-closing) .reaction-option:active {
   transform: scale(0.85);
   transition-delay: 0s;
 }

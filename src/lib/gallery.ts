@@ -591,37 +591,105 @@ function createReactionBadge(commentId: string) {
 
   const picker = document.createElement("div");
   picker.className = "reaction-picker";
-  picker.popover = "auto";
+  // "manual": Schließen (auch Tippen daneben / Esc) steuern wir selbst, damit
+  // die Auswahl erst sichtbar ins Badge zurückschrumpft und dann verschwindet.
+  // Bei "auto" verlässt sie sofort die oberste Ebene, und je nach Browser
+  // fliegt sie beim Schließen an eine falsche Stelle (z.B. Bildschirmmitte).
+  picker.popover = "manual";
   picker.setAttribute("role", "dialog");
   picker.setAttribute("aria-label", t("reactionPickerTitle"));
-  badge.popoverTargetElement = picker;
-  badge.popoverTargetAction = "toggle";
+  badge.setAttribute("aria-expanded", "false");
 
-  // Das Badge "wächst" zur Auswahl: Die Auswahl startet in Größe, Position
-  // und Farbe des Badges und zieht sich dann auf (beim Schließen zurück).
-  let closeTimer: number | undefined;
-  picker.addEventListener("beforetoggle", (event) => {
-    if ((event as ToggleEvent).newState !== "open") return;
-    window.clearTimeout(closeTimer);
-    renderReactionPicker(picker, commentId);
-    positionReactionPicker(picker, badge);
-  });
-  picker.addEventListener("toggle", (event) => {
-    if ((event as ToggleEvent).newState === "open") {
-      wrap.classList.add("is-open");
-    } else {
-      // Badge erst wieder zeigen, wenn die Auswahl zurückgeschrumpft ist
-      closeTimer = window.setTimeout(
-        () => wrap.classList.remove("is-open"),
-        PICKER_ANIMATION_MS,
-      );
+  badge.addEventListener("click", () => {
+    if (activeReactionPicker?.picker === picker) {
+      closeReactionPicker();
+      return;
     }
+    openReactionPicker({ wrap, badge, picker, commentId });
   });
 
   wrap.append(badge, picker);
   renderReactionBadge(wrap);
   return wrap;
 }
+
+type ReactionPickerRef = {
+  wrap: HTMLElement;
+  badge: HTMLButtonElement;
+  picker: HTMLElement;
+  commentId: string;
+};
+
+let activeReactionPicker: ReactionPickerRef | null = null;
+let reactionPickerCloseTimer: number | undefined;
+
+// Das Badge "wächst" zur Auswahl: Sie startet in Größe, Position und Farbe
+// des Badges (@starting-style) und zieht sich dann auf.
+function openReactionPicker(ref: ReactionPickerRef) {
+  closeReactionPicker(true);
+  renderReactionPicker(ref.picker, ref.commentId);
+  positionReactionPicker(ref.picker, ref.badge);
+  ref.picker.classList.remove("is-closing");
+  ref.picker.showPopover();
+  ref.wrap.classList.add("is-open");
+  ref.badge.setAttribute("aria-expanded", "true");
+  activeReactionPicker = ref;
+}
+
+// Schrumpft die offene Auswahl ins Badge zurück und schließt sie danach.
+// immediate: ohne Animation (z.B. wenn gleich eine andere geöffnet wird).
+function closeReactionPicker(immediate = false) {
+  const ref = activeReactionPicker;
+  if (!ref) return;
+  activeReactionPicker = null;
+  window.clearTimeout(reactionPickerCloseTimer);
+
+  const finish = () => {
+    if (ref.picker.matches(":popover-open")) ref.picker.hidePopover();
+    ref.picker.classList.remove("is-closing");
+    ref.wrap.classList.remove("is-open");
+    ref.badge.setAttribute("aria-expanded", "false");
+  };
+
+  if (immediate || !ref.picker.isConnected) {
+    finish();
+    return;
+  }
+
+  // aktuelle Badge-Position übernehmen (die Liste kann gescrollt worden sein)
+  positionReactionPicker(ref.picker, ref.badge);
+  ref.picker.classList.add("is-closing");
+  reactionPickerCloseTimer = window.setTimeout(finish, PICKER_ANIMATION_MS);
+}
+
+// Tippen/Klicken außerhalb schließt die Auswahl (der Badge selbst schaltet
+// über seinen eigenen Klick-Handler um)
+document.addEventListener(
+  "pointerdown",
+  (event) => {
+    const ref = activeReactionPicker;
+    if (!ref) return;
+    const target = event.target as Node | null;
+    if (target && (ref.picker.contains(target) || ref.badge.contains(target)))
+      return;
+    closeReactionPicker();
+  },
+  true,
+);
+
+// Esc schließt nur die Auswahl, nicht die ganze Galerie
+document.addEventListener(
+  "keydown",
+  (event) => {
+    if (event.key !== "Escape" || !activeReactionPicker) return;
+    event.stopPropagation();
+    event.preventDefault();
+    const badge = activeReactionPicker.badge;
+    closeReactionPicker();
+    badge.focus();
+  },
+  true,
+);
 
 function renderReactionBadge(wrap: HTMLElement) {
   const commentId = wrap.dataset.commentId!;
@@ -729,7 +797,7 @@ function renderReactionPicker(picker: HTMLElement, commentId: string) {
 
     // erneutes Antippen des markierten Emojis entfernt die Reaktion
     option.addEventListener("click", () => {
-      picker.hidePopover();
+      closeReactionPicker();
       void setCommentReaction(commentId, selected ? null : emoji);
     });
     picker.appendChild(option);
