@@ -864,9 +864,11 @@ to take effect, as the specificity is the same */
   visibility: hidden;
 }
 
-/* Auswahl: das Badge wächst zur Pille mit den Emojis. Geschlossen (und als
-   Startzustand) hat sie Größe, Position und Farbe des Badges, geöffnet ihre
-   volle Größe. Die Werte setzt gallery.ts (positionReactionPicker). */
+/* Auswahl: das Badge wächst zur Pille mit den Emojis. Ohne .is-closing hat
+   sie ihre volle Größe, mit .is-closing (Start beim Öffnen und Ende beim
+   Schließen) Größe, Position und Farbe des Badges. Die Werte setzt
+   gallery.ts (positionReactionPicker), die Klasse openReactionPicker /
+   closeReactionPicker. */
 .reaction-picker {
   position: fixed;
   inset: var(--badge-top, 50%) auto auto var(--badge-left, 50%);
@@ -915,20 +917,6 @@ to take effect, as the specificity is the same */
   opacity: 1;
 }
 
-@starting-style {
-  .reaction-picker:popover-open {
-    top: var(--badge-top);
-    left: var(--badge-left);
-    width: var(--badge-width);
-    height: var(--badge-height);
-    background: var(--badge-bg);
-    border-color: var(--badge-border);
-    box-shadow: 0 0 0 rgba(17, 17, 17, 0);
-    transform: none;
-    opacity: 1;
-  }
-}
-
 .reaction-picker::backdrop {
   background: transparent;
 }
@@ -966,13 +954,6 @@ to take effect, as the specificity is the same */
       calc(60ms + var(--i, 0) * 25ms),
     opacity 0.16s ease calc(60ms + var(--i, 0) * 25ms),
     background-color 0.12s ease;
-}
-
-@starting-style {
-  .reaction-picker:popover-open .reaction-option {
-    opacity: 0;
-    transform: scale(0.4);
-  }
 }
 
 @media (max-width: 640px) {

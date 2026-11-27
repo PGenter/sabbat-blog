@@ -629,8 +629,15 @@ function openReactionPicker(ref: ReactionPickerRef) {
   closeReactionPicker(true);
   renderReactionPicker(ref.picker, ref.commentId);
   positionReactionPicker(ref.picker, ref.badge);
-  ref.picker.classList.remove("is-closing");
+  // Start in Badge-Form (is-closing = zusammengefaltet), dann aufziehen.
+  // Bewusst per Klasse statt @starting-style, damit es in jedem Browser
+  // animiert.
+  ref.picker.classList.add("is-closing");
   ref.picker.showPopover();
+  void ref.picker.offsetWidth; // Startzustand übernehmen
+  requestAnimationFrame(() => {
+    if (activeReactionPicker === ref) ref.picker.classList.remove("is-closing");
+  });
   ref.wrap.classList.add("is-open");
   ref.badge.setAttribute("aria-expanded", "true");
   activeReactionPicker = ref;
@@ -756,9 +763,9 @@ function positionReactionPicker(picker: HTMLElement, badge: HTMLElement) {
   const height = optionSize + 2 * (PICKER_PADDING + PICKER_BORDER);
 
   const rect = badge.getBoundingClientRect();
-  // links bündig mit dem Badge, vertikal um seine Mitte herum aufziehen
+  // links und unten bündig mit dem Badge: wächst nach rechts und oben
   const left = Math.min(Math.max(8, rect.left), window.innerWidth - width - 8);
-  const top = rect.top + rect.height / 2 - height / 2;
+  const top = rect.bottom - height;
   const badgeStyle = getComputedStyle(badge);
 
   const vars: Record<string, string> = {
