@@ -134,6 +134,8 @@
                 <div class="button_wrapper" id="button_wrapper">
                     <button class="nav-button rnd-button glassy" id="logout" title="Logout"><i
                             class="bi bi-box-arrow-right"></i></button>
+                    <button class="nav-button rnd-button glassy" id="notifications" title="Benachrichtigungen"><i
+                            class="bi bi-bell"></i></button>
 
                     <button class="nav-button rnd-button glassy" id="upload" title="Upload"><i
                             class="bi bi-cloud-arrow-up"></i></button>
@@ -227,6 +229,49 @@
                         </div>
                         <button class="nav-button lg-button" id="inviteBtn"><i class="bi bi-person-add"></i>Einladung
                             versenden</button>
+                    </div>
+                </div>
+            </div>
+            <div class="upload_wrapper notify_wrapper">
+                <div class="card upload-cd notify-cd glassy modal" id="notification-section"
+                    style="visibility: hidden; opacity: 0;">
+                    <div class="dialog-header">
+                        <div class="close-button-container">
+                            <button class="header-button close-button" id="notification-close-button"><i
+                                    class="bi bi-x"></i></button>
+                        </div>
+                    </div>
+                    <div class="card-head">
+                        <div>
+                            <h2 id="notify-title">Benachrichtigungen</h2>
+                        </div>
+                    </div>
+                    <div class="modal-container notify-container">
+                        <label class="notify-row notify-row--device">
+                            <span class="notify-text">
+                                <span class="notify-label" id="notify-device-label">Auf diesem Gerät</span>
+                                <span class="notify-hint" id="notify-device-hint"></span>
+                            </span>
+                            <input type="checkbox" class="notify-switch" id="notify-device" role="switch" />
+                        </label>
+                        <p class="notify-section-title" id="notify-kinds-title">Benachrichtige mich bei …</p>
+                        <label class="notify-row">
+                            <span class="notify-label" data-notify-label="new_entry">neuen Stationen</span>
+                            <input type="checkbox" class="notify-switch" data-notify-kind="new_entry" role="switch" />
+                        </label>
+                        <label class="notify-row" data-notify-staff hidden>
+                            <span class="notify-label" data-notify-label="new_comment">neuen Kommentaren</span>
+                            <input type="checkbox" class="notify-switch" data-notify-kind="new_comment" role="switch" />
+                        </label>
+                        <label class="notify-row">
+                            <span class="notify-label" data-notify-label="comment_reply">weiteren Kommentaren zu Fotos, die ich kommentiert habe</span>
+                            <input type="checkbox" class="notify-switch" data-notify-kind="comment_reply" role="switch" />
+                        </label>
+                        <label class="notify-row">
+                            <span class="notify-label" data-notify-label="comment_reaction">Reaktionen auf meine Kommentare</span>
+                            <input type="checkbox" class="notify-switch" data-notify-kind="comment_reaction" role="switch" />
+                        </label>
+                        <p class="notify-footnote" id="notify-footnote">Gilt für alle Geräte, auf denen du Benachrichtigungen eingeschaltet hast.</p>
                     </div>
                 </div>
             </div>

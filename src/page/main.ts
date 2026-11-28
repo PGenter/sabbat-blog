@@ -3,6 +3,7 @@ import "../lib/map.ts";
 import "../lib/invite.ts";
 import {
   getRole,
+  getUser,
   supabase,
   requireAuth,
   getUserLanguage,
@@ -15,7 +16,15 @@ import {
   map,
   toggleEditMode,
   refreshLanguage,
+  openEntryFromLink,
 } from "../lib/map.ts";
+import {
+  disablePushOnThisDevice,
+  onNotificationOpen,
+  registerServiceWorker,
+  syncPushSubscription,
+} from "../lib/notifications.ts";
+import { setupNotificationSettings } from "../lib/notification-settings.ts";
 // Slider-Leiste entfernt
 // import { setOnCountryChange, updateCountryLabels } from "../lib/slider";
 import { startUpload } from "./upload.ts";
@@ -37,6 +46,16 @@ const uploadButton = document.getElementById("upload")!;
 const editMapButton = document.getElementById("edit-map")!;
 const editGalleryButton = document.getElementById("edit-gallery")!;
 const inviteButton = document.getElementById("invite")!;
+const notificationsButton = document.getElementById("notifications")!;
+const notificationSection = document.getElementById(
+  "notification-section",
+) as HTMLDivElement;
+const notificationCloseButton = document.getElementById(
+  "notification-close-button",
+) as HTMLButtonElement;
+let notificationSettings:
+  | ReturnType<typeof setupNotificationSettings>
+  | undefined;
 const languageToggleButton = document.getElementById(
   "language-toggle",
 ) as HTMLButtonElement;
@@ -139,6 +158,8 @@ function applyTranslations() {
   editMapButton.title = t("editMap");
   editGalleryButton.title = t("editGallery");
   inviteButton.title = t("invite");
+  notificationsButton.title = t("notifications");
+  notificationSettings?.applyTranslations();
   if (languageToggleButton) {
     languageToggleButton.title = t("languageToggleTitle");
   }
@@ -215,6 +236,10 @@ function applyTranslations() {
 }
 
 logoutButton.addEventListener("click", async () => {
+  // Gerät abmelden, sonst bekäme es nach dem Logout weiter Benachrichtigungen
+  await disablePushOnThisDevice().catch((error) =>
+    console.error("Abmelden der Benachrichtigungen fehlgeschlagen:", error),
+  );
   await supabase.auth.signOut();
   clearMarkers();
   await requireAuth();
@@ -244,6 +269,15 @@ inviteCloseButton.addEventListener("click", () => {
   hideModal(invitesection);
 });
 
+notificationsButton.addEventListener("click", () => {
+  showModal(notificationSection);
+  void notificationSettings?.refresh();
+});
+
+notificationCloseButton.addEventListener("click", () => {
+  hideModal(notificationSection);
+});
+
 languageToggleButton.addEventListener("click", async () => {
   const currentLanguage = getCurrentLanguage();
   const newLanguage = currentLanguage === "german" ? "spanish" : "german";
@@ -253,6 +287,7 @@ languageToggleButton.addEventListener("click", async () => {
   applyTranslations();
   // updateCountryLabels();
   await updateUserLanguage(newLanguage);
+  void syncPushSubscription(newLanguage);
   await refreshLanguage();
 });
 
@@ -262,6 +297,9 @@ document.body.addEventListener("keydown", (event) => {
     case "Escape":
       invitesection.checkVisibility() ? hideModal(invitesection) : "";
       uploadsection.checkVisibility() ? hideModal(uploadsection) : "";
+      notificationSection.checkVisibility()
+        ? hideModal(notificationSection)
+        : "";
       break;
   }
 });
@@ -292,6 +330,28 @@ applyTranslations();
 const loaderText = document.getElementById("app-loader-text");
 if (loaderText) loaderText.textContent = t("appLoading");
 await startUpload();
+
+// Benachrichtigungen: Service Worker, Einstellungsdialog, Klicks auf
+// Benachrichtigungen bei bereits offener Karte
+void registerServiceWorker();
+const currentUser = await getUser();
+if (currentUser) {
+  notificationSettings = setupNotificationSettings({
+    userId: currentUser.id,
+    role: await getRole(),
+    onDeviceStateChange: (enabled) => {
+      const icon = notificationsButton.querySelector("i");
+      icon?.classList.toggle("bi-bell-fill", enabled);
+      icon?.classList.toggle("bi-bell", !enabled);
+    },
+  });
+  notificationSettings.applyTranslations();
+  void notificationSettings.refresh();
+  void syncPushSubscription(initialLanguage);
+}
+onNotificationOpen((entryId, photoId) => {
+  void openEntryFromLink(entryId, photoId);
+});
 
 await initMap();
 

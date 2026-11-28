@@ -932,3 +932,133 @@ path.leaflet-interactive:nth-child(2) {
   width: 20px;
   height: auto;
 }
+
+/* ==========================================================================
+   Dialog "Benachrichtigungen"
+   ========================================================================== */
+
+.notify-cd {
+  width: min(92dvw, 460px);
+}
+
+.notify-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.notify-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--gallery-border);
+  cursor: pointer;
+}
+
+.notify-row[hidden] {
+  display: none;
+}
+
+.notify-row--device {
+  border-bottom: none;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 12px;
+  background: var(--gallery-background);
+}
+
+.notify-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.notify-row--device .notify-label {
+  font-weight: 500;
+}
+
+.notify-hint {
+  font-size: 0.85rem;
+  color: var(--gallery-text-muted);
+}
+
+.notify-section-title {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--gallery-text-muted);
+}
+
+.notify-footnote {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: var(--gallery-text-muted);
+}
+
+/* Schalter */
+.notify-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 0 0 auto;
+  position: relative;
+  width: 44px;
+  height: 26px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--gallery-track);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.notify-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.notify-switch:checked {
+  background: var(--gallery-text);
+}
+
+.notify-switch:checked::after {
+  transform: translateX(18px);
+  background: var(--gallery-accent);
+}
+
+.notify-switch:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.notify-switch:focus-visible {
+  outline: 2px solid var(--gallery-text);
+  outline-offset: 2px;
+}
+
+/* Mobil: kein Vollbild wie beim Upload, sondern ein Blatt von unten */
+@media screen and (max-width: 1023px) {
+  .notify_wrapper {
+    align-items: flex-end;
+  }
+
+  .upload-cd.notify-cd {
+    width: 100dvw;
+    height: auto;
+    max-height: 90dvh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .upload-cd.notify-cd .dialog-header {
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+  }
+}

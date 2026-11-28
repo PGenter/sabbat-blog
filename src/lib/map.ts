@@ -77,6 +77,9 @@ let totalCountsByCountry = new Map<CountryCode, number>();
 let canSeeNewComments = false;
 let newCommentsByEntry = new Map<string, number>();
 let entrySectionById = new Map<string, CountryCode>();
+// Original-IDs (uuid oder Zahl) zu ihrer String-Form, für Links aus
+// Benachrichtigungen (?entry=...&photo=...)
+let entryIdByString = new Map<string, string>();
 let routeLine: L.Polyline;
 let routeGlow: L.Polyline;
 let routeAnimationFrame: number | null = null;
@@ -125,6 +128,13 @@ async function setupMap() {
   ]);
   updateCountryCounts(overview);
   const latestEntry = overview[0];
+
+  // Geöffnet über eine Benachrichtigung? Dann direkt in dessen Land starten.
+  const link = readEntryLink();
+  const linkedEntry = link
+    ? overview.find((entry) => String(entry.id) === link.entry)
+    : undefined;
+  const startEntry = linkedEntry ?? latestEntry;
 
   // Direkt auf die neueste Station starten, statt erst Deutschland zu laden.
   const start =
@@ -233,11 +243,11 @@ async function setupMap() {
   map.on("moveend", handleMapViewportChanged);
   map.on("zoomend", handleMapViewportChanged);
 
-  const initialCountry: CountryCode = isCountryCode(latestEntry?.section)
-    ? latestEntry.section
+  const initialCountry: CountryCode = isCountryCode(startEntry?.section)
+    ? startEntry.section
     : "DE";
   currentCountry = initialCountry;
-  pendingFocusId = latestEntry?.id ?? null;
+  pendingFocusId = startEntry?.id ?? null;
   selectCountry(initialCountry, { flyTo: false });
 
   // Erst ausblenden, wenn Liste und Marker stehen und die erste Zentrierung
@@ -245,6 +255,43 @@ async function setupMap() {
   await markersLoading;
   await nextFrame();
   await nextFrame();
+
+  if (linkedEntry) {
+    showPhotoGallery(linkedEntry.id, link?.photo);
+    void setMarkerVisited(linkedEntry.id);
+  }
+  if (link) {
+    // Parameter entfernen, damit ein Reload nicht erneut die Galerie öffnet
+    history.replaceState(null, "", window.location.pathname);
+  }
+}
+
+function readEntryLink(): { entry: string; photo: string | null } | null {
+  const params = new URLSearchParams(window.location.search);
+  const entry = params.get("entry");
+  return entry ? { entry, photo: params.get("photo") } : null;
+}
+
+// Öffnet einen Eintrag (und optional ein bestimmtes Foto) – z.B. nach einem
+// Klick auf eine Benachrichtigung, während die Karte schon offen ist.
+export async function openEntryFromLink(
+  entryKey: string,
+  photoId?: string | null,
+) {
+  const id = entryIdByString.get(String(entryKey));
+  if (!id) return;
+
+  const section = entrySectionById.get(String(entryKey));
+  if (section && section !== currentCountry) {
+    pendingFocusId = id;
+    selectCountry(section, { flyTo: false });
+    await markersLoading;
+  } else if (entryItems.has(id)) {
+    focusEntry(id);
+  }
+
+  showPhotoGallery(id, photoId);
+  void setMarkerVisited(id);
 }
 
 function nextFrame() {
@@ -1090,7 +1137,9 @@ function updateCountryCounts(overview: EntryOverview[]) {
   const counts = new Map<CountryCode, number>();
   const totals = new Map<CountryCode, number>();
   entrySectionById = new Map();
+  entryIdByString = new Map();
   for (const entry of overview) {
+    entryIdByString.set(String(entry.id), entry.id);
     if (!isCountryCode(entry.section)) continue;
     entrySectionById.set(String(entry.id), entry.section);
     totals.set(entry.section, (totals.get(entry.section) ?? 0) + 1);

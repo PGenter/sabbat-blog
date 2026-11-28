@@ -999,8 +999,13 @@ function renderEditComment(
 }
 
 
-export function showPhotoGallery(entryId: string) {
+// Foto, das beim nächsten Öffnen der Galerie zuerst gezeigt wird (Links aus
+// Benachrichtigungen)
+let pendingStartPhotoId: string | null = null;
+
+export function showPhotoGallery(entryId: string, startPhotoId?: string | null) {
   currentGalleryEntryId = entryId;
+  pendingStartPhotoId = startPhotoId ?? null;
   void loadPhotosOfMarker(entryId);
 }
 
@@ -1359,7 +1364,11 @@ async function renderPhotos(photos: any[], description: string) {
 
   swiper.update();
   thumbsSwiper?.update();
-  swiper.slideTo(0, 0);
+  const startIndex = pendingStartPhotoId
+    ? photos.findIndex((photo) => String(photo.id) === pendingStartPhotoId)
+    : -1;
+  pendingStartPhotoId = null;
+  swiper.slideTo(Math.max(0, startIndex), 0);
   void refreshCommentsForActivePhoto();
   updateItemNo();
 

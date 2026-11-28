@@ -131,6 +131,25 @@ const translations = {
     entryListSelectCountry: "Land auswählen",
     // Start-Loader (erste Anzeige setzt das Inline-Skript in map.html)
     appLoading: "Karte wird geladen …",
+    // Benachrichtigungen
+    notifications: "Benachrichtigungen",
+    notifyDevice: "Auf diesem Gerät",
+    notifyDeviceOn: "Eingeschaltet",
+    notifyDeviceOff: "Ausgeschaltet",
+    notifyDenied:
+      "Benachrichtigungen sind im Browser blockiert. Erlaube sie in den Website-Einstellungen und versuche es erneut.",
+    notifyUnsupported: "Dieser Browser unterstützt keine Benachrichtigungen.",
+    notifyIosInstall:
+      "Auf iPhone und iPad: zuerst über Teilen → „Zum Home-Bildschirm“ hinzufügen und die App von dort öffnen.",
+    notifyMissingKey: "Benachrichtigungen sind noch nicht eingerichtet.",
+    notifyError: "Das hat nicht geklappt. Bitte versuche es erneut.",
+    notifyKindsTitle: "Benachrichtige mich bei …",
+    notifyNewEntry: "neuen Stationen",
+    notifyNewComment: "neuen Kommentaren",
+    notifyCommentReply: "weiteren Kommentaren zu Fotos, die ich kommentiert habe",
+    notifyCommentReaction: "Reaktionen auf meine Kommentare",
+    notifyFootnote:
+      "Gilt für alle Geräte, auf denen du Benachrichtigungen eingeschaltet hast.",
   },
   spanish: {
     cancel: "Cancelar",
@@ -261,6 +280,25 @@ const translations = {
     entryListSelectCountry: "Elegir país",
     // Start-Loader (erste Anzeige setzt das Inline-Skript in map.html)
     appLoading: "Cargando el mapa …",
+    // Notificaciones
+    notifications: "Notificaciones",
+    notifyDevice: "En este dispositivo",
+    notifyDeviceOn: "Activadas",
+    notifyDeviceOff: "Desactivadas",
+    notifyDenied:
+      "Las notificaciones están bloqueadas en el navegador. Permítelas en la configuración del sitio e inténtalo de nuevo.",
+    notifyUnsupported: "Este navegador no admite notificaciones.",
+    notifyIosInstall:
+      "En iPhone y iPad: primero añade la página con Compartir → «Añadir a pantalla de inicio» y ábrela desde allí.",
+    notifyMissingKey: "Las notificaciones aún no están configuradas.",
+    notifyError: "No ha funcionado. Inténtalo de nuevo.",
+    notifyKindsTitle: "Avísame de …",
+    notifyNewEntry: "nuevas estaciones",
+    notifyNewComment: "nuevos comentarios",
+    notifyCommentReply: "más comentarios en fotos que he comentado",
+    notifyCommentReaction: "reacciones a mis comentarios",
+    notifyFootnote:
+      "Se aplica a todos los dispositivos en los que hayas activado las notificaciones.",
   },
 } as const;
 

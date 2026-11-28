@@ -6,6 +6,7 @@ import * as exifr from "exifr";
 import { handleError } from "../lib/errorHandler";
 import { setBackgroundBlocked } from "../lib/modal.ts";
 import { t } from "../lib/i18n.ts";
+import { notifyEntryPublished } from "../lib/notifications.ts";
 import {
   currentCountry,
   map,
@@ -347,6 +348,10 @@ export async function startUpload() {
       if (fileInfo) fileInfo.textContent = t("noFileSelected");
 
       setUploadModalVisible(false);
+
+      // Alle anderen über die neue Station benachrichtigen (läuft im
+      // Hintergrund, ein Fehler hier macht den Upload nicht ungültig)
+      if (entryId) void notifyEntryPublished(entryId);
 
       if (isCountryCode(section) && section !== currentCountry) {
         selectCountry(section);
